@@ -1,0 +1,83 @@
+{
+  "otherData": {
+    "build_id": "52f0a044-539c-488c-8a7d-9a7d43af4745",
+    "date": "Tue Aug 02 17:11:16 UTC 2022",
+    "output_base": "/home/github-actions-runner/.cache/bazel/_bazel_github-actions-runner/821f525b4992dc2a685662ed20d9fe01"
+  },
+  "traceEvents": [
+    {
+      "args": {
+        "name": "Main Thread"
+      },
+      "name": "thread_name",
+      "ph": "M",
+      "pid": 1,
+      "tid": 20
+    },
+    {
+      "cat": "build phase marker",
+      "dur": 17000,
+      "name": "Launch Blaze",
+      "ph": "X",
+      "pid": 1,
+      "tid": 20,
+      "ts": -17000
+    },
+    {
+      "cat": "build phase marker",
+      "name": "Initialize command",
+      "ph": "i",
+      "pid": 1,
+      "tid": 20,
+      "ts": 0
+    },
+    {
+      "cat": "build phase marker",
+      "name": "Evaluate target patterns",
+      "ph": "i",
+      "pid": 1,
+      "tid": 20,
+      "ts": 31229183
+    },
+    {
+      "cat": "build phase marker",
+      "name": "Load and analyze dependencies",
+      "ph": "i",
+      "pid": 1,
+      "tid": 20,
+      "ts": 34200314
+    },
+    {
+      "cat": "build phase marker",
+      "name": "Prepare for build",
+      "ph": "i",
+      "pid": 1,
+      "tid": 20,
+      "ts": 77059750
+    },
+    {
+      "cat": "build phase marker",
+      "name": "Build artifacts",
+      "ph": "i",
+      "pid": 1,
+      "tid": 20,
+      "ts": 77090175
+    },
+    {
+      "cat": "build phase marker",
+      "name": "Complete build",
+      "ph": "i",
+      "pid": 1,
+      "tid": 20,
+      "ts": 727135633
+    },
+    {
+      "cat": "general information",
+      "name": "Finishing",
+      "ph": "i",
+      "pid": 1,
+      "tid": 20,
+      "ts": 727213543
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+/bazel-*
+/.ijwb
+/.clwb
+/.project
+/.classes
+/.coverage
+*.swp
+/.bazelrc.user
+
+# macOS-specific excludes
+.DS_Store
+

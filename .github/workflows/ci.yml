@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push: {}
+
+jobs:
+  build:
+    runs-on: [self-hosted, Linux, x64, debian10]
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Build
+        run: |
+          bazel build //...
+      - name: Test
+        run: |
+          bazel test //...
+  lint:
+    runs-on: [self-hosted, Linux, x64, debian10]
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Lint
+        run: |
+          bazel run //infra:lint -- "$(pwd)"
