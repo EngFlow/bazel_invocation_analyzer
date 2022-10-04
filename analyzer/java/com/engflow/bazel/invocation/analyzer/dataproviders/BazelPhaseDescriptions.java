@@ -71,8 +71,6 @@ public class BazelPhaseDescriptions implements Datum {
                 phase.name));
       }
     }
-    // Remove the final newline
-    sb.setLength(sb.length() - 1);
     return sb.toString();
   }
 }
