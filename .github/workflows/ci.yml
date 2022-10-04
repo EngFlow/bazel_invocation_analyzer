@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: [Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
@@ -17,7 +17,7 @@ jobs:
         run: |
           bazel test //...
   lint:
-    runs-on: [Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
 
     steps:
