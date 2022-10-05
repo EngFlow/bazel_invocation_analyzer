@@ -27,9 +27,9 @@ import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.InstantEvent;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 /**
@@ -92,7 +92,7 @@ public class BazelPhasesDataProvider extends DataProvider {
       } catch (Exception ex) {
         throw new InvalidProfileException(
             String.format(
-                "Unable to find instant event event named \"%s\".",
+                "Unable to find instant event named \"%s\".",
                 BazelProfileConstants.INSTANT_FINISHING),
             ex);
       }
@@ -112,8 +112,7 @@ public class BazelPhasesDataProvider extends DataProvider {
 
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
 
-    Map<BazelProfilePhase, Timestamp> phaseToStart = new HashMap<>();
-    phaseToStart.put(BazelProfilePhase.LAUNCH, launchStart);
+    Map<Timestamp, BazelProfilePhase> startToPhase = new TreeMap<>();
 
     List<InstantEvent> buildPhases;
     try {
@@ -130,58 +129,31 @@ public class BazelPhasesDataProvider extends DataProvider {
           ex);
     }
 
-    buildPhases.stream()
-        .forEach(
-            (action) -> {
-              String phaseName = action.getName();
-              try {
-                BazelProfilePhase phase = BazelProfilePhase.parse(phaseName);
-                phaseToStart.put(phase, action.getTimestamp());
-              } catch (IllegalArgumentException e) {
-                logger.warning(String.format("Found unrecognized Bazel phase %s", phaseName));
-              }
-            });
-
-    if (phaseToStart.size() != BazelProfilePhase.values().length) {
-      throw new InvalidProfileException(
-          String.format(
-              "Missing build phases: %d/%d found.",
-              phaseToStart.size(), BazelProfilePhase.values().length));
+    if (buildPhases != null) {
+      buildPhases.stream()
+          .forEach(
+              (action) -> {
+                String phaseName = action.getName();
+                try {
+                  BazelProfilePhase phase = BazelProfilePhase.parse(phaseName);
+                  startToPhase.put(action.getTimestamp(), phase);
+                } catch (IllegalArgumentException e) {
+                  logger.warning(String.format("Found unrecognized Bazel phase %s", phaseName));
+                }
+              });
     }
 
     BazelPhaseDescriptions result = new BazelPhaseDescriptions();
-    result.add(
-        BazelProfilePhase.LAUNCH,
-        new BazelPhaseDescription(
-            phaseToStart.get(BazelProfilePhase.LAUNCH), phaseToStart.get(BazelProfilePhase.INIT)));
-    result.add(
-        BazelProfilePhase.INIT,
-        new BazelPhaseDescription(
-            phaseToStart.get(BazelProfilePhase.INIT),
-            phaseToStart.get(BazelProfilePhase.EVALUATE)));
-    result.add(
-        BazelProfilePhase.EVALUATE,
-        new BazelPhaseDescription(
-            phaseToStart.get(BazelProfilePhase.EVALUATE),
-            phaseToStart.get(BazelProfilePhase.DEPENDENCIES)));
-    result.add(
-        BazelProfilePhase.DEPENDENCIES,
-        new BazelPhaseDescription(
-            phaseToStart.get(BazelProfilePhase.DEPENDENCIES),
-            phaseToStart.get(BazelProfilePhase.PREPARE)));
-    result.add(
-        BazelProfilePhase.PREPARE,
-        new BazelPhaseDescription(
-            phaseToStart.get(BazelProfilePhase.PREPARE),
-            phaseToStart.get(BazelProfilePhase.EXECUTE)));
-    result.add(
-        BazelProfilePhase.EXECUTE,
-        new BazelPhaseDescription(
-            phaseToStart.get(BazelProfilePhase.EXECUTE),
-            phaseToStart.get(BazelProfilePhase.FINISH)));
-    result.add(
-        BazelProfilePhase.FINISH,
-        new BazelPhaseDescription(phaseToStart.get(BazelProfilePhase.FINISH), finishEnd));
+    Timestamp previousTimestamp = launchStart;
+    BazelProfilePhase previousPhase = BazelProfilePhase.LAUNCH;
+    for (Timestamp timestamp : startToPhase.keySet()) {
+      if (previousPhase != null) {
+        result.add(previousPhase, new BazelPhaseDescription(previousTimestamp, timestamp));
+      }
+      previousTimestamp = timestamp;
+      previousPhase = startToPhase.get(timestamp);
+    }
+    result.add(BazelProfilePhase.FINISH, new BazelPhaseDescription(previousTimestamp, finishEnd));
     return result;
   }
 }
