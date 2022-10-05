@@ -35,6 +35,32 @@ public class BazelPhaseDescriptions implements Datum {
     return phaseToDescription.get(phase);
   }
 
+  public BazelPhaseDescription getOrClosestBefore(BazelProfilePhase phase) {
+    if (phaseToDescription.containsKey(phase)) {
+      return phaseToDescription.get(phase);
+    }
+    while (phase != BazelProfilePhase.LAUNCH) {
+      phase = phase.getPrevious();
+      if (phaseToDescription.containsKey(phase)) {
+        return phaseToDescription.get(phase);
+      }
+    }
+    return null;
+  }
+
+  public BazelPhaseDescription getOrClosestAfter(BazelProfilePhase phase) {
+    if (phaseToDescription.containsKey(phase)) {
+      return phaseToDescription.get(phase);
+    }
+    while (phase != BazelProfilePhase.FINISH) {
+      phase = phase.getNext();
+      if (phaseToDescription.containsKey(phase)) {
+        return phaseToDescription.get(phase);
+      }
+    }
+    return null;
+  }
+
   @Override
   public String getDescription() {
     return "The Bazel Profile's various phases and their timing information.";
