@@ -35,10 +35,10 @@ import java.util.Locale;
 /**
  * A {@link SuggestionProvider} that provides suggestions on how to reduce remote execution queuing.
  */
-public class QueuingSuggestionProvider implements SuggestionProvider {
+public class QueuingSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME = QueuingSuggestionProvider.class.getName();
   private static final String SUGGESTION_ID_INCREASE_RE_CLUSTER_SIZE =
-      ANALYZER_CLASSNAME + "-IncreaseRemoteExecutionClusterSize";
+      "IncreaseRemoteExecutionClusterSize";
 
   @Override
   public SuggestionOutput getSuggestions(DataManager dataManager) {
@@ -90,7 +90,7 @@ public class QueuingSuggestionProvider implements SuggestionProvider {
         suggestions.add(
             SuggestionProviderUtil.createSuggestion(
                 SuggestionCategory.OTHER,
-                SUGGESTION_ID_INCREASE_RE_CLUSTER_SIZE,
+                createSuggestionId(SUGGESTION_ID_INCREASE_RE_CLUSTER_SIZE),
                 title,
                 recommendation,
                 potentialImprovement,

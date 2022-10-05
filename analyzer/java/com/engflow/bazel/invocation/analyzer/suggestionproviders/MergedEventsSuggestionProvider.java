@@ -26,10 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** A {@link SuggestionProvider} that suggest creating Bazel profiles without merged events. */
-public class MergedEventsSuggestionProvider implements SuggestionProvider {
+public class MergedEventsSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME = MergedEventsSuggestionProvider.class.getName();
-  private static final String SUGGESTION_ID_DISABLE_MERGED_EVENTS =
-      ANALYZER_CLASSNAME + "-DisableMergedEvents";
+  private static final String SUGGESTION_ID_DISABLE_MERGED_EVENTS = "DisableMergedEvents";
 
   @Override
   public SuggestionOutput getSuggestions(DataManager dataManager) {
@@ -56,7 +55,7 @@ public class MergedEventsSuggestionProvider implements SuggestionProvider {
         suggestions.add(
             SuggestionProviderUtil.createSuggestion(
                 SuggestionCategory.BAZEL_FLAGS,
-                SUGGESTION_ID_DISABLE_MERGED_EVENTS,
+                createSuggestionId(SUGGESTION_ID_DISABLE_MERGED_EVENTS),
                 title,
                 recommendation,
                 null,
