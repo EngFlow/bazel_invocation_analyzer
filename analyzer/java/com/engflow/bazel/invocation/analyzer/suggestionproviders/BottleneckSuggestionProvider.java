@@ -23,7 +23,6 @@ import com.engflow.bazel.invocation.analyzer.SuggestionCategory;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
-import com.engflow.bazel.invocation.analyzer.core.SuggestionProvider;
 import com.engflow.bazel.invocation.analyzer.dataproviders.ActionStats;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresUsed;
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
@@ -36,10 +35,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-public class BottleneckSuggestionProvider implements SuggestionProvider {
+public class BottleneckSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME = BottleneckSuggestionProvider.class.getName();
   private static final String SUGGESTION_ID_BREAK_DOWN_BOTTLENECK_ACTIONS =
-      ANALYZER_CLASSNAME + "-BreakDownBottleneckActions";
+      "BreakDownBottleneckActions";
 
   private final Duration minDuration;
   private final int maxSuggestions;
@@ -153,7 +152,7 @@ public class BottleneckSuggestionProvider implements SuggestionProvider {
     }
     return SuggestionProviderUtil.createSuggestion(
         SuggestionCategory.BUILD_FILE,
-        SUGGESTION_ID_BREAK_DOWN_BOTTLENECK_ACTIONS,
+        createSuggestionId(SUGGESTION_ID_BREAK_DOWN_BOTTLENECK_ACTIONS),
         title,
         recommendation,
         potentialImprovement(bottleneck, totalDuration),

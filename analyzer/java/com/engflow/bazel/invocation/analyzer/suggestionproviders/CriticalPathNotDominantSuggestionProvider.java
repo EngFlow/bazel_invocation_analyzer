@@ -39,13 +39,11 @@ import java.util.Locale;
  * A {@link SuggestionProvider} that provides suggestions on how to speed up the invocation if the
  * critical path does not dominate the execution phase.
  */
-public class CriticalPathNotDominantSuggestionProvider implements SuggestionProvider {
+public class CriticalPathNotDominantSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME =
       CriticalPathNotDominantSuggestionProvider.class.getName();
-  private static final String SUGGESTION_ID_INCREASE_NUMBER_OF_CORES =
-      ANALYZER_CLASSNAME + "-IncreaseNumberOfCores";
-  private static final String SUGGESTION_ID_INCREASE_VALUE_OF_JOBS_FLAG =
-      ANALYZER_CLASSNAME + "-IncreaseValueOfJobsFlag";
+  private static final String SUGGESTION_ID_INCREASE_NUMBER_OF_CORES = "IncreaseNumberOfCores";
+  private static final String SUGGESTION_ID_INCREASE_VALUE_OF_JOBS_FLAG = "IncreaseValueOfJobsFlag";
 
   private static final double MAX_CRITICAL_PATH_FACTOR = 0.75;
   private static final Duration MIN_DURATION_FOR_EVALUATION = Duration.ofSeconds(5);
@@ -160,7 +158,7 @@ public class CriticalPathNotDominantSuggestionProvider implements SuggestionProv
         suggestions.add(
             SuggestionProviderUtil.createSuggestion(
                 SuggestionCategory.BAZEL_FLAGS,
-                SUGGESTION_ID_INCREASE_VALUE_OF_JOBS_FLAG,
+                createSuggestionId(SUGGESTION_ID_INCREASE_VALUE_OF_JOBS_FLAG),
                 title,
                 recommendation,
                 potentialImprovement,
@@ -190,7 +188,7 @@ public class CriticalPathNotDominantSuggestionProvider implements SuggestionProv
         suggestions.add(
             SuggestionProviderUtil.createSuggestion(
                 SuggestionCategory.OTHER,
-                SUGGESTION_ID_INCREASE_NUMBER_OF_CORES,
+                createSuggestionId(SUGGESTION_ID_INCREASE_NUMBER_OF_CORES),
                 title,
                 recommendation,
                 potentialImprovement,

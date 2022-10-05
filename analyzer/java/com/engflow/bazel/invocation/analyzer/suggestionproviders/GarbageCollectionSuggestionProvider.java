@@ -31,13 +31,11 @@ import java.util.List;
 import java.util.Locale;
 
 /** A {@link SuggestionProvider} that provides suggestions regarding garbage collection. */
-public class GarbageCollectionSuggestionProvider implements SuggestionProvider {
+public class GarbageCollectionSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME =
       GarbageCollectionSuggestionProvider.class.getName();
-  private static final String SUGGESTION_ID_INCREASE_JAVA_HEAP_SIZE =
-      ANALYZER_CLASSNAME + "-IncreaseJavaHeapSize";
-  private static final String SUGGESTION_ID_REDUCE_RULES_MEMORY_USAGE =
-      ANALYZER_CLASSNAME + "-ReduceRulesMemoryUsage";
+  private static final String SUGGESTION_ID_INCREASE_JAVA_HEAP_SIZE = "IncreaseJavaHeapSize";
+  private static final String SUGGESTION_ID_REDUCE_RULES_MEMORY_USAGE = "ReduceRulesMemoryUsage";
   // Only return a suggestion if major garbage collection takes up a significant portion of the
   // whole invocation.
   @VisibleForTesting static final double MAJOR_GC_MIN_PERCENTAGE = 5.0;
@@ -87,7 +85,7 @@ public class GarbageCollectionSuggestionProvider implements SuggestionProvider {
           suggestions.add(
               SuggestionProviderUtil.createSuggestion(
                   SuggestionCategory.BAZEL_FLAGS,
-                  SUGGESTION_ID_INCREASE_JAVA_HEAP_SIZE,
+                  createSuggestionId(SUGGESTION_ID_INCREASE_JAVA_HEAP_SIZE),
                   titleIncreaseHeapSize,
                   recommendationIncreaseHeapSize,
                   potentialImprovement,
@@ -109,7 +107,7 @@ public class GarbageCollectionSuggestionProvider implements SuggestionProvider {
           suggestions.add(
               SuggestionProviderUtil.createSuggestion(
                   SuggestionCategory.RULES,
-                  SUGGESTION_ID_REDUCE_RULES_MEMORY_USAGE,
+                  createSuggestionId(SUGGESTION_ID_REDUCE_RULES_MEMORY_USAGE),
                   titleReduceMemoryUsage,
                   recommendationReduceMemoryUsage,
                   potentialImprovement,

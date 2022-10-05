@@ -126,18 +126,21 @@ public class SuggestionProviderUtil {
    */
   public static Suggestion createSuggestion(
       SuggestionCategory category,
-      String uniqueSuggestionTypeId,
+      SuggestionId uniqueSuggestionTypeId,
       String title,
       @Nullable String recommendation,
       @Nullable PotentialImprovement potentialImprovement,
       @Nullable List<String> rationale,
       @Nullable List<Caveat> caveats) {
     Preconditions.checkNotNull(uniqueSuggestionTypeId);
-    String suggestionIdWithoutSpaces = uniqueSuggestionTypeId.replaceAll("\\s+", "");
-    Preconditions.checkArgument(uniqueSuggestionTypeId.equals(suggestionIdWithoutSpaces));
+    String suggestionIdWithoutSpaces = uniqueSuggestionTypeId.id.replaceAll("\\s+", "");
+    Preconditions.checkArgument(uniqueSuggestionTypeId.id.equals(suggestionIdWithoutSpaces));
     Preconditions.checkNotNull(title);
     Suggestion.Builder builder =
-        Suggestion.newBuilder().setCategory(category).setId(uniqueSuggestionTypeId).setTitle(title);
+        Suggestion.newBuilder()
+            .setCategory(category)
+            .setId(uniqueSuggestionTypeId.id)
+            .setTitle(title);
     if (recommendation != null) {
       builder.setRecommendation(recommendation);
     }
@@ -215,5 +218,14 @@ public class SuggestionProviderUtil {
         .setAnalyzerClassname(analyzerClassname)
         .setFailure(failureBuilder)
         .build();
+  }
+
+  static class SuggestionId {
+    private final String id;
+
+    SuggestionId(String id) {
+      Preconditions.checkNotNull(id);
+      this.id = id;
+    }
   }
 }

@@ -28,11 +28,10 @@ import java.util.List;
 /**
  * A {@link SuggestionProvider} that suggests enabling "Build without the Bytes" where applicable.
  */
-public class BuildWithoutTheBytesSuggestionProvider implements SuggestionProvider {
+public class BuildWithoutTheBytesSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME =
       BuildWithoutTheBytesSuggestionProvider.class.getName();
-  private static final String SUGGESTION_ID_BUILD_WITHOUT_THE_BYTES =
-      ANALYZER_CLASSNAME + "-BuildWithoutTheBytes";
+  private static final String SUGGESTION_ID_BUILD_WITHOUT_THE_BYTES = "BuildWithoutTheBytes";
 
   @Override
   public SuggestionOutput getSuggestions(DataManager dataManager) {
@@ -55,7 +54,7 @@ public class BuildWithoutTheBytesSuggestionProvider implements SuggestionProvide
         suggestions.add(
             SuggestionProviderUtil.createSuggestion(
                 SuggestionCategory.BAZEL_FLAGS,
-                SUGGESTION_ID_BUILD_WITHOUT_THE_BYTES,
+                createSuggestionId(SUGGESTION_ID_BUILD_WITHOUT_THE_BYTES),
                 title,
                 recommendation,
                 null,
