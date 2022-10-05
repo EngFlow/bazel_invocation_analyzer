@@ -130,17 +130,23 @@ public class BazelPhasesDataProvider extends DataProvider {
     }
 
     if (buildPhases != null) {
-      buildPhases.stream()
-          .forEach(
-              (action) -> {
-                String phaseName = action.getName();
-                try {
-                  BazelProfilePhase phase = BazelProfilePhase.parse(phaseName);
-                  startToPhase.put(action.getTimestamp(), phase);
-                } catch (IllegalArgumentException e) {
-                  logger.warning(String.format("Found unrecognized Bazel phase %s", phaseName));
-                }
-              });
+      for (InstantEvent buildPhaseMarker : buildPhases) {
+        String phaseName = buildPhaseMarker.getName();
+        try {
+          BazelProfilePhase phase = BazelProfilePhase.parse(phaseName);
+          if (startToPhase.containsKey(buildPhaseMarker.getTimestamp())) {
+            throw new InvalidProfileException(
+                String.format(
+                    "Two phase markers have the same timestamp %dμs: \"%s\" and \"%s\"",
+                    buildPhaseMarker.getTimestamp().getMicros(),
+                    phase.name,
+                    startToPhase.get(buildPhaseMarker.getTimestamp()).name));
+          }
+          startToPhase.put(buildPhaseMarker.getTimestamp(), phase);
+        } catch (IllegalArgumentException e) {
+          logger.warning(String.format("Found unrecognized Bazel phase %s", phaseName));
+        }
+      }
     }
 
     BazelPhaseDescriptions result = new BazelPhaseDescriptions();

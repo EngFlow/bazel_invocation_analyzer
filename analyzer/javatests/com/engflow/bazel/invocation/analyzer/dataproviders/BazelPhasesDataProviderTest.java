@@ -155,6 +155,37 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
+  public void getBazelPhaseDescriptionsShouldThrowWhenTwoMarkersHaveTheSameTimestamp()
+      throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                20,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                createPhaseEvents(
+                    LAUNCH_START,
+                    INIT_START,
+                    EVAL_START,
+                    DEP_START,
+                    PREP_START,
+                    DEP_START,
+                    FINISH_START,
+                    FINISH_TIME))));
+
+    InvalidProfileException invalidProfileException =
+        assertThrows(InvalidProfileException.class, () -> provider.getBazelPhaseDescriptions());
+    assertThat(invalidProfileException)
+        .hasMessageThat()
+        .contains(BazelProfilePhase.DEPENDENCIES.name);
+    assertThat(invalidProfileException).hasMessageThat().contains(BazelProfilePhase.EXECUTE.name);
+    assertThat(invalidProfileException)
+        .hasMessageThat()
+        .contains(String.valueOf(DEP_START.getMicros()));
+  }
+
+  @Test
   public void getBazelPhaseDescriptionsShouldThrowWhenLaunchPhaseIsMissing() throws Exception {
     useProfile(
         metaData(),
