@@ -18,9 +18,11 @@ import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfilePhase;
+import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import org.junit.Before;
@@ -46,7 +48,7 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void shouldReturnBazelPhaseDurations() throws Exception {
+  public void getBazelPhaseDescriptionsShouldWorkWhenAllPhasesArePresent() throws Exception {
     useProfile(
         metaData(),
         trace(
@@ -96,7 +98,145 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void shouldReturnTotalDuration() throws Exception {
+  public void getBazelPhaseDescriptionsShouldWorkWhenSomePhasesAreMissing() throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                20,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                createPhaseEvents(
+                    LAUNCH_START,
+                    INIT_START,
+                    null,
+                    null,
+                    PREP_START,
+                    null,
+                    FINISH_START,
+                    FINISH_TIME))));
+
+    BazelPhaseDescriptions descriptions = provider.getBazelPhaseDescriptions();
+    assertThat(descriptions.get(BazelProfilePhase.LAUNCH))
+        .isEqualTo(
+            new BazelPhaseDescription(
+                LAUNCH_START, TimeUtil.getDurationBetween(LAUNCH_START, INIT_START)));
+    assertThat(descriptions.get(BazelProfilePhase.INIT))
+        .isEqualTo(
+            new BazelPhaseDescription(
+                INIT_START, TimeUtil.getDurationBetween(INIT_START, PREP_START)));
+    assertThat(descriptions.get(BazelProfilePhase.PREPARE))
+        .isEqualTo(
+            new BazelPhaseDescription(
+                PREP_START, TimeUtil.getDurationBetween(PREP_START, FINISH_START)));
+    assertThat(descriptions.get(BazelProfilePhase.FINISH))
+        .isEqualTo(
+            new BazelPhaseDescription(
+                FINISH_START, TimeUtil.getDurationBetween(FINISH_START, FINISH_TIME)));
+  }
+
+  @Test
+  public void getBazelPhaseDescriptionsShouldWorkWhenAllButLaunchAndFinishPhaseAreMissing()
+      throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                20,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                createPhaseEvents(LAUNCH_START, null, null, null, null, null, null, FINISH_TIME))));
+
+    BazelPhaseDescriptions descriptions = provider.getBazelPhaseDescriptions();
+    assertThat(descriptions.get(BazelProfilePhase.FINISH))
+        .isEqualTo(
+            new BazelPhaseDescription(
+                LAUNCH_START, TimeUtil.getDurationBetween(LAUNCH_START, FINISH_TIME)));
+  }
+
+  @Test
+  public void getBazelPhaseDescriptionsShouldThrowWhenTwoMarkersHaveTheSameTimestamp()
+      throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                20,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                createPhaseEvents(
+                    LAUNCH_START,
+                    INIT_START,
+                    EVAL_START,
+                    DEP_START,
+                    PREP_START,
+                    DEP_START,
+                    FINISH_START,
+                    FINISH_TIME))));
+
+    InvalidProfileException invalidProfileException =
+        assertThrows(InvalidProfileException.class, () -> provider.getBazelPhaseDescriptions());
+    assertThat(invalidProfileException)
+        .hasMessageThat()
+        .contains(BazelProfilePhase.DEPENDENCIES.name);
+    assertThat(invalidProfileException).hasMessageThat().contains(BazelProfilePhase.EXECUTE.name);
+    assertThat(invalidProfileException)
+        .hasMessageThat()
+        .contains(String.valueOf(DEP_START.getMicros()));
+  }
+
+  @Test
+  public void getBazelPhaseDescriptionsShouldThrowWhenLaunchPhaseIsMissing() throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                20,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                createPhaseEvents(
+                    null,
+                    INIT_START,
+                    EVAL_START,
+                    DEP_START,
+                    PREP_START,
+                    EXEC_START,
+                    FINISH_START,
+                    FINISH_TIME))));
+
+    InvalidProfileException invalidProfileException =
+        assertThrows(InvalidProfileException.class, () -> provider.getBazelPhaseDescriptions());
+    assertThat(invalidProfileException).hasMessageThat().contains(BazelProfilePhase.LAUNCH.name);
+  }
+
+  @Test
+  public void getBazelPhaseDescriptionsShouldThrowWhenFinishPhaseIsMissing() throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                20,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                createPhaseEvents(
+                    LAUNCH_START,
+                    INIT_START,
+                    EVAL_START,
+                    DEP_START,
+                    PREP_START,
+                    EXEC_START,
+                    FINISH_START,
+                    null))));
+
+    InvalidProfileException invalidProfileException =
+        assertThrows(InvalidProfileException.class, () -> provider.getBazelPhaseDescriptions());
+    assertThat(invalidProfileException)
+        .hasMessageThat()
+        .contains(BazelProfileConstants.INSTANT_FINISHING);
+  }
+
+  @Test
+  public void getTotalDurationShouldWorkWhenAllPhasesArePresent() throws Exception {
     useProfile(
         metaData(),
         trace(
@@ -117,5 +257,72 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
     TotalDuration duration = provider.getTotalDuration();
     assertThat(duration.getTotalDuration())
         .isEqualTo(TimeUtil.getDurationBetween(LAUNCH_START, FINISH_TIME));
+  }
+
+  @Test
+  public void getTotalDurationShouldWorkWhenAllButLaunchAndFinishPhaseAreMissing()
+      throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                20,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                createPhaseEvents(LAUNCH_START, null, null, null, null, null, null, FINISH_TIME))));
+
+    TotalDuration duration = provider.getTotalDuration();
+    assertThat(duration.getTotalDuration())
+        .isEqualTo(TimeUtil.getDurationBetween(LAUNCH_START, FINISH_TIME));
+  }
+
+  @Test
+  public void getTotalDurationShouldThrowWhenLaunchPhasesIsMissing() throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                20,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                createPhaseEvents(
+                    null,
+                    INIT_START,
+                    EVAL_START,
+                    DEP_START,
+                    PREP_START,
+                    EXEC_START,
+                    FINISH_START,
+                    FINISH_TIME))));
+
+    InvalidProfileException invalidProfileException =
+        assertThrows(InvalidProfileException.class, () -> provider.getTotalDuration());
+    assertThat(invalidProfileException).hasMessageThat().contains(BazelProfilePhase.LAUNCH.name);
+  }
+
+  @Test
+  public void getTotalDurationShouldThrowWhenFinishingPhaseIsMissing() throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                20,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                createPhaseEvents(
+                    LAUNCH_START,
+                    INIT_START,
+                    EVAL_START,
+                    DEP_START,
+                    PREP_START,
+                    EXEC_START,
+                    FINISH_START,
+                    null))));
+
+    InvalidProfileException invalidProfileException =
+        assertThrows(InvalidProfileException.class, () -> provider.getTotalDuration());
+    assertThat(invalidProfileException)
+        .hasMessageThat()
+        .contains(BazelProfileConstants.INSTANT_FINISHING);
   }
 }

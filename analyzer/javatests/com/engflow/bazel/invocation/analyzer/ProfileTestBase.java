@@ -31,6 +31,8 @@ import com.google.devtools.build.runfiles.Runfiles;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.junit.After;
 import org.junit.BeforeClass;
@@ -112,7 +114,8 @@ public abstract class ProfileTestBase {
   }
 
   /**
-   * Create the Bazel profile events that establish the phases of invocation processing.
+   * Create the Bazel profile events that establish the phases of invocation processing. For a valid
+   * profile, at least launchStart and finishTime have to be non-null.
    *
    * @param launchStart timestamp of the Launch Blaze event
    * @param initStart timestamp of the Initialize command event
@@ -125,37 +128,73 @@ public abstract class ProfileTestBase {
    * @return array of phase marker events
    */
   protected WriteBazelProfile.ThreadEvent[] createPhaseEvents(
-      Timestamp launchStart,
-      Timestamp initStart,
-      Timestamp evalStart,
-      Timestamp depStart,
-      Timestamp prepStart,
-      Timestamp execStart,
-      Timestamp finishStart,
-      Timestamp finishTime) {
-    return new WriteBazelProfile.ThreadEvent[] {
-      complete(
-          "Launch Blaze",
-          BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
-          launchStart,
-          TimeUtil.getDurationBetween(initStart, launchStart)),
-      instant(BazelProfilePhase.INIT.name, BazelProfileConstants.CAT_BUILD_PHASE_MARKER, initStart),
-      instant(
-          BazelProfilePhase.EVALUATE.name, BazelProfileConstants.CAT_BUILD_PHASE_MARKER, evalStart),
-      instant(
-          BazelProfilePhase.DEPENDENCIES.name,
-          BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
-          depStart),
-      instant(
-          BazelProfilePhase.PREPARE.name, BazelProfileConstants.CAT_BUILD_PHASE_MARKER, prepStart),
-      instant(
-          BazelProfilePhase.EXECUTE.name, BazelProfileConstants.CAT_BUILD_PHASE_MARKER, execStart),
-      instant(
-          BazelProfilePhase.FINISH.name, BazelProfileConstants.CAT_BUILD_PHASE_MARKER, finishStart),
-      instant(
-          BazelProfileConstants.INSTANT_FINISHING,
-          BazelProfileConstants.CAT_GENERAL_INFORMATION,
-          finishTime)
-    };
+      @Nullable Timestamp launchStart,
+      @Nullable Timestamp initStart,
+      @Nullable Timestamp evalStart,
+      @Nullable Timestamp depStart,
+      @Nullable Timestamp prepStart,
+      @Nullable Timestamp execStart,
+      @Nullable Timestamp finishStart,
+      @Nullable Timestamp finishTime) {
+    List<WriteBazelProfile.ThreadEvent> threadEvents = new ArrayList<>();
+    if (launchStart != null) {
+      threadEvents.add(
+          complete(
+              BazelProfilePhase.LAUNCH.name,
+              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
+              launchStart,
+              TimeUtil.getDurationBetween(
+                  launchStart, initStart == null ? Timestamp.ofMicros(0) : initStart)));
+    }
+    if (initStart != null) {
+      threadEvents.add(
+          instant(
+              BazelProfilePhase.INIT.name,
+              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
+              initStart));
+    }
+    if (evalStart != null) {
+      threadEvents.add(
+          instant(
+              BazelProfilePhase.EVALUATE.name,
+              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
+              evalStart));
+    }
+    if (depStart != null) {
+      threadEvents.add(
+          instant(
+              BazelProfilePhase.DEPENDENCIES.name,
+              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
+              depStart));
+    }
+    if (prepStart != null) {
+      threadEvents.add(
+          instant(
+              BazelProfilePhase.PREPARE.name,
+              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
+              prepStart));
+    }
+    if (execStart != null) {
+      threadEvents.add(
+          instant(
+              BazelProfilePhase.EXECUTE.name,
+              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
+              execStart));
+    }
+    if (finishStart != null) {
+      threadEvents.add(
+          instant(
+              BazelProfilePhase.FINISH.name,
+              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
+              finishStart));
+    }
+    if (finishTime != null) {
+      threadEvents.add(
+          instant(
+              BazelProfileConstants.INSTANT_FINISHING,
+              BazelProfileConstants.CAT_GENERAL_INFORMATION,
+              finishTime));
+    }
+    return threadEvents.toArray(new WriteBazelProfile.ThreadEvent[0]);
   }
 }
