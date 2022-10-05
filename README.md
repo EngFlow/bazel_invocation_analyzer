@@ -11,7 +11,7 @@ The Bazel Invocation Analyzer can be run in a terminal. In this mode it will pri
 
 ### Usage
 
-Pass in the path of a Bazel profile on your filesystem as the first argument. Use -h or --help to show all the available options.
+Pass in the path of a Bazel profile on your filesystem as the first argument. Use `-h` or `--help` to show all the available options.
 
 ```bash
 bazel run //cli -- /path/to/bazel_profile.json.gz
