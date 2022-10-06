@@ -59,41 +59,42 @@ public class BazelProfileTest extends UnitTestBase {
 
   @Test
   public void parseCriticalPath() throws Exception {
+    var name = "CPP";
     var want =
         new ProfileThread(
             new ThreadId(1, 1),
-            "Critical Path",
+            BazelProfileConstants.THREAD_CRITICAL_PATH,
             0,
             ImmutableList.of(),
             ImmutableList.of(),
             Lists.newArrayList(
                 new CompleteEvent(
-                    "CPP",
-                    "critical path component",
+                    name,
+                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
                     Timestamp.ofMicros(11),
                     TimeUtil.getDurationForMicros(10),
                     1,
                     1,
                     ImmutableMap.of()),
                 new CompleteEvent(
-                    "CPP",
-                    "critical path component",
+                    name,
+                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
                     Timestamp.ofMicros(21),
                     TimeUtil.getDurationForMicros(10),
                     1,
                     1,
                     ImmutableMap.of()),
                 new CompleteEvent(
-                    "CPP",
-                    "critical path component",
+                    name,
+                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
                     Timestamp.ofMicros(31),
                     TimeUtil.getDurationForMicros(10),
                     1,
                     1,
                     ImmutableMap.of()),
                 new CompleteEvent(
-                    "CPP",
-                    "critical path component",
+                    name,
+                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
                     Timestamp.ofMicros(50),
                     TimeUtil.getDurationForMicros(10),
                     1,
@@ -109,13 +110,13 @@ public class BazelProfileTest extends UnitTestBase {
                 thread(
                     1,
                     0,
-                    "Critical Path",
+                    BazelProfileConstants.THREAD_CRITICAL_PATH,
                     sequence(
                         want.getCompleteEvents().stream().map(e -> e.start),
                         timestamp ->
                             complete(
-                                "CPP",
-                                "critical path component",
+                                name,
+                                BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
                                 timestamp,
                                 TimeUtil.getDurationForMicros(10))))));
 
