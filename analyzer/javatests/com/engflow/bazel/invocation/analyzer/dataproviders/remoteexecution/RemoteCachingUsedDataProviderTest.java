@@ -14,14 +14,17 @@
 
 package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
-import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.DataProviderUnitTestBase;
+import com.engflow.bazel.invocation.analyzer.time.Timestamp;
+import java.time.Duration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,30 +40,26 @@ public class RemoteCachingUsedDataProviderTest extends DataProviderUnitTestBase 
 
   @Test
   public void shouldReturnRemoteCachingUsed() throws Exception {
-    // TODO: Generate a small json with remote caching.
-    String profilePath = RUNFILES.rlocation(ROOT + "bazel-profile-with_queuing.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
-    when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                "foo",
+                complete(
+                    "bar",
+                    BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK,
+                    Timestamp.ofMicros(123),
+                    Duration.ZERO))));
 
-    RemoteCachingUsed remoteCachingUsed = provider.getRemoteCachingUsed();
-    verify(dataManager).registerProvider(provider);
-    verify(dataManager).getDatum(BazelProfile.class);
-    verifyNoMoreInteractions(dataManager);
-
-    assertThat(remoteCachingUsed.isRemoteCachingUsed()).isTrue();
+    assertThat(provider.getRemoteCachingUsed().isRemoteCachingUsed()).isTrue();
   }
 
   @Test
   public void shouldReturnRemoteCachingNotUsed() throws Exception {
-    String profilePath = RUNFILES.rlocation(ROOT + "tiny.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
-    when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
+    useProfile(metaData(), trace());
 
-    RemoteCachingUsed remoteCachingUsed = provider.getRemoteCachingUsed();
-    verify(dataManager).registerProvider(provider);
-    verify(dataManager).getDatum(BazelProfile.class);
-    verifyNoMoreInteractions(dataManager);
-
-    assertThat(remoteCachingUsed.isRemoteCachingUsed()).isFalse();
+    assertThat(provider.getRemoteCachingUsed().isRemoteCachingUsed()).isFalse();
   }
 }
