@@ -8,6 +8,7 @@ java_test(
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/core",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/dataproviders/remoteexecution",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/dataproviders/remoteexecution:types",
+        "//analyzer/java/com/engflow/bazel/invocation/analyzer/time",
         "//analyzer/javatests/com/engflow/bazel/invocation/analyzer:test_base",
         "//analyzer/javatests/com/engflow/bazel/invocation/analyzer/dataproviders:data_provider_test_base",
         "//third_party/junit",
