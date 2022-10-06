@@ -52,6 +52,11 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
   public SuggestionOutput getSuggestions(DataManager dataManager) {
     try {
       BazelPhaseDescriptions phases = dataManager.getDatum(BazelPhaseDescriptions.class);
+      if (!phases.has(BazelProfilePhase.EXECUTE)) {
+        // No execution phase found, so critical path analysis not applicable.
+        return SuggestionProviderUtil.createSuggestionOutput(ANALYZER_CLASSNAME, null, null);
+      }
+
       Duration executionDuration = phases.get(BazelProfilePhase.EXECUTE).getDuration();
       if (executionDuration.compareTo(MIN_DURATION_FOR_EVALUATION) < 0) {
         Caveat caveat =
