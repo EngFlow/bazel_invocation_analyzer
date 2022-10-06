@@ -14,48 +14,45 @@
 
 package com.engflow.bazel.invocation.analyzer.bazelprofile;
 
-import java.util.Comparator;
-import java.util.stream.Stream;
-
 public enum BazelProfilePhase {
-  LAUNCH("Launch Blaze", 0),
-  INIT("Initialize command", 1),
-  EVALUATE("Evaluate target patterns", 2),
-  DEPENDENCIES("Load and analyze dependencies", 3),
-  PREPARE("Prepare for build", 4),
-  EXECUTE("Build artifacts", 5),
-  FINISH("Complete build", 6);
+  // The order of these is important, it reflects in which order we expect the timestamps of the
+  // phases markers in the Bazel profile to be.
+  LAUNCH("Launch Blaze"),
+  INIT("Initialize command"),
+  EVALUATE("Evaluate target patterns"),
+  DEPENDENCIES("Load and analyze dependencies"),
+  PREPARE("Prepare for build"),
+  EXECUTE("Build artifacts"),
+  FINISH("Complete build");
 
   public final String name;
-  public final int order;
 
-  BazelProfilePhase(String name, int order) {
+  BazelProfilePhase(String name) {
     this.name = name;
-    this.order = order;
   }
 
   /**
-   * Returns the Bazel phase with the largest order smaller than the order of this phase.
+   * Returns the previous Bazel phase.
    *
    * @throws UnsupportedOperationException for the first phase
    */
   public BazelProfilePhase getPrevious() throws UnsupportedOperationException {
-    return Stream.of(values())
-        .filter((a) -> a.order < this.order)
-        .max(Comparator.comparingInt(a -> a.order))
-        .orElseThrow(() -> new UnsupportedOperationException());
+    if (this.ordinal() == 0) {
+      throw new UnsupportedOperationException();
+    }
+    return values()[this.ordinal() - 1];
   }
 
   /**
-   * Returns the Bazel phase with the smallest order larger than the order of this phase.
+   * Returns the next Bazel phase.
    *
    * @throws UnsupportedOperationException for the last phase
    */
   public BazelProfilePhase getNext() throws UnsupportedOperationException {
-    return Stream.of(values())
-        .filter((a) -> a.order > this.order)
-        .min(Comparator.comparingInt(a -> a.order))
-        .orElseThrow(() -> new UnsupportedOperationException());
+    if (this.ordinal() == values().length - 1) {
+      throw new UnsupportedOperationException();
+    }
+    return values()[this.ordinal() + 1];
   }
 
   public static BazelProfilePhase parse(String name) {
