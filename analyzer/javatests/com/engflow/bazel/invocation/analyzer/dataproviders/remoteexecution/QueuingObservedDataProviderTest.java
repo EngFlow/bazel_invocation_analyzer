@@ -14,14 +14,17 @@
 
 package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
-import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.DataProviderUnitTestBase;
+import com.engflow.bazel.invocation.analyzer.time.Timestamp;
+import java.time.Duration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,31 +40,26 @@ public class QueuingObservedDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void shouldReturnQueuingObserved() throws Exception {
-    // TODO: Generate a small json with queuing in both the critical path and actions that are not
-    // part of the critical path.
-    String profilePath = RUNFILES.rlocation(ROOT + "bazel-profile-with_queuing.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
-    when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                "foo",
+                complete(
+                    "bar",
+                    BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
+                    Timestamp.ofMicros(123),
+                    Duration.ZERO))));
 
-    QueuingObserved queuingObserved = provider.getQueuingObserved();
-    verify(dataManager).registerProvider(provider);
-    verify(dataManager).getDatum(BazelProfile.class);
-    verifyNoMoreInteractions(dataManager);
-
-    assertThat(queuingObserved.isQueuingObserved()).isTrue();
+    assertThat(provider.getQueuingObserved().isQueuingObserved()).isTrue();
   }
 
   @Test
   public void shouldReturnQueuingNotObserved() throws Exception {
-    String profilePath = RUNFILES.rlocation(ROOT + "tiny.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
-    when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
+    useProfile(metaData(), trace());
 
-    QueuingObserved queuingObserved = provider.getQueuingObserved();
-    verify(dataManager).registerProvider(provider);
-    verify(dataManager).getDatum(BazelProfile.class);
-    verifyNoMoreInteractions(dataManager);
-
-    assertThat(queuingObserved.isQueuingObserved()).isFalse();
+    assertThat(provider.getQueuingObserved().isQueuingObserved()).isFalse();
   }
 }

@@ -35,6 +35,10 @@ public class BazelPhaseDescriptions implements Datum {
     return phaseToDescription.get(phase);
   }
 
+  public boolean has(BazelProfilePhase phase) {
+    return phaseToDescription.containsKey(phase);
+  }
+
   public BazelPhaseDescription getOrClosestBefore(BazelProfilePhase phase) {
     if (phaseToDescription.containsKey(phase)) {
       return phaseToDescription.get(phase);

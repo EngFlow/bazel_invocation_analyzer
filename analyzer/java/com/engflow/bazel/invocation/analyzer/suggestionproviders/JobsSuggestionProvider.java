@@ -31,9 +31,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** A {@link SuggestionProvider} that provides suggestions on setting the Bazel flag `--jobs`. */
-public class JobsSuggestionProvider implements SuggestionProvider {
+public class JobsSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME = JobsSuggestionProvider.class.getName();
-  private static final String SUGGESTION_ID_UNSET_JOBS_FLAG = ANALYZER_CLASSNAME + "-UnsetJobsFlag";
+  private static final String SUGGESTION_ID_UNSET_JOBS_FLAG = "UnsetJobsFlag";
 
   @VisibleForTesting
   public static final String RATIONALE_FOR_LOCAL_TOO_HIGH_JOBS_VALUE =
@@ -89,7 +89,7 @@ public class JobsSuggestionProvider implements SuggestionProvider {
         suggestions.add(
             SuggestionProviderUtil.createSuggestion(
                 SuggestionCategory.BAZEL_FLAGS,
-                SUGGESTION_ID_UNSET_JOBS_FLAG,
+                createSuggestionId(SUGGESTION_ID_UNSET_JOBS_FLAG),
                 title,
                 recommendation,
                 null,

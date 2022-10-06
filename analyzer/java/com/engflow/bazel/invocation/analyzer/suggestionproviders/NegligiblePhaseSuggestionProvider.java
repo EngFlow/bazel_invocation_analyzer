@@ -37,11 +37,11 @@ import java.util.List;
  * evaluating the target patterns, loading and analyzing the dependencies, and executing the
  * actions.
  */
-public class NegligiblePhaseSuggestionProvider implements SuggestionProvider {
+public class NegligiblePhaseSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME =
       NegligiblePhaseSuggestionProvider.class.getName();
   private static final String SUGGESTION_ID_UNUSUAL_PHASE_DURATION_FORMAT =
-      ANALYZER_CLASSNAME + "-UnusualPhaseDuration-%s";
+      "UnusualPhaseDuration-%s";
 
   // These phases are expected to be more than a negligible percentage of the overall time
   @VisibleForTesting
@@ -93,7 +93,8 @@ public class NegligiblePhaseSuggestionProvider implements SuggestionProvider {
           suggestions.add(
               SuggestionProviderUtil.createSuggestion(
                   SuggestionCategory.OTHER,
-                  String.format(SUGGESTION_ID_UNUSUAL_PHASE_DURATION_FORMAT, phase),
+                  createSuggestionId(
+                      String.format(SUGGESTION_ID_UNUSUAL_PHASE_DURATION_FORMAT, phase)),
                   title,
                   recommendation,
                   null,
