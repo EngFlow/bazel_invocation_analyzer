@@ -14,14 +14,19 @@
 
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
+import com.engflow.bazel.invocation.analyzer.WriteBazelProfile;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfilePhase;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
+import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.google.common.collect.Sets;
+import java.time.Duration;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,22 +38,159 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
   public void setupTest() throws DuplicateProviderException {
     provider = new EstimatedCoresDataProvider();
     provider.register(dataManager);
+    new BazelPhasesDataProvider().register(dataManager);
     super.dataProvider = provider;
   }
 
+  private WriteBazelProfile.TraceEvent skyFrameThread(
+      int i, Timestamp timestamp, Duration duration) {
+    return thread(
+        i, i, String.format("skyframe-evaluator-%d", i), complete("", "", timestamp, duration));
+  }
+
   @Test
-  public void shouldReturnEstimatedCores() throws Exception {
-    // TODO: Generate a small json.
-    String profilePath = RUNFILES.rlocation(ROOT + "tiny.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
-    when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
+  public void shouldReturnEstimatedCoresAvailableAllThreadsWithinRange() throws Exception {
+    int maxIndexInRelevantPhase = 5;
+    Timestamp start = Timestamp.ofMicros(20_000);
+    Timestamp within = Timestamp.ofMicros(22_000);
+    Timestamp end = Timestamp.ofMicros(30_000);
+    useProfile(
+        metaData(),
+        trace(
+            skyFrameThread(0, start, Duration.ZERO),
+            skyFrameThread(1, end, Duration.ZERO),
+            skyFrameThread(2, within, Duration.ZERO),
+            skyFrameThread(maxIndexInRelevantPhase, within, Duration.ZERO)));
+
+    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
+    bazelPhaseDescriptions.add(
+        BazelProfilePhase.EVALUATE, new BazelPhaseDescription(start, within));
+    bazelPhaseDescriptions.add(
+        BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(within, end));
+
+    when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
+
+    EstimatedCoresAvailable estimatedCores = provider.getEstimatedCoresAvailable();
+    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(maxIndexInRelevantPhase + 1);
+  }
+
+  @Test
+  public void shouldReturnEstimatedCoresAvailableSomeThreadsWithinRange() throws Exception {
+    int maxIndexInRelevantPhase = 3;
+    Timestamp start = Timestamp.ofMicros(20_000);
+    Timestamp within = Timestamp.ofMicros(22_000);
+    Timestamp end = Timestamp.ofMicros(30_000);
+    Timestamp outsideRange = Timestamp.ofMicros(30_001);
+    useProfile(
+        metaData(),
+        trace(
+            skyFrameThread(maxIndexInRelevantPhase - 1, start, Duration.ZERO),
+            skyFrameThread(maxIndexInRelevantPhase - 2, within, Duration.ZERO),
+            skyFrameThread(maxIndexInRelevantPhase, end, Duration.ZERO),
+            skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
+
+    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
+    bazelPhaseDescriptions.add(
+        BazelProfilePhase.EVALUATE, new BazelPhaseDescription(start, within));
+    bazelPhaseDescriptions.add(
+        BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(within, end));
+
+    when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
+
+    EstimatedCoresAvailable estimatedCores = provider.getEstimatedCoresAvailable();
+    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(maxIndexInRelevantPhase + 1);
+  }
+
+  @Test
+  public void shouldReturnEstimatedCoresAvailablePhaseMarkersMissing() throws Exception {
+    int maxIndexInRelevantPhase = 3;
+    Timestamp start = Timestamp.ofMicros(20_000);
+    Timestamp within1 = Timestamp.ofMicros(22_000);
+    Timestamp within2 = Timestamp.ofMicros(28_000);
+    Timestamp end = Timestamp.ofMicros(30_000);
+    Timestamp outsideRange = Timestamp.ofMicros(30_001);
+    useProfile(
+        metaData(),
+        trace(
+            skyFrameThread(maxIndexInRelevantPhase, within1, Duration.ZERO),
+            skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
+
+    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
+    bazelPhaseDescriptions.add(BazelProfilePhase.INIT, new BazelPhaseDescription(start, within1));
+    bazelPhaseDescriptions.add(BazelProfilePhase.EXECUTE, new BazelPhaseDescription(within2, end));
+
+    when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
+
+    EstimatedCoresAvailable estimatedCores = provider.getEstimatedCoresAvailable();
+    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(maxIndexInRelevantPhase + 1);
+  }
+
+  @Test
+  public void shouldReturnEstimatedCoresUsedAllThreadsWithinRange() throws Exception {
+    Timestamp start = Timestamp.ofMicros(20_000);
+    Timestamp end = Timestamp.ofMicros(30_000);
+    useProfile(
+        metaData(),
+        trace(
+            skyFrameThread(0, start, Duration.ZERO),
+            skyFrameThread(1, start, Duration.ZERO),
+            skyFrameThread(2, start, Duration.ZERO),
+            skyFrameThread(3, start, Duration.ZERO)));
+    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
+    bazelPhaseDescriptions.add(BazelProfilePhase.EXECUTE, new BazelPhaseDescription(start, end));
+
+    when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
     EstimatedCoresUsed estimatedCores = provider.getEstimatedCoresUsed();
-    verify(dataManager).registerProvider(provider);
-    verify(dataManager).getDatum(BazelProfile.class);
-    verifyNoMoreInteractions(dataManager);
+    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(4);
+  }
 
-    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(8);
+  @Test
+  public void shouldReturnEstimatedCoresUsedSomeThreadsWithinRange() throws Exception {
+    Timestamp outsideRangeBefore = Timestamp.ofMicros(19_999);
+    Timestamp start = Timestamp.ofMicros(20_000);
+    Timestamp end = Timestamp.ofMicros(30_000);
+    Timestamp outsideRangeAfter = Timestamp.ofMicros(30_001);
+    useProfile(
+        metaData(),
+        trace(
+            skyFrameThread(0, outsideRangeAfter, Duration.ZERO),
+            skyFrameThread(1, start, Duration.ZERO),
+            skyFrameThread(2, start, Duration.ZERO),
+            skyFrameThread(3, outsideRangeBefore, Duration.ZERO)));
+    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
+    bazelPhaseDescriptions.add(BazelProfilePhase.EXECUTE, new BazelPhaseDescription(start, end));
+
+    when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
+
+    EstimatedCoresUsed estimatedCores = provider.getEstimatedCoresUsed();
+    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(2);
+  }
+
+  @Test
+  public void shouldReturnEstimatedCoresUsedExecutePhaseMarkerMissing() throws Exception {
+    Timestamp outsideRangeBefore = Timestamp.ofMicros(19_999);
+    Timestamp start = Timestamp.ofMicros(20_000);
+    Timestamp within1 = Timestamp.ofMicros(22_000);
+    Timestamp within2 = Timestamp.ofMicros(28_000);
+    Timestamp end = Timestamp.ofMicros(30_000);
+    Timestamp outsideRangeAfter = Timestamp.ofMicros(30_001);
+    useProfile(
+        metaData(),
+        trace(
+            skyFrameThread(0, outsideRangeBefore, Duration.ZERO),
+            skyFrameThread(1, within2, Duration.ZERO),
+            skyFrameThread(2, outsideRangeAfter, Duration.ZERO),
+            skyFrameThread(3, within1, Duration.ZERO)));
+    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
+    bazelPhaseDescriptions.add(
+        BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(start, within1));
+    bazelPhaseDescriptions.add(BazelProfilePhase.FINISH, new BazelPhaseDescription(within2, end));
+
+    when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
+
+    EstimatedCoresUsed estimatedCores = provider.getEstimatedCoresUsed();
+    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(2);
   }
 
   @Test

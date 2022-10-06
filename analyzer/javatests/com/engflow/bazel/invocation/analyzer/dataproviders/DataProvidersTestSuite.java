@@ -21,6 +21,8 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
   ActionStatsDataProviderTest.class,
   BazelPhasesDataProviderTest.class,
+  BazelPhaseDescriptionsTest.class,
+  BazelProfilePhaseTest.class,
   CriticalPathDurationDataProviderTest.class,
   EstimatedCoresDataProviderTest.class,
   GarbageCollectionStatsDataProviderTest.class,

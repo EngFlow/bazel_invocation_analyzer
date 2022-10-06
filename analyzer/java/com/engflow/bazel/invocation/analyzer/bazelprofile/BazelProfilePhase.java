@@ -15,6 +15,8 @@
 package com.engflow.bazel.invocation.analyzer.bazelprofile;
 
 public enum BazelProfilePhase {
+  // The order of these is important, it reflects in which order we expect the timestamps of the
+  // phases markers in the Bazel profile to be.
   LAUNCH("Launch Blaze"),
   INIT("Initialize command"),
   EVALUATE("Evaluate target patterns"),
@@ -27,6 +29,30 @@ public enum BazelProfilePhase {
 
   BazelProfilePhase(String name) {
     this.name = name;
+  }
+
+  /**
+   * Returns the previous Bazel phase.
+   *
+   * @throws UnsupportedOperationException for the first phase
+   */
+  public BazelProfilePhase getPrevious() throws UnsupportedOperationException {
+    if (this.ordinal() == 0) {
+      throw new UnsupportedOperationException();
+    }
+    return values()[this.ordinal() - 1];
+  }
+
+  /**
+   * Returns the next Bazel phase.
+   *
+   * @throws UnsupportedOperationException for the last phase
+   */
+  public BazelProfilePhase getNext() throws UnsupportedOperationException {
+    if (this.ordinal() == values().length - 1) {
+      throw new UnsupportedOperationException();
+    }
+    return values()[this.ordinal() + 1];
   }
 
   public static BazelProfilePhase parse(String name) {

@@ -398,7 +398,6 @@ public class WriteBazelProfile {
             @Override
             public void json(UncheckWrite block) {
               try {
-                System.out.printf("Writing to json %s\n", block);
                 block.writeTo(writer);
               } catch (IOException e) {
                 throw new RuntimeException(e);
