@@ -57,11 +57,12 @@ public class CriticalPathQueuingDurationDataProvider extends DataProvider {
     // Given the matching event, find a queuing event with the same tid and pid that fits
     // within the time interval.
     Set<CompleteEvent> criticalPathEventsInThreads = new HashSet<>();
-    if (bazelProfile.getCriticalPath() == null) {
+    if (bazelProfile.getCriticalPath().isEmpty()) {
       return null;
     }
     bazelProfile
         .getCriticalPath()
+        .get()
         .getCompleteEvents()
         .forEach(
             (criticalPathEvent) -> {

@@ -120,6 +120,6 @@ public class BazelProfileTest extends UnitTestBase {
                                 timestamp,
                                 TimeUtil.getDurationForMicros(10))))));
 
-    assertThat(profile.getCriticalPath()).isEqualTo(want);
+    assertThat(profile.getCriticalPath().get()).isEqualTo(want);
   }
 }
