@@ -14,15 +14,22 @@
 
 package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.concat;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
-import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.DataProviderUnitTestBase;
+import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
+import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,32 +44,215 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
   }
 
   @Test
-  public void shouldReturnNonZeroQueuingDuration() throws Exception {
-    // TODO: Generate a small json with queuing in both the critical path and actions that are not
-    // part of the critical path.
-    String profilePath = RUNFILES.rlocation(ROOT + "bazel-profile-with_queuing.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
-    when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
+  public void shouldReturnQueuingDurationWhenTimestampsMatch() throws Exception {
+    List<Integer> microseconds = List.of(1_000, 20_000, 300);
+    String evaluatorThreadActionNameFormat = "some random action %d";
+    String criticalPathThreadActionNameFormat = "action 'some random action %d'";
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                BazelProfileConstants.THREAD_CRITICAL_PATH,
+                sequence(
+                    microseconds.stream(),
+                    (m) ->
+                        complete(
+                            String.format(criticalPathThreadActionNameFormat, m),
+                            BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                            Timestamp.ofMicros(m),
+                            Duration.of(m, ChronoUnit.MICROS)))),
+            thread(
+                1,
+                1,
+                "some thread",
+                concat(
+                    sequence(
+                        microseconds.stream(),
+                        m ->
+                            complete(
+                                String.format(evaluatorThreadActionNameFormat, m),
+                                BazelProfileConstants.CAT_ACTION_PROCESSING,
+                                Timestamp.ofMicros(m),
+                                Duration.of(m, ChronoUnit.MICROS))),
+                    sequence(
+                        microseconds.stream(),
+                        m ->
+                            complete(
+                                String.format(evaluatorThreadActionNameFormat, m),
+                                BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
+                                Timestamp.ofMicros(m),
+                                Duration.of(m / 10, ChronoUnit.MICROS)))))));
 
-    CriticalPathQueuingDuration queuing = provider.getCriticalPathQueuingDuration();
-    verify(dataManager).registerProvider(provider);
-    verify(dataManager).getDatum(BazelProfile.class);
-    verifyNoMoreInteractions(dataManager);
-
-    assertThat(queuing.getCriticalPathQueuingDuration()).isGreaterThan(Duration.ZERO);
+    Duration totalQueueing =
+        microseconds.stream()
+            .map(m -> Duration.of(m / 10, ChronoUnit.MICROS))
+            .reduce(Duration.ZERO, Duration::plus);
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
+        .isEqualTo(totalQueueing);
   }
 
   @Test
-  public void shouldReturnZeroQueuingDuration() throws Exception {
-    String profilePath = RUNFILES.rlocation(ROOT + "tiny.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
-    when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
+  public void shouldReturnQueuingDurationWhenTimestampsAlmostMatch() throws Exception {
+    List<Integer> microseconds = List.of(1_030, 20_010, 380);
+    long mod = TimeUtil.getMicros(Timestamp.ACCEPTABLE_DIVERGENCE);
+    String evaluatorThreadActionNameFormat = "some random action %d";
+    String criticalPathThreadActionNameFormat = "action 'some random action %d'";
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                BazelProfileConstants.THREAD_CRITICAL_PATH,
+                sequence(
+                    microseconds.stream(),
+                    (m) ->
+                        complete(
+                            String.format(criticalPathThreadActionNameFormat, m),
+                            BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                            // Vary the timestamp of the critical path event compared to the
+                            // action processing events.
+                            Timestamp.ofMicros(m % mod > 50 ? m + m % mod : m - m % mod),
+                            Duration.of(m, ChronoUnit.MICROS)))),
+            thread(
+                1,
+                1,
+                "some thread",
+                concat(
+                    sequence(
+                        microseconds.stream(),
+                        m ->
+                            complete(
+                                String.format(evaluatorThreadActionNameFormat, m),
+                                BazelProfileConstants.CAT_ACTION_PROCESSING,
+                                Timestamp.ofMicros(m),
+                                Duration.of(m, ChronoUnit.MICROS))),
+                    sequence(
+                        microseconds.stream(),
+                        m ->
+                            complete(
+                                String.format(evaluatorThreadActionNameFormat, m),
+                                BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
+                                Timestamp.ofMicros(m),
+                                Duration.of(m / 10, ChronoUnit.MICROS)))))));
 
-    CriticalPathQueuingDuration queuing = provider.getCriticalPathQueuingDuration();
-    verify(dataManager).registerProvider(provider);
-    verify(dataManager).getDatum(BazelProfile.class);
-    verifyNoMoreInteractions(dataManager);
+    Duration totalQueueing =
+        microseconds.stream()
+            .map(m -> Duration.of(m / 10, ChronoUnit.MICROS))
+            .reduce(Duration.ZERO, Duration::plus);
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
+        .isEqualTo(totalQueueing);
+  }
 
-    assertThat(queuing.getCriticalPathQueuingDuration()).isEqualTo(Duration.ZERO);
+  @Test
+  public void shouldNotIncludeQueuingDurationWhenTimestampsDifferTooMuch() throws Exception {
+    List<Integer> microseconds = List.of(1_030, 20_010, 380);
+    long divergence = TimeUtil.getMicros(Timestamp.ACCEPTABLE_DIVERGENCE) + 1;
+    String evaluatorThreadActionNameFormat = "some random action %d";
+    String criticalPathThreadActionNameFormat = "action 'some random action %d'";
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                BazelProfileConstants.THREAD_CRITICAL_PATH,
+                sequence(
+                    microseconds.stream(),
+                    (m) ->
+                        complete(
+                            String.format(criticalPathThreadActionNameFormat, m),
+                            BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                            // Vary the timestamp of the critical path event compared to the
+                            // action processing events.
+                            Timestamp.ofMicros(m > 1000 ? m - divergence : m + divergence),
+                            Duration.of(m, ChronoUnit.MICROS)))),
+            thread(
+                1,
+                1,
+                "some thread",
+                concat(
+                    sequence(
+                        microseconds.stream(),
+                        m ->
+                            complete(
+                                String.format(evaluatorThreadActionNameFormat, m),
+                                BazelProfileConstants.CAT_ACTION_PROCESSING,
+                                Timestamp.ofMicros(m),
+                                Duration.of(m, ChronoUnit.MICROS))),
+                    sequence(
+                        microseconds.stream(),
+                        m ->
+                            complete(
+                                String.format(evaluatorThreadActionNameFormat, m),
+                                BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
+                                Timestamp.ofMicros(m),
+                                Duration.of(m / 10, ChronoUnit.MICROS)))))));
+
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
+        .isEqualTo(Duration.ZERO);
+  }
+
+  @Test
+  public void shouldNotIncludeQueuingDurationWhenNamesDiffer() throws Exception {
+    List<Integer> microseconds = List.of(1_000, 20_000, 300);
+    String evaluatorThreadActionNameFormat = "some random action %d";
+    String criticalPathThreadActionNameFormat = "action 'some other action %d'";
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                BazelProfileConstants.THREAD_CRITICAL_PATH,
+                sequence(
+                    microseconds.stream(),
+                    (m) ->
+                        complete(
+                            String.format(criticalPathThreadActionNameFormat, m),
+                            BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                            Timestamp.ofMicros(m),
+                            Duration.of(m, ChronoUnit.MICROS)))),
+            thread(
+                1,
+                1,
+                "some thread",
+                concat(
+                    sequence(
+                        microseconds.stream(),
+                        m ->
+                            complete(
+                                String.format(evaluatorThreadActionNameFormat, m),
+                                BazelProfileConstants.CAT_ACTION_PROCESSING,
+                                Timestamp.ofMicros(m),
+                                Duration.of(m, ChronoUnit.MICROS))),
+                    sequence(
+                        microseconds.stream(),
+                        m ->
+                            complete(
+                                String.format(evaluatorThreadActionNameFormat, m),
+                                BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
+                                Timestamp.ofMicros(m),
+                                Duration.of(m / 10, ChronoUnit.MICROS)))))));
+
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
+        .isEqualTo(Duration.ZERO);
+  }
+
+  @Test
+  public void shouldReturnZeroQueuingDurationWhenCriticalPathIsEmpty() throws Exception {
+    useProfile(metaData(), trace(thread(0, 0, BazelProfileConstants.THREAD_CRITICAL_PATH)));
+
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
+        .isEqualTo(Duration.ZERO);
+  }
+
+  @Test
+  public void shouldBeNullWhenCriticalPathIsMissing() throws Exception {
+    useProfile(metaData(), trace());
+
+    assertThat(provider.getCriticalPathQueuingDuration()).isNull();
   }
 }

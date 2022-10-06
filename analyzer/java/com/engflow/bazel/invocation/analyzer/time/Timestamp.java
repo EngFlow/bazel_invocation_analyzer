@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 public class Timestamp implements Comparable<Timestamp> {
   // When matching critical path events to events in the actual threads, timestamps and durations
   // do not match up entirely. Accept a difference of up to 1ms.
-  @VisibleForTesting static final Duration ACCEPTABLE_DIVERGENCE = Duration.ofMillis(1);
+  @VisibleForTesting public static final Duration ACCEPTABLE_DIVERGENCE = Duration.ofMillis(1);
 
   private final long timestampInMicros;
 

@@ -64,11 +64,15 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
             ANALYZER_CLASSNAME, null, List.of(caveat));
       }
 
-      Duration criticalPathDuration =
-          dataManager.getDatum(CriticalPathDuration.class).getCriticalPathDuration();
+      CriticalPathDuration criticalPathDurationDatum =
+          dataManager.getDatum(CriticalPathDuration.class);
+      if (criticalPathDurationDatum == null) {
+        // We cannot make any suggestions if we have no data about the critical path.
+        return SuggestionProviderUtil.createSuggestionOutput(ANALYZER_CLASSNAME, null, null);
+      }
+      Duration criticalPathDuration = criticalPathDurationDatum.getCriticalPathDuration();
       if (executionDuration.compareTo(criticalPathDuration) < 0) {
         // Execution phase shorter than critical path.
-        // TODO: Should this throw an Exception instead?
         Caveat caveat =
             SuggestionProviderUtil.createCaveat(
                 "The provided Bazel profile seems to have invalid data. The critical path takes"

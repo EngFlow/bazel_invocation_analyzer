@@ -118,7 +118,7 @@ public class BazelProfile implements Datum {
     return threads.values().stream()
         .filter(t -> BazelProfileConstants.THREAD_CRITICAL_PATH.equals(t.getName()))
         .findAny()
-        .get();
+        .orElse(null);
   }
 
   public ProfileThread getMainThread() {

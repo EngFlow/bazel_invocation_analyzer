@@ -14,15 +14,18 @@
 
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
-import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
+import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
+import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,17 +41,29 @@ public class CriticalPathDurationDataProviderTest extends DataProviderUnitTestBa
 
   @Test
   public void shouldReturnCriticalPathDuration() throws Exception {
-    // TODO: Generate a small json.
-    String profilePath = RUNFILES.rlocation(ROOT + "tiny.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
-    when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
+    Duration[] durations = {Duration.ofMillis(12), Duration.ofMillis(234), Duration.ofMillis(5)};
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                BazelProfileConstants.THREAD_CRITICAL_PATH,
+                sequence(
+                    Stream.of(durations),
+                    (duration) ->
+                        complete(
+                            "some action", "some category", Timestamp.ofMicros(0), duration)))));
 
-    CriticalPathDuration duration = provider.getCriticalPathDuration();
-    verify(dataManager).registerProvider(provider);
-    verify(dataManager).getDatum(BazelProfile.class);
-    verifyNoMoreInteractions(dataManager);
+    Duration totalDuration = Stream.of(durations).reduce(Duration.ZERO, Duration::plus);
+    assertThat(provider.getCriticalPathDuration().getCriticalPathDuration())
+        .isEqualTo(totalDuration);
+  }
 
-    assertThat(duration.getCriticalPathDuration().truncatedTo(ChronoUnit.SECONDS))
-        .isEqualTo(Duration.ofSeconds(13));
+  @Test
+  public void shouldBeNullWhenCriticalPathIsMissing() throws Exception {
+    useProfile(metaData(), trace());
+
+    assertThat(provider.getCriticalPathDuration()).isNull();
   }
 }

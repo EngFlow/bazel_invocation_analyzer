@@ -48,12 +48,10 @@ public class QueuingSuggestionProvider extends SuggestionProviderBase {
       if (hasQueuing) {
         Duration totalQueuingDuration =
             dataManager.getDatum(TotalQueuingDuration.class).getTotalQueuingDuration();
-        Duration criticalPathQueuingDuration =
-            dataManager
-                .getDatum(CriticalPathQueuingDuration.class)
-                .getCriticalPathQueuingDuration();
-        Duration criticalPathDuration =
-            dataManager.getDatum(CriticalPathDuration.class).getCriticalPathDuration();
+        CriticalPathQueuingDuration criticalPathQueuingDuration =
+            dataManager.getDatum(CriticalPathQueuingDuration.class);
+        CriticalPathDuration criticalPathDuration =
+            dataManager.getDatum(CriticalPathDuration.class);
 
         String title = "Increase the remote execution cluster size";
         String recommendation =
@@ -61,24 +59,28 @@ public class QueuingSuggestionProvider extends SuggestionProviderBase {
                 + " consider increasing the number of workers to avoid queuing and review"
                 + " the cluster's autoscaling settings.";
         PotentialImprovement potentialImprovement = null;
-        if (!criticalPathQueuingDuration.isZero()) {
+        if (criticalPathQueuingDuration != null
+            && !criticalPathQueuingDuration.getCriticalPathQueuingDuration().isZero()
+            && criticalPathDuration != null
+            && !criticalPathDuration.getCriticalPathDuration().isZero()) {
+          Duration queuing = criticalPathQueuingDuration.getCriticalPathQueuingDuration();
+          Duration criticalPath = criticalPathDuration.getCriticalPathDuration();
           Duration totalDuration = dataManager.getDatum(TotalDuration.class).getTotalDuration();
           double invocationDurationReductionPercentage =
-              100 * criticalPathQueuingDuration.toMillis() / (double) totalDuration.toMillis();
+              100 * queuing.toMillis() / (double) totalDuration.toMillis();
           potentialImprovement =
               SuggestionProviderUtil.createPotentialImprovement(
                   String.format(
                       Locale.US,
                       "The critical path includes queuing for %s. Without queuing it could be"
                           + " reduced by %.2f%%, from %s to %s.",
-                      DurationUtil.formatDuration(criticalPathQueuingDuration),
+                      DurationUtil.formatDuration(queuing),
                       100
                           * (1
-                              - criticalPathDuration.minus(criticalPathQueuingDuration).toMillis()
-                                  / (double) criticalPathDuration.toMillis()),
-                      DurationUtil.formatDuration(criticalPathDuration),
-                      DurationUtil.formatDuration(
-                          criticalPathDuration.minus(criticalPathQueuingDuration))),
+                              - criticalPath.minus(queuing).toMillis()
+                                  / (double) criticalPath.toMillis()),
+                      DurationUtil.formatDuration(criticalPath),
+                      DurationUtil.formatDuration(criticalPath.minus(queuing))),
                   invocationDurationReductionPercentage);
         }
         String rationale =

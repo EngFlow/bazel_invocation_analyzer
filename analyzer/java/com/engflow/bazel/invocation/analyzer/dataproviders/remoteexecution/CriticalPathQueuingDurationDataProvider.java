@@ -39,9 +39,6 @@ import java.util.regex.Pattern;
  */
 public class CriticalPathQueuingDurationDataProvider extends DataProvider {
   private static final Pattern CRITICAL_PATH_TO_EVENT_NAME = Pattern.compile("^action '(.*)'$");
-  // When matching critical path events to events in the actual threads, timestamps and durations
-  // do not match up entirely. Accept a difference of up to 1ms.
-  private static final int ACCEPTABLE_DIVERGENCE_IN_MICROS = 1000;
 
   @Override
   public List<DatumSupplierSpecification<?>> getSuppliers() {
@@ -60,6 +57,9 @@ public class CriticalPathQueuingDurationDataProvider extends DataProvider {
     // Given the matching event, find a queuing event with the same tid and pid that fits
     // within the time interval.
     Set<CompleteEvent> criticalPathEventsInThreads = new HashSet<>();
+    if (bazelProfile.getCriticalPath() == null) {
+      return null;
+    }
     bazelProfile
         .getCriticalPath()
         .getCompleteEvents()

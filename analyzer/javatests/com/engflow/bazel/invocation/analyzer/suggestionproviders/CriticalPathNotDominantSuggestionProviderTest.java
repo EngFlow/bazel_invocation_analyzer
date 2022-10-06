@@ -71,6 +71,24 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
   }
 
   @Test
+  public void shouldNotReturnSuggestionIfCriticalPathDurationIsMissing() throws Exception {
+    phases.add(
+        BazelProfilePhase.EXECUTE,
+        new BazelPhaseDescription(Timestamp.ofMicros(0), Timestamp.ofSeconds(100)));
+    criticalPathDuration = null;
+
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+    verify(dataManager).getDatum(BazelPhaseDescriptions.class);
+    verify(dataManager).getDatum(CriticalPathDuration.class);
+    verifyNoMoreInteractions(dataManager);
+
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(CriticalPathNotDominantSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+  }
+
+  @Test
   public void shouldNotReturnSuggestionForTooShortExecutionPhase() throws Exception {
     phases.add(
         BazelProfilePhase.EXECUTE,
