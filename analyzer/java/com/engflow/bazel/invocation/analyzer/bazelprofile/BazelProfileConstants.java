@@ -27,6 +27,7 @@ public class BazelProfileConstants {
   // Category names
   public static final String CAT_ACTION_PROCESSING = "action processing";
   public static final String CAT_BUILD_PHASE_MARKER = "build phase marker";
+  public static final String CAT_CRITICAL_PATH_COMPONENT = "critical path component";
   public static final String CAT_GARBAGE_COLLECTION = "gc notification";
   public static final String CAT_GENERAL_INFORMATION = "general information";
   public static final String CAT_REMOTE_ACTION_CACHE_CHECK = "remote action cache check";

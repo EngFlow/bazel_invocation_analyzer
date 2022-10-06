@@ -60,13 +60,43 @@ public class QueuingSuggestionProviderTest extends SuggestionProviderUnitTestBas
   }
 
   @Test
-  public void shouldReturnSuggestionForInvocationWithQueuing() throws Exception {
+  public void shouldReturnSuggestionForInvocationWithQueuing() {
     Duration totalQueuing = Duration.ofSeconds(10);
     Duration criticalPathQueuing = Duration.ofSeconds(2);
     Duration criticalPath = Duration.ofSeconds(6);
     totalQueuingDuration = new TotalQueuingDuration(totalQueuing);
     criticalPathQueuingDuration = new CriticalPathQueuingDuration(criticalPathQueuing);
     criticalPathDuration = new CriticalPathDuration(criticalPath);
+
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(QueuingSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.getSuggestionList().size()).isEqualTo(1);
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+  }
+
+  @Test
+  public void shouldReturnSuggestionForInvocationWithoutQueuingInCriticalPath() {
+    Duration totalQueuing = Duration.ofSeconds(10);
+    Duration criticalPathQueuing = Duration.ZERO;
+    Duration criticalPath = Duration.ofSeconds(6);
+    totalQueuingDuration = new TotalQueuingDuration(totalQueuing);
+    criticalPathQueuingDuration = new CriticalPathQueuingDuration(criticalPathQueuing);
+    criticalPathDuration = new CriticalPathDuration(criticalPath);
+
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(QueuingSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.getSuggestionList().size()).isEqualTo(1);
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+  }
+
+  @Test
+  public void shouldReturnSuggestionForInvocationWithoutCriticalPath() {
+    Duration totalQueuing = Duration.ofSeconds(10);
+    totalQueuingDuration = new TotalQueuingDuration(totalQueuing);
+    criticalPathQueuingDuration = null;
+    criticalPathDuration = null;
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getAnalyzerClassname())

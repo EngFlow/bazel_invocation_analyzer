@@ -34,6 +34,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipException;
@@ -114,11 +115,10 @@ public class BazelProfile implements Datum {
     return threads.values().stream();
   }
 
-  public ProfileThread getCriticalPath() {
+  public Optional<ProfileThread> getCriticalPath() {
     return threads.values().stream()
         .filter(t -> BazelProfileConstants.THREAD_CRITICAL_PATH.equals(t.getName()))
-        .findAny()
-        .get();
+        .findAny();
   }
 
   public ProfileThread getMainThread() {
@@ -159,11 +159,11 @@ public class BazelProfile implements Datum {
   @Override
   public String getSummary() {
     StringBuilder sb = new StringBuilder();
-    ProfileThread criticalPath = getCriticalPath();
-    if (!criticalPath.getCompleteEvents().isEmpty()) {
+    Optional<ProfileThread> criticalPath = getCriticalPath();
+    if (criticalPath.isPresent() && !criticalPath.get().getCompleteEvents().isEmpty()) {
       String durationHeading = "Duration";
       Integer maxFormattedDurationLength =
-          criticalPath.getCompleteEvents().stream()
+          criticalPath.get().getCompleteEvents().stream()
               .map(event -> DurationUtil.formatDuration(event.duration).length())
               .max(Integer::compareTo)
               .orElse(0)
@@ -173,7 +173,7 @@ public class BazelProfile implements Datum {
       sb.append("CriticalPath:\n");
       sb.append(String.format(format, durationHeading, "Description"));
       String entryFormat = "\n" + format;
-      criticalPath.getCompleteEvents().stream()
+      criticalPath.get().getCompleteEvents().stream()
           .forEach(
               event -> {
                 sb.append(
