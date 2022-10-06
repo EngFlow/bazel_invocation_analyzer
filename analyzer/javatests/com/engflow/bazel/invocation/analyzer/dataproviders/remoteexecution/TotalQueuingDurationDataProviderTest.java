@@ -14,15 +14,22 @@
 
 package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.DataProviderUnitTestBase;
+import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
+import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,31 +45,38 @@ public class TotalQueuingDurationDataProviderTest extends DataProviderUnitTestBa
 
   @Test
   public void shouldReturnNonZeroQueuingDuration() throws Exception {
-    // TODO: Generate a small json with queuing in both the critical path and actions that are not
-    // part of the critical path.
-    String profilePath = RUNFILES.rlocation(ROOT + "bazel-profile-with_queuing.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
-    when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
+    Duration[] durations = {Duration.ofMillis(123), Duration.ofMillis(432), Duration.ofMillis(8)};
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                "foo",
+                sequence(
+                    Stream.of(durations),
+                    (duration) ->
+                        complete(
+                            "bar",
+                            BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
+                            Timestamp.ofMicros(0),
+                            duration)))));
 
-    TotalQueuingDuration queuing = provider.getTotalQueuingDuration();
-    verify(dataManager).registerProvider(provider);
-    verify(dataManager).getDatum(BazelProfile.class);
-    verifyNoMoreInteractions(dataManager);
-
-    assertThat(queuing.getTotalQueuingDuration()).isGreaterThan(Duration.ZERO);
+    Duration totalDuration = Stream.of(durations).reduce(Duration.ZERO, Duration::plus);
+    assertThat(provider.getTotalQueuingDuration().getTotalQueuingDuration())
+        .isEqualTo(totalDuration);
   }
 
   @Test
   public void shouldReturnZeroQueuingDuration() throws Exception {
-    String profilePath = RUNFILES.rlocation(ROOT + "tiny.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
-    when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
+    useProfile(metaData(), trace());
 
     TotalQueuingDuration queuing = provider.getTotalQueuingDuration();
     verify(dataManager).registerProvider(provider);
     verify(dataManager).getDatum(BazelProfile.class);
     verifyNoMoreInteractions(dataManager);
 
-    assertThat(queuing.getTotalQueuingDuration()).isEqualTo(Duration.ZERO);
+    assertThat(provider.getTotalQueuingDuration().getTotalQueuingDuration())
+        .isEqualTo(Duration.ZERO);
   }
 }
