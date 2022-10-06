@@ -14,14 +14,17 @@
 
 package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
-import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.DataProviderUnitTestBase;
+import com.engflow.bazel.invocation.analyzer.time.Timestamp;
+import java.time.Duration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,31 +39,82 @@ public class RemoteExecutionUsedDataProviderTest extends DataProviderUnitTestBas
   }
 
   @Test
-  public void shouldReturnRemoteExecutionUsed() throws Exception {
-    // TODO: Generate a small json with remote execution.
-    String profilePath = RUNFILES.rlocation(ROOT + "bazel-profile-with_queuing.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
-    when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
+  public void shouldReturnRemoteExecutionUsedOnRemoteExecutionProcessWallTime() throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                "foo",
+                complete(
+                    "bar",
+                    BazelProfileConstants.CAT_REMOTE_EXECUTION_PROCESS_WALL_TIME,
+                    Timestamp.ofMicros(123),
+                    Duration.ZERO))));
 
-    RemoteExecutionUsed remoteExecutionUsed = provider.getRemoteExecutionUsed();
-    verify(dataManager).registerProvider(provider);
-    verify(dataManager).getDatum(BazelProfile.class);
-    verifyNoMoreInteractions(dataManager);
-
-    assertThat(remoteExecutionUsed.isRemoteExecutionUsed()).isTrue();
+    assertThat(provider.getRemoteExecutionUsed().isRemoteExecutionUsed()).isTrue();
   }
 
   @Test
-  public void shouldReturnRemoteExecutionNotUsed() throws Exception {
-    String profilePath = RUNFILES.rlocation(ROOT + "tiny.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
-    when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
+  public void shouldReturnRemoteExecutionUsedOnRemoteExecutionQueuingTime() throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                "foo",
+                complete(
+                    "bar",
+                    BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
+                    Timestamp.ofMicros(123),
+                    Duration.ZERO))));
 
-    RemoteExecutionUsed remoteExecutionUsed = provider.getRemoteExecutionUsed();
-    verify(dataManager).registerProvider(provider);
-    verify(dataManager).getDatum(BazelProfile.class);
-    verifyNoMoreInteractions(dataManager);
+    assertThat(provider.getRemoteExecutionUsed().isRemoteExecutionUsed()).isTrue();
+  }
 
-    assertThat(remoteExecutionUsed.isRemoteExecutionUsed()).isFalse();
+  @Test
+  public void shouldReturnRemoteExecutionUsedOnRemoteExecutionSetup() throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                "foo",
+                complete(
+                    "bar",
+                    BazelProfileConstants.CAT_REMOTE_EXECUTION_SETUP,
+                    Timestamp.ofMicros(123),
+                    Duration.ZERO))));
+
+    assertThat(provider.getRemoteExecutionUsed().isRemoteExecutionUsed()).isTrue();
+  }
+
+  @Test
+  public void shouldReturnRemoteExecutionNotUsedForEmptyProfile() throws Exception {
+    useProfile(metaData(), trace());
+
+    assertThat(provider.getRemoteExecutionUsed().isRemoteExecutionUsed()).isFalse();
+  }
+
+  @Test
+  public void shouldReturnRemoteExecutionNotUsedForProfileWithOnlyRemoteExecutionUploadTime()
+      throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                "foo",
+                complete(
+                    "bar",
+                    BazelProfileConstants.CAT_REMOTE_EXECUTION_UPLOAD_TIME,
+                    Timestamp.ofMicros(123),
+                    Duration.ZERO))));
+
+    assertThat(provider.getRemoteExecutionUsed().isRemoteExecutionUsed()).isFalse();
   }
 }
