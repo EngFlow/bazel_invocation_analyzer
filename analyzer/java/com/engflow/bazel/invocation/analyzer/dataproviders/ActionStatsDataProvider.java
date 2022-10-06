@@ -38,6 +38,9 @@ public class ActionStatsDataProvider extends DataProvider {
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
     var actionCounts =
         bazelProfile.getMainThread().getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT);
+    if (actionCounts == null) {
+      return new ActionStats(List.of());
+    }
 
     var coreCount = getDataManager().getDatum(EstimatedCoresUsed.class).getEstimatedCores();
 

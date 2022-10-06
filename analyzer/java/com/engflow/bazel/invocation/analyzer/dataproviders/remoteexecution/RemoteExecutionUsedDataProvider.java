@@ -47,8 +47,10 @@ public class RemoteExecutionUsedDataProvider extends DataProvider {
             .flatMap((thread) -> thread.getCompleteEvents().stream())
             .anyMatch(
                 (event) ->
-                    BazelProfileConstants.CAT_REMOTE_EXECUTION_UPLOAD_TIME.equals(event.category)
+                    BazelProfileConstants.CAT_REMOTE_EXECUTION_SETUP.equals(event.category)
                         || BazelProfileConstants.CAT_REMOTE_EXECUTION_PROCESS_WALL_TIME.equals(
+                            event.category)
+                        || BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME.equals(
                             event.category)));
   }
 }

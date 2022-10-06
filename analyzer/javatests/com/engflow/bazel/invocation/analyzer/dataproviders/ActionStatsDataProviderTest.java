@@ -46,6 +46,13 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
+  public void shouldReturnNoBottlenecksOnEmptyProfile()
+      throws DuplicateProviderException, MissingInputException, InvalidProfileException {
+    useProfile(metaData(), trace(thread(0, 0, BazelProfileConstants.THREAD_MAIN)));
+    assertThat(provider.getActionStats().bottlenecks).isEmpty();
+  }
+
+  @Test
   public void shouldCaptureBottleneckRunningSingleAction()
       throws DuplicateProviderException, MissingInputException, InvalidProfileException {
     useCoreCount(4);

@@ -34,6 +34,11 @@ public class BazelProfileConstants {
   public static final String CAT_REMOTE_EXECUTION_PROCESS_WALL_TIME =
       "Remote execution process wall time";
   public static final String CAT_REMOTE_EXECUTION_QUEUING_TIME = "Remote execution queuing time";
+  public static final String CAT_REMOTE_EXECUTION_SETUP = "Remote execution setup";
+  /**
+   * This event does not necessarily imply remote execution was enabled. For example, it is also
+   * reported when setting the Bazel flag `--disk_cache`.
+   */
   public static final String CAT_REMOTE_EXECUTION_UPLOAD_TIME = "Remote execution upload time";
 
   // CompleteEvent names

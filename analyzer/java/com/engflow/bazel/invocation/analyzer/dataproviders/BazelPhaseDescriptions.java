@@ -35,6 +35,10 @@ public class BazelPhaseDescriptions implements Datum {
     return phaseToDescription.get(phase);
   }
 
+  public boolean has(BazelProfilePhase phase) {
+    return phaseToDescription.containsKey(phase);
+  }
+
   @Override
   public String getDescription() {
     return "The Bazel Profile's various phases and their timing information.";
