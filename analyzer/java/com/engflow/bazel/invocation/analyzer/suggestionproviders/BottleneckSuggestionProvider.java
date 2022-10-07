@@ -180,7 +180,7 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
   }
 
   public static BottleneckSuggestionProvider createDefault() {
-    return new BottleneckSuggestionProvider(5, 5, Duration.ofSeconds(5), .01);
+    return new BottleneckSuggestionProvider(5, 5, Duration.ofSeconds(5), .05);
   }
 
   public static BottleneckSuggestionProvider createVerbose() {
