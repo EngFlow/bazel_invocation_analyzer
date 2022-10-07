@@ -65,8 +65,15 @@ public class ConsoleOutput {
     System.out.println();
   }
 
+  public void outputRelativePathError(String relativePath) {
+    System.out.println(
+        format("You provided a relative path to the Bazel profile:", ConsoleOutputStyle.TEXT_RED));
+    System.out.println(relativePath);
+    System.out.println(format("Specify an absolute path instead.", ConsoleOutputStyle.TEXT_RED));
+  }
+
   public void outputAnalysisInput(String inputDescription) {
-    System.out.printf("Analyzing %s\n", inputDescription);
+    System.out.printf("Analyzing %s%s", inputDescription, NEWLINE);
   }
 
   public void outputSuggestions(Stream<SuggestionOutput> suggestions) {
@@ -167,7 +174,7 @@ public class ConsoleOutput {
     if (suggestionOutput.hasFailure()) {
       SuggestionOutput.Failure failure = suggestionOutput.getFailure();
       sb.append(failure.getMessage());
-      sb.append("\n");
+      sb.append(NEWLINE);
       if (verbose) {
         sb.append(failure.getStackTrace());
       }
@@ -199,7 +206,7 @@ public class ConsoleOutput {
         if (!Strings.isNullOrEmpty(message)) {
           improvementMessages.add(message);
         }
-        addSection(sb, HEADING_POTENTIAL_IMPROVEMENT, String.join("\n", improvementMessages));
+        addSection(sb, HEADING_POTENTIAL_IMPROVEMENT, String.join(NEWLINE, improvementMessages));
       }
       addSection(sb, HEADING_RATIONALE, suggestion.getRationaleList());
       List<String> formattedCaveats =

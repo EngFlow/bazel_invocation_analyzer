@@ -24,6 +24,7 @@ import com.engflow.bazel.invocation.analyzer.options.IaOption;
 import com.engflow.bazel.invocation.analyzer.options.IaOptions;
 import com.engflow.bazel.invocation.analyzer.options.Mode;
 import com.engflow.bazel.invocation.analyzer.suggestionproviders.SuggestionProviderUtil;
+import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -67,7 +68,12 @@ public class Main {
     try {
 
       String bazelProfilePath = options.getArguments()[0];
-      consoleOutput.outputAnalysisInput(bazelProfilePath);
+      File file = new File(bazelProfilePath);
+      if (!file.isAbsolute()) {
+        consoleOutput.outputRelativePathError(bazelProfilePath);
+        System.exit(1);
+      }
+      consoleOutput.outputAnalysisInput(file.getCanonicalPath());
 
       DataManager dataManager = new DataManager();
       BazelProfile bazelProfile = BazelProfile.createFromPath(bazelProfilePath);
