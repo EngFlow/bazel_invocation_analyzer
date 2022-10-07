@@ -26,6 +26,7 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.Criti
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.QueuingObserved;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.TotalQueuingDuration;
 import java.time.Duration;
+import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,8 +37,8 @@ public class QueuingSuggestionProviderTest extends SuggestionProviderUnitTestBas
   // re-initialize the mocking).
   private TotalDuration totalDuration;
   private TotalQueuingDuration totalQueuingDuration;
-  private CriticalPathQueuingDuration criticalPathQueuingDuration;
-  private CriticalPathDuration criticalPathDuration;
+  @Nullable private CriticalPathQueuingDuration criticalPathQueuingDuration;
+  @Nullable private CriticalPathDuration criticalPathDuration;
   private QueuingObserved queuingObserved;
 
   @Before

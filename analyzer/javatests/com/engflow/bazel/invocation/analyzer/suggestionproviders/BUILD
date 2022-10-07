@@ -11,6 +11,7 @@ java_test(
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/suggestionproviders",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/time",
         "//proto:bazel_invocation_analyzer_java_proto",
+        "//third_party/jsr305",
         "//third_party/junit",
         "//third_party/mockito",
         "//third_party/truth",
