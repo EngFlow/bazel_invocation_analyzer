@@ -20,8 +20,10 @@ import static org.mockito.Mockito.when;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.ActionStats;
+import com.engflow.bazel.invocation.analyzer.dataproviders.Bottleneck;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresUsed;
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
+import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
 import java.util.List;
@@ -54,19 +56,16 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
   public void doesNotCreateSuggestionsIfBottlenecksAreShorterThanMinDuration()
       throws MissingInputException, InvalidProfileException {
     final var minDuration = Duration.ofSeconds(2);
+    Bottleneck bottleneck =
+        Bottleneck.newBuilder(Timestamp.ofSeconds(0))
+            .setEnd(Timestamp.ofSeconds(minDuration.getSeconds() - 1))
+            .addActionCountSample(1)
+            .build();
+
     when(dataManager.getDatum(TotalDuration.class))
         .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
     when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
-    when(dataManager.getDatum(ActionStats.class))
-        .thenReturn(
-            new ActionStats(
-                List.of(
-                    new ActionStats.Bottleneck(Timestamp.ofSeconds(0)) {
-                      {
-                        setEndTs(Timestamp.ofSeconds(minDuration.getSeconds() - 1));
-                        addActionCountSample(1);
-                      }
-                    })));
+    when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of(bottleneck)));
 
     final var bottleneckSuggestionProvider =
         new BottleneckSuggestionProvider(1, 1, minDuration, .0);
@@ -79,19 +78,16 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
   @Test
   public void createSuggestionIfThereAreBottlenecks()
       throws MissingInputException, InvalidProfileException {
+    Bottleneck bottleneck =
+        Bottleneck.newBuilder(Timestamp.ofSeconds(0))
+            .setEnd(Timestamp.ofSeconds(10))
+            .addActionCountSample(1)
+            .build();
+
     when(dataManager.getDatum(TotalDuration.class))
         .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
     when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
-    when(dataManager.getDatum(ActionStats.class))
-        .thenReturn(
-            new ActionStats(
-                List.of(
-                    new ActionStats.Bottleneck(Timestamp.ofSeconds(0)) {
-                      {
-                        setEndTs(Timestamp.ofSeconds(10));
-                        addActionCountSample(1);
-                      }
-                    })));
+    when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of(bottleneck)));
 
     final var bottleneckSuggestionProvider =
         new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0);
@@ -104,19 +100,16 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
   @Test
   public void doesNotAddSuggestionIfBelowMinImprovementRatio()
       throws MissingInputException, InvalidProfileException {
+    Bottleneck bottleneck =
+        Bottleneck.newBuilder(Timestamp.ofSeconds(0))
+            .setEnd(Timestamp.ofSeconds(10))
+            .addActionCountSample(1)
+            .build();
+
     when(dataManager.getDatum(TotalDuration.class))
         .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
     when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
-    when(dataManager.getDatum(ActionStats.class))
-        .thenReturn(
-            new ActionStats(
-                List.of(
-                    new ActionStats.Bottleneck(Timestamp.ofSeconds(0)) {
-                      {
-                        setEndTs(Timestamp.ofSeconds(10));
-                        addActionCountSample(1);
-                      }
-                    })));
+    when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of(bottleneck)));
 
     final var bottleneckSuggestionProvider =
         new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 1.);
@@ -129,30 +122,30 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
   @Test
   public void createsOnlyLimitedSuggestions()
       throws MissingInputException, InvalidProfileException {
+    Bottleneck minorBottleneck =
+        Bottleneck.newBuilder(Timestamp.ofSeconds(0))
+            .setEnd(Timestamp.ofSeconds(10))
+            .addActionCountSample(1)
+            .build();
+    Bottleneck majorBottleneck =
+        Bottleneck.newBuilder(Timestamp.ofSeconds(10))
+            .setEnd(Timestamp.ofSeconds(500))
+            .addActionCountSample(1)
+            .build();
     when(dataManager.getDatum(TotalDuration.class))
         .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
     when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
     when(dataManager.getDatum(ActionStats.class))
-        .thenReturn(
-            new ActionStats(
-                List.of(
-                    new ActionStats.Bottleneck(Timestamp.ofSeconds(0)) {
-                      {
-                        setEndTs(Timestamp.ofSeconds(10));
-                        addActionCountSample(1);
-                      }
-                    },
-                    new ActionStats.Bottleneck(Timestamp.ofSeconds(10)) {
-                      {
-                        setEndTs(Timestamp.ofSeconds(20));
-                        addActionCountSample(1);
-                      }
-                    })));
+        .thenReturn(new ActionStats(List.of(minorBottleneck, majorBottleneck)));
 
     final var bottleneckSuggestionProvider =
         new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0);
     final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
-    assertThat(suggestions.getSuggestionList()).hasSize(1);
+    assertThat(suggestions.getSuggestionCount()).isEqualTo(1);
+    assertThat(suggestions.getSuggestion(0).getRationaleCount()).isEqualTo(1);
+    assertThat(suggestions.getSuggestion(0).getRationale(0))
+        .contains(
+            String.format(" %s ", DurationUtil.formatDuration(majorBottleneck.getDuration())));
     assertThat(suggestions.getCaveatList()).hasSize(1);
     assertThat(suggestions.getCaveat(0).getSuggestVerboseMode()).isTrue();
     assertThat(suggestions.hasFailure()).isFalse();

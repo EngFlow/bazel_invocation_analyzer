@@ -25,6 +25,7 @@ import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CounterEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** A {@link DataProvider} that supplies data on action counts, including bottleneck statistics. */
 public class ActionStatsDataProvider extends DataProvider {
@@ -44,8 +45,8 @@ public class ActionStatsDataProvider extends DataProvider {
 
     var coreCount = getDataManager().getDatum(EstimatedCoresUsed.class).getEstimatedCores();
 
-    List<ActionStats.Bottleneck> bottlenecks = new ArrayList<>();
-    ActionStats.Bottleneck currentBottleneck = null;
+    List<Bottleneck.Builder> bottlenecks = new ArrayList<>();
+    Bottleneck.Builder currentBottleneck = null;
 
     for (CounterEvent actionCount : actionCounts) {
       boolean isBottleneck = actionCount.getTotalValue() < coreCount;
@@ -54,14 +55,14 @@ public class ActionStatsDataProvider extends DataProvider {
       if (bottleneckInProgress) {
         if (isBottleneck) {
           currentBottleneck.addActionCountSample(actionCount.getTotalValue());
-          currentBottleneck.setEndTs(actionCount.getTimestamp());
+          currentBottleneck.setEnd(actionCount.getTimestamp());
         } else {
           bottlenecks.add(currentBottleneck);
           currentBottleneck = null;
         }
       } else {
         if (isBottleneck) {
-          currentBottleneck = new ActionStats.Bottleneck(actionCount.getTimestamp());
+          currentBottleneck = Bottleneck.newBuilder(actionCount.getTimestamp());
           currentBottleneck.addActionCountSample(actionCount.getTotalValue());
         }
       }
@@ -80,16 +81,16 @@ public class ActionStatsDataProvider extends DataProvider {
                 bottlenecks.forEach(
                     bottleneck -> {
                       // Has this event started after the bottleneck?
-                      if (event.start.compareTo(bottleneck.getEndTs()) > 0) {
+                      if (event.start.compareTo(bottleneck.getEnd()) > 0) {
                         return;
                       }
                       // Has this event ended before the bottleneck?
-                      if (event.end.compareTo(bottleneck.getStartTs()) < 0) {
+                      if (event.end.compareTo(bottleneck.getStart()) < 0) {
                         return;
                       }
                       bottleneck.addEvent(event);
                     }));
 
-    return new ActionStats(bottlenecks);
+    return new ActionStats(bottlenecks.stream().map(b -> b.build()).collect(Collectors.toList()));
   }
 }

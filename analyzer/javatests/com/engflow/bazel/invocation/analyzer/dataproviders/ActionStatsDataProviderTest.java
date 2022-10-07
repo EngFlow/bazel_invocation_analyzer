@@ -88,8 +88,8 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
 
     assertThat(actionStats.bottlenecks).hasSize(1);
     final var bottleneck = actionStats.bottlenecks.get(0);
-    assertThat(bottleneck.getStartTs().getMicros()).isEqualTo(100);
-    assertThat(bottleneck.getEndTs().getMicros()).isEqualTo(200);
+    assertThat(bottleneck.getStart().getMicros()).isEqualTo(100);
+    assertThat(bottleneck.getEnd().getMicros()).isEqualTo(200);
     assertThat(bottleneck.getAvgActionCount()).isWithin(.0001).of(1);
     assertThat(bottleneck.getEvents()).hasSize(2);
     final var firstAction = bottleneck.getEvents().get(0);
