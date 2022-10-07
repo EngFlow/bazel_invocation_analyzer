@@ -28,7 +28,6 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.DataProviderUnitTestB
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,7 +61,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                             String.format(criticalPathThreadActionNameFormat, m),
                             BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
                             Timestamp.ofMicros(m),
-                            Duration.of(m, ChronoUnit.MICROS)))),
+                            TimeUtil.getDurationForMicros(m)))),
             thread(
                 1,
                 1,
@@ -75,7 +74,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                                 String.format(evaluatorThreadActionNameFormat, m),
                                 BazelProfileConstants.CAT_ACTION_PROCESSING,
                                 Timestamp.ofMicros(m),
-                                Duration.of(m, ChronoUnit.MICROS))),
+                                TimeUtil.getDurationForMicros(m))),
                     sequence(
                         microseconds.stream(),
                         m ->
@@ -83,11 +82,11 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                                 String.format(evaluatorThreadActionNameFormat, m),
                                 BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
                                 Timestamp.ofMicros(m),
-                                Duration.of(m / 10, ChronoUnit.MICROS)))))));
+                                TimeUtil.getDurationForMicros(m / 10)))))));
 
     Duration totalQueueing =
         microseconds.stream()
-            .map(m -> Duration.of(m / 10, ChronoUnit.MICROS))
+            .map(m -> TimeUtil.getDurationForMicros(m / 10))
             .reduce(Duration.ZERO, Duration::plus);
     assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
         .isEqualTo(totalQueueing);
@@ -115,7 +114,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                             // Vary the timestamp of the critical path event compared to the
                             // action processing events.
                             Timestamp.ofMicros(m % mod > 50 ? m + m % mod : m - m % mod),
-                            Duration.of(m, ChronoUnit.MICROS)))),
+                            TimeUtil.getDurationForMicros(m)))),
             thread(
                 1,
                 1,
@@ -128,7 +127,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                                 String.format(evaluatorThreadActionNameFormat, m),
                                 BazelProfileConstants.CAT_ACTION_PROCESSING,
                                 Timestamp.ofMicros(m),
-                                Duration.of(m, ChronoUnit.MICROS))),
+                                TimeUtil.getDurationForMicros(m))),
                     sequence(
                         microseconds.stream(),
                         m ->
@@ -136,11 +135,11 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                                 String.format(evaluatorThreadActionNameFormat, m),
                                 BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
                                 Timestamp.ofMicros(m),
-                                Duration.of(m / 10, ChronoUnit.MICROS)))))));
+                                TimeUtil.getDurationForMicros(m / 10)))))));
 
     Duration totalQueueing =
         microseconds.stream()
-            .map(m -> Duration.of(m / 10, ChronoUnit.MICROS))
+            .map(m -> TimeUtil.getDurationForMicros(m / 10))
             .reduce(Duration.ZERO, Duration::plus);
     assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
         .isEqualTo(totalQueueing);
@@ -168,7 +167,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                             // Vary the timestamp of the critical path event compared to the
                             // action processing events.
                             Timestamp.ofMicros(m - divergence),
-                            Duration.of(m, ChronoUnit.MICROS)))),
+                            TimeUtil.getDurationForMicros(m)))),
             thread(
                 1,
                 1,
@@ -181,7 +180,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                                 String.format(evaluatorThreadActionNameFormat, m),
                                 BazelProfileConstants.CAT_ACTION_PROCESSING,
                                 Timestamp.ofMicros(m),
-                                Duration.of(m, ChronoUnit.MICROS))),
+                                TimeUtil.getDurationForMicros(m))),
                     sequence(
                         microseconds.stream(),
                         m ->
@@ -189,7 +188,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                                 String.format(evaluatorThreadActionNameFormat, m),
                                 BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
                                 Timestamp.ofMicros(m),
-                                Duration.of(m / 10, ChronoUnit.MICROS)))))));
+                                TimeUtil.getDurationForMicros(m / 10)))))));
 
     assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
         .isEqualTo(Duration.ZERO);
@@ -216,7 +215,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                             String.format(criticalPathThreadActionNameFormat, m),
                             BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
                             Timestamp.ofMicros(m),
-                            Duration.of(m, ChronoUnit.MICROS)))),
+                            TimeUtil.getDurationForMicros(m)))),
             thread(
                 1,
                 1,
@@ -262,7 +261,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                             String.format(criticalPathThreadActionNameFormat, m),
                             BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
                             Timestamp.ofMicros(m),
-                            Duration.of(m, ChronoUnit.MICROS)))),
+                            TimeUtil.getDurationForMicros(m)))),
             thread(
                 1,
                 1,
@@ -275,7 +274,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                                 String.format(evaluatorThreadActionNameFormat, m),
                                 BazelProfileConstants.CAT_ACTION_PROCESSING,
                                 Timestamp.ofMicros(m),
-                                Duration.of(m, ChronoUnit.MICROS))),
+                                TimeUtil.getDurationForMicros(m))),
                     sequence(
                         microseconds.stream(),
                         m ->
@@ -283,7 +282,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                                 String.format(evaluatorThreadActionNameFormat, m),
                                 BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
                                 Timestamp.ofMicros(m),
-                                Duration.of(m / 10, ChronoUnit.MICROS)))))));
+                                TimeUtil.getDurationForMicros(m / 10)))))));
 
     assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
         .isEqualTo(Duration.ZERO);
