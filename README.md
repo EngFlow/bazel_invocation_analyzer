@@ -11,10 +11,20 @@ The Bazel Invocation Analyzer can be run in a terminal. In this mode it will pri
 
 ### Usage
 
-Pass in the path of a Bazel profile on your filesystem as the first argument. Use `-h` or `--help` to show all the available options.
+Pass in the absolute path of a Bazel profile on your filesystem as the first argument. Use `-h` or `--help` to show all the available options.
 
 ```bash
-bazel run //cli -- /path/to/bazel_profile.json.gz
+bazel run //cli -- /absolute/path/to/bazel_profile.json.gz
+```
+
+#### Passing in relative paths
+If you want to pass in a relative path to a Bazel profile, on Linux or macOS try
+```bash
+bazel run --run_under="cd $PWD && " //cli -- relative/path/to/profile
+```
+Alternatively, first build `//cli:cli_deploy.jar` and then run it with `java -jar`:
+```bash
+bazel build //cli:cli_deploy.jar && java -jar bazel-bin/cli/cli_deploy.jar relative/path/to/profile
 ```
 
 ## Contributing
