@@ -167,7 +167,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                             BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
                             // Vary the timestamp of the critical path event compared to the
                             // action processing events.
-                            Timestamp.ofMicros(m > 1000 ? m - divergence : m + divergence),
+                            Timestamp.ofMicros(m - divergence),
                             Duration.of(m, ChronoUnit.MICROS)))),
             thread(
                 1,
@@ -190,6 +190,54 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                                 BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
                                 Timestamp.ofMicros(m),
                                 Duration.of(m / 10, ChronoUnit.MICROS)))))));
+
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
+        .isEqualTo(Duration.ZERO);
+  }
+
+  @Test
+  public void shouldNotIncludeQueuingDurationWhenQueuingEndTimeExceedsCriticalPathEntry()
+      throws Exception {
+    List<Integer> microseconds = List.of(1_030, 20_010, 380);
+    long divergence = TimeUtil.getMicros(Timestamp.ACCEPTABLE_DIVERGENCE) + 1;
+    String evaluatorThreadActionNameFormat = "some random action %d";
+    String criticalPathThreadActionNameFormat = "action 'some random action %d'";
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                BazelProfileConstants.THREAD_CRITICAL_PATH,
+                sequence(
+                    microseconds.stream(),
+                    (m) ->
+                        complete(
+                            String.format(criticalPathThreadActionNameFormat, m),
+                            BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                            Timestamp.ofMicros(m),
+                            Duration.of(m, ChronoUnit.MICROS)))),
+            thread(
+                1,
+                1,
+                "some thread",
+                concat(
+                    sequence(
+                        microseconds.stream(),
+                        m ->
+                            complete(
+                                String.format(evaluatorThreadActionNameFormat, m),
+                                BazelProfileConstants.CAT_ACTION_PROCESSING,
+                                Timestamp.ofMicros(m),
+                                TimeUtil.getDurationForMicros(m))),
+                    sequence(
+                        microseconds.stream(),
+                        m ->
+                            complete(
+                                String.format(evaluatorThreadActionNameFormat, m),
+                                BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
+                                Timestamp.ofMicros(m),
+                                TimeUtil.getDurationForMicros(m + divergence)))))));
 
     assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
         .isEqualTo(Duration.ZERO);
