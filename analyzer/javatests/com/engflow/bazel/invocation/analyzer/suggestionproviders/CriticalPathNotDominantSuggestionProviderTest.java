@@ -32,6 +32,7 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteExecutionUsed;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
+import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,7 +42,7 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
   // tests when custom values are desired for the testing being conducted (without the need to
   // re-initialize the mocking).
   private BazelPhaseDescriptions phases;
-  private CriticalPathDuration criticalPathDuration;
+  @Nullable private CriticalPathDuration criticalPathDuration;
   private TotalDuration totalDuration;
   private RemoteExecutionUsed remoteExecutionUsed;
   private EstimatedCoresUsed estimatedCoresUsed;
