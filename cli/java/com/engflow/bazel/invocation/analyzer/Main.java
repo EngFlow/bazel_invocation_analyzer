@@ -24,11 +24,15 @@ import com.engflow.bazel.invocation.analyzer.options.IaOption;
 import com.engflow.bazel.invocation.analyzer.options.IaOptions;
 import com.engflow.bazel.invocation.analyzer.options.Mode;
 import com.engflow.bazel.invocation.analyzer.suggestionproviders.SuggestionProviderUtil;
+import java.io.File;
+import java.nio.file.FileSystems;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 
 public class Main {
+  private static final String BUILD_WORKING_DIRECTORY = "BUILD_WORKING_DIRECTORY";
+
   public static void main(String[] args) throws Exception {
     IaOptions options = new IaOptions(args);
 
@@ -65,9 +69,28 @@ public class Main {
     consoleOutput.outputHeader();
 
     try {
-
       String bazelProfilePath = options.getArguments()[0];
-      consoleOutput.outputAnalysisInput(bazelProfilePath);
+      File file = new File(bazelProfilePath);
+      if (!file.isAbsolute()) {
+        String buildWorkingDirectory = System.getenv(BUILD_WORKING_DIRECTORY);
+        if (buildWorkingDirectory != null) {
+          String absoluteBazelProfilePath =
+              buildWorkingDirectory + FileSystems.getDefault().getSeparator() + bazelProfilePath;
+          String relativePathWarning =
+              String.format(
+                  "The relative path\n\t%s\nwas resolved to\n\t%s\nusing the value of the"
+                      + " environment variable\n\t%s=%s\nIf this is undesired, specify"
+                      + " an absolute path instead.",
+                  bazelProfilePath,
+                  absoluteBazelProfilePath,
+                  BUILD_WORKING_DIRECTORY,
+                  buildWorkingDirectory);
+          consoleOutput.outputNote(relativePathWarning);
+          bazelProfilePath = absoluteBazelProfilePath;
+          file = new File(bazelProfilePath);
+        }
+      }
+      consoleOutput.outputAnalysisInput(file.getCanonicalPath());
 
       DataManager dataManager = new DataManager();
       BazelProfile bazelProfile = BazelProfile.createFromPath(bazelProfilePath);
