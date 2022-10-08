@@ -24,6 +24,7 @@ import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.ActionStats;
+import com.engflow.bazel.invocation.analyzer.dataproviders.Bottleneck;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresUsed;
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
@@ -189,19 +190,19 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
   }
 
   private static class BottleneckStats {
-    private final ActionStats.Bottleneck bottleneck;
+    private final Bottleneck bottleneck;
     private final Duration optimalWallDuration;
     private final double improvement;
 
     private BottleneckStats(
-        ActionStats.Bottleneck bottleneck, Duration optimalWallDuration, double improvement) {
+        Bottleneck bottleneck, Duration optimalWallDuration, double improvement) {
       this.bottleneck = bottleneck;
       this.optimalWallDuration = optimalWallDuration;
       this.improvement = improvement;
     }
 
     private static BottleneckStats fromBottleneckAndCoresAndWallDuration(
-        ActionStats.Bottleneck bottleneck, int coresCount, Duration totalDuration) {
+        Bottleneck bottleneck, int coresCount, Duration totalDuration) {
       final var optimalBottleneckDuration =
           bottleneck
               .getDuration()
