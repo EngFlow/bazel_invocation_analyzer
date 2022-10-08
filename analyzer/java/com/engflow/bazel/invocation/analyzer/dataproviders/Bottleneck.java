@@ -65,8 +65,12 @@ public class Bottleneck {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     Bottleneck that = (Bottleneck) o;
     return Double.compare(that.sampleTotal, sampleTotal) == 0
         && sampleCount == that.sampleCount
