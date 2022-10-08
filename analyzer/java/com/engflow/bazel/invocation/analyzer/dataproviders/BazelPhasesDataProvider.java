@@ -149,17 +149,18 @@ public class BazelPhasesDataProvider extends DataProvider {
       }
     }
 
-    BazelPhaseDescriptions result = new BazelPhaseDescriptions();
+    BazelPhaseDescriptions.Builder resultBuilder = BazelPhaseDescriptions.newBuilder();
     Timestamp previousTimestamp = launchStart;
     BazelProfilePhase previousPhase = BazelProfilePhase.LAUNCH;
     for (Timestamp timestamp : startToPhase.keySet()) {
       if (previousPhase != null) {
-        result.add(previousPhase, new BazelPhaseDescription(previousTimestamp, timestamp));
+        resultBuilder.add(previousPhase, new BazelPhaseDescription(previousTimestamp, timestamp));
       }
       previousTimestamp = timestamp;
       previousPhase = startToPhase.get(timestamp);
     }
-    result.add(BazelProfilePhase.FINISH, new BazelPhaseDescription(previousTimestamp, finishEnd));
-    return result;
+    resultBuilder.add(
+        BazelProfilePhase.FINISH, new BazelPhaseDescription(previousTimestamp, finishEnd));
+    return resultBuilder.build();
   }
 }

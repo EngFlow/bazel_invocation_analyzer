@@ -25,8 +25,8 @@ public class BazelPhaseDescriptionsTest {
   public void getOrClosestBeforeShouldReturnSelf() {
     BazelPhaseDescription description =
         new BazelPhaseDescription(Timestamp.ofMicros(1), Timestamp.ofMicros(2));
-    BazelPhaseDescriptions descriptions = new BazelPhaseDescriptions();
-    descriptions.add(BazelProfilePhase.EVALUATE, description);
+    BazelPhaseDescriptions descriptions =
+        BazelPhaseDescriptions.newBuilder().add(BazelProfilePhase.EVALUATE, description).build();
     assertThat(descriptions.getOrClosestBefore(BazelProfilePhase.EVALUATE)).isEqualTo(description);
   }
 
@@ -36,17 +36,19 @@ public class BazelPhaseDescriptionsTest {
         new BazelPhaseDescription(Timestamp.ofMicros(1), Timestamp.ofMicros(2));
     BazelPhaseDescription otherDescription =
         new BazelPhaseDescription(Timestamp.ofMicros(5), Timestamp.ofMicros(8));
-    BazelPhaseDescriptions descriptions = new BazelPhaseDescriptions();
-    descriptions.add(BazelProfilePhase.INIT, otherDescription);
-    descriptions.add(BazelProfilePhase.EVALUATE, expectedDescription);
-    descriptions.add(BazelProfilePhase.PREPARE, otherDescription);
+    BazelPhaseDescriptions descriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.INIT, otherDescription)
+            .add(BazelProfilePhase.EVALUATE, expectedDescription)
+            .add(BazelProfilePhase.PREPARE, otherDescription)
+            .build();
     assertThat(descriptions.getOrClosestBefore(BazelProfilePhase.DEPENDENCIES))
         .isEqualTo(expectedDescription);
   }
 
   @Test
   public void getOrClosestBeforeShouldReturnNull() {
-    BazelPhaseDescriptions descriptions = new BazelPhaseDescriptions();
+    BazelPhaseDescriptions descriptions = BazelPhaseDescriptions.newBuilder().build();
     assertThat(descriptions.getOrClosestBefore(BazelProfilePhase.EVALUATE)).isNull();
   }
 
@@ -54,8 +56,8 @@ public class BazelPhaseDescriptionsTest {
   public void getOrClosestAfterShouldReturnSelf() {
     BazelPhaseDescription description =
         new BazelPhaseDescription(Timestamp.ofMicros(1), Timestamp.ofMicros(2));
-    BazelPhaseDescriptions descriptions = new BazelPhaseDescriptions();
-    descriptions.add(BazelProfilePhase.EVALUATE, description);
+    BazelPhaseDescriptions descriptions =
+        BazelPhaseDescriptions.newBuilder().add(BazelProfilePhase.EVALUATE, description).build();
     assertThat(descriptions.getOrClosestAfter(BazelProfilePhase.EVALUATE)).isEqualTo(description);
   }
 
@@ -65,17 +67,19 @@ public class BazelPhaseDescriptionsTest {
         new BazelPhaseDescription(Timestamp.ofMicros(1), Timestamp.ofMicros(2));
     BazelPhaseDescription otherDescription =
         new BazelPhaseDescription(Timestamp.ofMicros(5), Timestamp.ofMicros(8));
-    BazelPhaseDescriptions descriptions = new BazelPhaseDescriptions();
-    descriptions.add(BazelProfilePhase.INIT, otherDescription);
-    descriptions.add(BazelProfilePhase.PREPARE, expectedDescription);
-    descriptions.add(BazelProfilePhase.EXECUTE, otherDescription);
+    BazelPhaseDescriptions descriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.INIT, otherDescription)
+            .add(BazelProfilePhase.PREPARE, expectedDescription)
+            .add(BazelProfilePhase.EXECUTE, otherDescription)
+            .build();
     assertThat(descriptions.getOrClosestAfter(BazelProfilePhase.EVALUATE))
         .isEqualTo(expectedDescription);
   }
 
   @Test
   public void getOrClosestAfterShouldReturnNull() {
-    BazelPhaseDescriptions descriptions = new BazelPhaseDescriptions();
+    BazelPhaseDescriptions descriptions = BazelPhaseDescriptions.newBuilder().build();
     assertThat(descriptions.getOrClosestAfter(BazelProfilePhase.EVALUATE)).isNull();
   }
 }

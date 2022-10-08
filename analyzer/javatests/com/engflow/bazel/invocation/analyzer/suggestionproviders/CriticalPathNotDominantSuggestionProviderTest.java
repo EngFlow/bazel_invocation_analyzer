@@ -16,8 +16,6 @@ package com.engflow.bazel.invocation.analyzer.suggestionproviders;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
@@ -41,7 +39,7 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
   // are set up with reasonable defaults before each test is run, but can be overridden within the
   // tests when custom values are desired for the testing being conducted (without the need to
   // re-initialize the mocking).
-  private BazelPhaseDescriptions phases;
+  private BazelPhaseDescriptions.Builder phases;
   @Nullable private CriticalPathDuration criticalPathDuration;
   private TotalDuration totalDuration;
   private RemoteExecutionUsed remoteExecutionUsed;
@@ -54,8 +52,8 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
 
     // Create reasonable defaults and set up to return the class-variables when the associated types
     // are requested.
-    phases = new BazelPhaseDescriptions();
-    when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(phases);
+    phases = BazelPhaseDescriptions.newBuilder();
+    when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenAnswer(i -> phases.build());
     criticalPathDuration = new CriticalPathDuration(Duration.ofSeconds(10));
     when(dataManager.getDatum(CriticalPathDuration.class)).thenAnswer(i -> criticalPathDuration);
     totalDuration = new TotalDuration(Duration.ofSeconds(100));
@@ -79,9 +77,6 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
     criticalPathDuration = null;
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
-    verify(dataManager).getDatum(BazelPhaseDescriptions.class);
-    verify(dataManager).getDatum(CriticalPathDuration.class);
-    verifyNoMoreInteractions(dataManager);
 
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(CriticalPathNotDominantSuggestionProvider.class.getName());
@@ -92,8 +87,6 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
   @Test
   public void shouldNotReturnSuggestionForMissingExecutionPhase() throws Exception {
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
-    verify(dataManager).getDatum(BazelPhaseDescriptions.class);
-    verifyNoMoreInteractions(dataManager);
 
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(CriticalPathNotDominantSuggestionProvider.class.getName());
@@ -108,8 +101,6 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
         new BazelPhaseDescription(Timestamp.ofMicros(0), Timestamp.ofSeconds(1)));
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
-    verify(dataManager).getDatum(BazelPhaseDescriptions.class);
-    verifyNoMoreInteractions(dataManager);
 
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(CriticalPathNotDominantSuggestionProvider.class.getName());
@@ -128,9 +119,6 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
     criticalPathDuration = new CriticalPathDuration(criticalPath);
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
-    verify(dataManager).getDatum(BazelPhaseDescriptions.class);
-    verify(dataManager).getDatum(CriticalPathDuration.class);
-    verifyNoMoreInteractions(dataManager);
 
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
