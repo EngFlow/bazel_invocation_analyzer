@@ -65,8 +65,15 @@ public class ConsoleOutput {
     System.out.println();
   }
 
+  public void outputNote(String warning) {
+    System.out.println(format("Note:", ConsoleOutputStyle.TEXT_BOLD));
+    System.out.println(warning);
+    System.out.println();
+  }
+
   public void outputAnalysisInput(String inputDescription) {
-    System.out.printf("Analyzing %s\n", inputDescription);
+    System.out.printf("Analyzing %s", inputDescription);
+    System.out.println();
   }
 
   public void outputSuggestions(Stream<SuggestionOutput> suggestions) {
@@ -167,7 +174,7 @@ public class ConsoleOutput {
     if (suggestionOutput.hasFailure()) {
       SuggestionOutput.Failure failure = suggestionOutput.getFailure();
       sb.append(failure.getMessage());
-      sb.append("\n");
+      sb.append(NEWLINE);
       if (verbose) {
         sb.append(failure.getStackTrace());
       }
@@ -199,7 +206,7 @@ public class ConsoleOutput {
         if (!Strings.isNullOrEmpty(message)) {
           improvementMessages.add(message);
         }
-        addSection(sb, HEADING_POTENTIAL_IMPROVEMENT, String.join("\n", improvementMessages));
+        addSection(sb, HEADING_POTENTIAL_IMPROVEMENT, String.join(NEWLINE, improvementMessages));
       }
       addSection(sb, HEADING_RATIONALE, suggestion.getRationaleList());
       List<String> formattedCaveats =

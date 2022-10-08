@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Locale;
 
 public class Main {
+  private static final String BUILD_WORKING_DIRECTORY = "BUILD_WORKING_DIRECTORY";
+
   public static void main(String[] args) throws Exception {
     IaOptions options = new IaOptions(args);
 
@@ -70,13 +72,25 @@ public class Main {
       String bazelProfilePath = options.getArguments()[0];
       File file = new File(bazelProfilePath);
       if (!file.isAbsolute()) {
-        String buildWorkingDirectory = System.getenv("BUILD_WORKING_DIRECTORY");
+        String buildWorkingDirectory = System.getenv(BUILD_WORKING_DIRECTORY);
         if (buildWorkingDirectory != null) {
-          bazelProfilePath =
+          String absoluteBazelProfilePath =
               buildWorkingDirectory + FileSystems.getDefault().getSeparator() + bazelProfilePath;
+          String relativePathWarning =
+              String.format(
+                  "The relative path\n\t%s\nwas resolved to\n\t%s\nusing the value of the"
+                      + " environment variable\n\t%s=%s\nIf this is undesired, specify"
+                      + " an absolute path instead.",
+                  bazelProfilePath,
+                  absoluteBazelProfilePath,
+                  BUILD_WORKING_DIRECTORY,
+                  buildWorkingDirectory);
+          consoleOutput.outputNote(relativePathWarning);
+          bazelProfilePath = absoluteBazelProfilePath;
+          file = new File(bazelProfilePath);
         }
       }
-      consoleOutput.outputAnalysisInput(bazelProfilePath);
+      consoleOutput.outputAnalysisInput(file.getCanonicalPath());
 
       DataManager dataManager = new DataManager();
       BazelProfile bazelProfile = BazelProfile.createFromPath(bazelProfilePath);
