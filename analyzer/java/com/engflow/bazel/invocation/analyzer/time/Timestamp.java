@@ -116,4 +116,9 @@ public class Timestamp implements Comparable<Timestamp> {
     // NullPointerException on null o desired.
     return Long.compare(this.timestampInMicros, o.timestampInMicros);
   }
+
+  @Override
+  public String toString() {
+    return String.format("%d μs", timestampInMicros);
+  }
 }

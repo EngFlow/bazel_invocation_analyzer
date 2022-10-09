@@ -41,12 +41,17 @@ public class ThreadId {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ThreadId threadId1 = (ThreadId) o;
-    return processId == threadId1.processId && threadId == threadId1.threadId;
+    ThreadId other = (ThreadId) o;
+    return processId == other.processId && threadId == other.threadId;
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(processId, threadId);
+  }
+
+  @Override
+  public String toString() {
+    return String.format("processId: %d, threadId: %d", processId, threadId);
   }
 }

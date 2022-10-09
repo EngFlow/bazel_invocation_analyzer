@@ -91,13 +91,17 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
     assertThat(bottleneck.getStart().getMicros()).isEqualTo(100);
     assertThat(bottleneck.getEnd().getMicros()).isEqualTo(200);
     assertThat(bottleneck.getAvgActionCount()).isWithin(.0001).of(1);
-    assertThat(bottleneck.getEvents()).hasSize(2);
-    final var firstAction = bottleneck.getEvents().get(0);
-    assertThat(firstAction.start.getMicros()).isEqualTo(80);
-    assertThat(TimeUtil.getMicros(firstAction.duration)).isEqualTo(80);
-    final var secondAction = bottleneck.getEvents().get(1);
-    assertThat(secondAction.start.getMicros()).isEqualTo(160);
-    assertThat(TimeUtil.getMicros(secondAction.duration)).isEqualTo(80);
+    assertThat(bottleneck.getPartialEvents()).hasSize(2);
+    final var firstAction = bottleneck.getPartialEvents().get(0);
+    assertThat(firstAction.completeEvent.start.getMicros()).isEqualTo(80);
+    assertThat(firstAction.croppedStart).isEqualTo(bottleneck.getStart());
+    assertThat(TimeUtil.getMicros(firstAction.completeEvent.duration)).isEqualTo(80);
+    assertThat(TimeUtil.getMicros(firstAction.croppedDuration)).isEqualTo(60);
+    final var secondAction = bottleneck.getPartialEvents().get(1);
+    assertThat(secondAction.completeEvent.start.getMicros()).isEqualTo(160);
+    assertThat(secondAction.croppedEnd).isEqualTo(bottleneck.getEnd());
+    assertThat(TimeUtil.getMicros(secondAction.completeEvent.duration)).isEqualTo(80);
+    assertThat(TimeUtil.getMicros(secondAction.croppedDuration)).isEqualTo(40);
   }
 
   @Test

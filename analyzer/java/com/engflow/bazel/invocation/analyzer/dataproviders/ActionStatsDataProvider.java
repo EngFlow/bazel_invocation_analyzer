@@ -18,11 +18,14 @@ import static com.engflow.bazel.invocation.analyzer.core.DatumSupplier.memoized;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.ThreadId;
 import com.engflow.bazel.invocation.analyzer.core.DataProvider;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CounterEvent;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -79,6 +82,7 @@ public class ActionStatsDataProvider extends DataProvider {
         .forEach(
             event ->
                 bottlenecks.forEach(
+                    // Add events to bottleneck, if at least partially contained.
                     bottleneck -> {
                       // Has this event started after the bottleneck?
                       if (event.start.compareTo(bottleneck.getEnd()) > 0) {
@@ -89,6 +93,38 @@ public class ActionStatsDataProvider extends DataProvider {
                         return;
                       }
                       bottleneck.addEvent(event);
+                    }));
+    bazelProfile
+        .getThreads()
+        .flatMap((thread) -> thread.getCompleteEvents().stream())
+        // Restrict to queuing events.
+        .filter(
+            (event) ->
+                BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME.equals(event.category))
+        .forEach(
+            event ->
+                bottlenecks.forEach(
+                    // Add queuing duration to bottleneck, if at least partially contained.
+                    bottleneck -> {
+                      // Has this queuing event started after the bottleneck?
+                      if (event.start.compareTo(bottleneck.getEnd()) > 0) {
+                        return;
+                      }
+                      // Has this queuing event ended before the bottleneck?
+                      if (event.end.compareTo(bottleneck.getStart()) < 0) {
+                        return;
+                      }
+                      // Only consider the queuing that is part of the bottleneck.
+                      Duration partialQueuingDuration =
+                          TimeUtil.getDurationBetween(
+                              bottleneck.getStart().compareTo(event.start) > 0
+                                  ? bottleneck.getStart()
+                                  : event.start,
+                              bottleneck.getEnd().compareTo(event.end) < 0
+                                  ? bottleneck.getEnd()
+                                  : event.end);
+                      bottleneck.addQueuingDuration(
+                          new ThreadId(event.processId, event.threadId), partialQueuingDuration);
                     }));
 
     return new ActionStats(bottlenecks.stream().map(b -> b.build()).collect(Collectors.toList()));

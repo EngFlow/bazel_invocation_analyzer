@@ -27,7 +27,8 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.ActionStats;
 import com.engflow.bazel.invocation.analyzer.dataproviders.Bottleneck;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresUsed;
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
-import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
+import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
+import com.engflow.bazel.invocation.analyzer.traceeventformat.PartialCompleteEvent;
 import com.google.common.annotations.VisibleForTesting;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -38,13 +39,21 @@ import java.util.stream.Collectors;
 
 public class BottleneckSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME = BottleneckSuggestionProvider.class.getName();
-  private static final String SUGGESTION_ID_BREAK_DOWN_BOTTLENECK_ACTIONS =
-      "BreakDownBottleneckActions";
+
+  @VisibleForTesting
+  static final String SUGGESTION_ID_BREAK_DOWN_BOTTLENECK_ACTIONS = "BreakDownBottleneckActions";
+
+  @VisibleForTesting
+  static final String SUGGESTION_ID_AVOID_BOTTLENECKS_DUE_TO_QUEUING =
+      "AvoidBottlenecksDueToQueuing";
+
+  private static final double SIGNIFICANT_QUEUING_RATIO = .2;
 
   private final Duration minDuration;
   private final int maxSuggestions;
   private final int maxActionsPerBottleneck;
   private final double minImprovementRatio;
+  private final double maxActionCountRatio;
 
   /**
    * @param maxSuggestions the maximum number of bottlenecks suggested by this provider
@@ -53,17 +62,21 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
    * @param minImprovementRatio the minimum improvement you'd get out of fixing a bottleneck for it
    *     to be suggested, where the improvement is the 1 -
    *     (theoretical_wall_duration_without_bottleneck / wall_duration_with_bottleneck)
+   * @param maxActionCountRatio the maximum ratio for (bottleneck action count / cores used in
+   *     invocation) for a bottleneck to be suggested
    */
   @VisibleForTesting
   public BottleneckSuggestionProvider(
       int maxSuggestions,
       int maxActionsPerBottleneck,
       Duration minDuration,
-      double minImprovementRatio) {
+      double minImprovementRatio,
+      double maxActionCountRatio) {
     this.maxSuggestions = maxSuggestions;
     this.maxActionsPerBottleneck = maxActionsPerBottleneck;
     this.minDuration = minDuration;
     this.minImprovementRatio = minImprovementRatio;
+    this.maxActionCountRatio = maxActionCountRatio;
   }
 
   @Override
@@ -76,6 +89,9 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
 
       final var suggestions =
           actionStats.bottlenecks.stream()
+              // Only consider bottlenecks with sufficiently fewer actions than cores used.
+              .filter(bottleneck -> bottleneck.getAvgActionCount() / cores < maxActionCountRatio)
+              // Only consider bottlenecks that are sufficiently long.
               .filter(bottleneck -> bottleneck.getDuration().compareTo(minDuration) >= 0)
               .map(
                   bottleneck ->
@@ -127,22 +143,21 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
   }
 
   private Suggestion generateSuggestion(BottleneckStats bottleneck, Duration totalDuration) {
-    String title = "Break down bottleneck actions";
-    String recommendation =
-        String.format(
-            "These actions are involved in a bottleneck preventing parallelization. Try"
-                + " breaking them down into smaller actions:\n"
-                + "%s",
-            this.suggestTargetsOrActions(bottleneck));
-    String rationale =
+    StringBuilder recommendation =
+        new StringBuilder(
+            String.format(
+                "These actions are involved in a bottleneck preventing parallelization:\n" + "%s",
+                this.suggestTargetsOrActions(bottleneck)));
+    final List<String> rationale = new ArrayList<>();
+    rationale.add(
         String.format(
             Locale.US,
             "The profile includes a bottleneck lasting %s with an average action count of"
                 + " %.2f.",
             formatDuration(bottleneck.bottleneck.getDuration()),
-            bottleneck.bottleneck.getAvgActionCount());
+            bottleneck.bottleneck.getAvgActionCount()));
     final List<Caveat> caveats = new ArrayList<>();
-    final var actionCount = bottleneck.bottleneck.getEvents().size();
+    final var actionCount = bottleneck.bottleneck.getPartialEvents().size();
     if (actionCount > maxActionsPerBottleneck) {
       caveats.add(
           SuggestionProviderUtil.createCaveat(
@@ -151,22 +166,70 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
                   maxActionsPerBottleneck, actionCount),
               true));
     }
-    return SuggestionProviderUtil.createSuggestion(
-        SuggestionCategory.BUILD_FILE,
-        createSuggestionId(SUGGESTION_ID_BREAK_DOWN_BOTTLENECK_ACTIONS),
-        title,
-        recommendation,
-        potentialImprovement(bottleneck, totalDuration),
-        List.of(rationale),
-        caveats);
+
+    Duration maxQueuingDuration = bottleneck.bottleneck.getMaxQueuingDuration();
+    double ratio =
+        maxQueuingDuration.toMillis() / (double) bottleneck.bottleneck.getDuration().toMillis();
+    String bottleneckQueuingData =
+        String.format(
+            Locale.US,
+            "This bottleneck includes queuing for up to %s, which is %.2f%% of the bottleneck's"
+                + " duration.",
+            DurationUtil.formatDuration(maxQueuingDuration),
+            100 * ratio);
+    if (ratio > SIGNIFICANT_QUEUING_RATIO) {
+      recommendation.append(
+          "\n"
+              + "The bottleneck includes significant queuing.\n"
+              + "Investigate whether your remote execution cluster is overloaded. If so, consider"
+              + " increasing the number of workers to avoid queuing and review the cluster's"
+              + " autoscaling settings.");
+      rationale.add(bottleneckQueuingData);
+      return SuggestionProviderUtil.createSuggestion(
+          SuggestionCategory.OTHER,
+          createSuggestionId(SUGGESTION_ID_AVOID_BOTTLENECKS_DUE_TO_QUEUING),
+          "Avoid bottlenecks due to queuing",
+          recommendation.toString(),
+          potentialImprovement(bottleneck, totalDuration),
+          rationale,
+          caveats);
+    } else {
+      if (ratio > 0) {
+        caveats.add(SuggestionProviderUtil.createCaveat(bottleneckQueuingData, false));
+      }
+      recommendation.append("\nTry breaking them down into smaller actions.");
+      return SuggestionProviderUtil.createSuggestion(
+          SuggestionCategory.BUILD_FILE,
+          createSuggestionId(SUGGESTION_ID_BREAK_DOWN_BOTTLENECK_ACTIONS),
+          "Break down bottleneck actions",
+          recommendation.toString(),
+          potentialImprovement(bottleneck, totalDuration),
+          rationale,
+          caveats);
+    }
   }
 
   private String suggestTargetsOrActions(BottleneckStats bottleneck) {
     // TODO(antonio) suggest targets instead of actions if possible
-    return bottleneck.bottleneck.getEvents().stream()
-        .sorted(Comparator.<CompleteEvent, Duration>comparing(event -> event.duration).reversed())
+    return bottleneck.bottleneck.getPartialEvents().stream()
+        .sorted(
+            Comparator.<PartialCompleteEvent, Duration>comparing(event -> event.croppedDuration)
+                .reversed())
         .limit(maxActionsPerBottleneck)
-        .map(event -> String.format("\t- %s (%s)", event.name, formatDuration(event.duration)))
+        .map(
+            event -> {
+              if (event.isCropped()) {
+                return String.format(
+                    "\t- %s (partially: %s of %s)",
+                    event.completeEvent.name,
+                    formatDuration(event.croppedDuration),
+                    formatDuration(event.completeEvent.duration));
+              } else {
+                return String.format(
+                    "\t- %s (%s)",
+                    event.completeEvent.name, formatDuration(event.completeEvent.duration));
+              }
+            })
         .collect(Collectors.joining("\n"));
   }
 
@@ -181,12 +244,12 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
   }
 
   public static BottleneckSuggestionProvider createDefault() {
-    return new BottleneckSuggestionProvider(5, 5, Duration.ofSeconds(5), .05);
+    return new BottleneckSuggestionProvider(5, 5, Duration.ofSeconds(5), .05, .9);
   }
 
   public static BottleneckSuggestionProvider createVerbose() {
     return new BottleneckSuggestionProvider(
-        Integer.MAX_VALUE, Integer.MAX_VALUE, Duration.ZERO, .0);
+        Integer.MAX_VALUE, Integer.MAX_VALUE, Duration.ZERO, .0, .0);
   }
 
   private static class BottleneckStats {

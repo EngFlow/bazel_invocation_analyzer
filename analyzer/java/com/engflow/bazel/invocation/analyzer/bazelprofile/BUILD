@@ -1,5 +1,6 @@
 TYPES = [
     "BazelProfilePhase.java",
+    "ThreadId.java",
 ]
 
 java_library(
@@ -10,6 +11,7 @@ java_library(
     ),
     visibility = ["//visibility:public"],
     deps = [
+        ":types",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/core",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/time",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/traceeventformat",
