@@ -46,16 +46,35 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void shouldReturnNoBottlenecksOnEmptyProfile()
+  public void shouldReturnNullOnEmptyProfile()
       throws DuplicateProviderException, MissingInputException, InvalidProfileException {
+    useEstimatedCoresUsed(4);
     useProfile(metaData(), trace(thread(0, 0, BazelProfileConstants.THREAD_MAIN)));
-    assertThat(provider.getActionStats().bottlenecks).isEmpty();
+
+    assertThat(provider.getActionStats()).isNull();
+  }
+
+  @Test
+  public void shouldReturnNullOnMissingEstimatedCoresUsed()
+      throws DuplicateProviderException, MissingInputException, InvalidProfileException {
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                sequence(
+                    IntStream.rangeClosed(0, 100).boxed(),
+                    ts -> count(BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "4")))));
+
+    assertThat(provider.getActionStats()).isNull();
   }
 
   @Test
   public void shouldCaptureBottleneckRunningSingleAction()
       throws DuplicateProviderException, MissingInputException, InvalidProfileException {
-    useCoreCount(4);
+    useEstimatedCoresUsed(4);
     useProfile(
         metaData(),
         trace(
@@ -107,7 +126,7 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
   @Test
   public void shouldNotCaptureBottleneckWhenRunningMaxActionCount()
       throws DuplicateProviderException, MissingInputException, InvalidProfileException {
-    useCoreCount(4);
+    useEstimatedCoresUsed(4);
     useProfile(
         metaData(),
         trace(
@@ -135,7 +154,8 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
     assertThat(actionStats.bottlenecks).isEmpty();
   }
 
-  private void useCoreCount(int count) throws MissingInputException, InvalidProfileException {
+  private void useEstimatedCoresUsed(int count)
+      throws MissingInputException, InvalidProfileException {
     when(dataManager.getDatum(EstimatedCoresUsed.class))
         .thenReturn(new EstimatedCoresUsed(count, 0));
   }

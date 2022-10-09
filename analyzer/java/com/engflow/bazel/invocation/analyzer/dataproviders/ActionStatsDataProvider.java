@@ -43,16 +43,20 @@ public class ActionStatsDataProvider extends DataProvider {
     var actionCounts =
         bazelProfile.getMainThread().getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT);
     if (actionCounts == null) {
-      return new ActionStats(List.of());
+      return null;
     }
 
-    var coreCount = getDataManager().getDatum(EstimatedCoresUsed.class).getEstimatedCores();
+    var estimatedCoresUsedDatum = getDataManager().getDatum(EstimatedCoresUsed.class);
+    if (estimatedCoresUsedDatum == null) {
+      return null;
+    }
+    var coresUsed = estimatedCoresUsedDatum.getEstimatedCores();
 
     List<Bottleneck.Builder> bottlenecks = new ArrayList<>();
     Bottleneck.Builder currentBottleneck = null;
 
     for (CounterEvent actionCount : actionCounts) {
-      boolean isBottleneck = actionCount.getTotalValue() < coreCount;
+      boolean isBottleneck = actionCount.getTotalValue() < coresUsed;
       boolean bottleneckInProgress = currentBottleneck != null;
 
       if (bottleneckInProgress) {

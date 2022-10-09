@@ -23,6 +23,7 @@ import org.junit.runners.Suite;
   BuildWithoutTheBytesSuggestionProviderTest.class,
   CriticalPathNotDominantSuggestionProviderTest.class,
   GarbageCollectionSuggestionProviderTest.class,
+  JobsSuggestionProviderTest.class,
   MergedEventsSuggestionProviderTest.class,
   NegligiblePhaseSuggestionProviderTest.class,
   QueuingSuggestionProviderTest.class,

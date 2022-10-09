@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class SuggestionProviderUtil {
@@ -184,17 +185,32 @@ public class SuggestionProviderUtil {
    * Creates a {@link SuggestionOutput} when an essential input is missing.
    *
    * @param analyzerClassname The name of the analyzer that produces this output.
-   * @param e The exception thrown due to an essential input missing.
+   * @param missingInputException The exception thrown due to an essential input missing.
    * @return A {@link SuggestionOutput} surfacing which input is missing.
    */
   public static SuggestionOutput createSuggestionOutputForMissingInput(
-      String analyzerClassname, MissingInputException e) {
-    Preconditions.checkNotNull(analyzerClassname);
-    Preconditions.checkNotNull(e);
+      String analyzerClassname, MissingInputException missingInputException) {
+    return createSuggestionOutputForMissingInputs(
+        analyzerClassname, List.of(missingInputException));
+  }
 
+  /**
+   * Creates a {@link SuggestionOutput} when essential inputs are missing.
+   *
+   * @param analyzerClassname The name of the analyzer that produces this output.
+   * @param missingInputExceptions The exceptions thrown due to essential inputs missing.
+   * @return A {@link SuggestionOutput} surfacing which input is missing.
+   */
+  public static SuggestionOutput createSuggestionOutputForMissingInputs(
+      String analyzerClassname, List<MissingInputException> missingInputExceptions) {
+    Preconditions.checkNotNull(analyzerClassname);
+    Preconditions.checkNotNull(missingInputExceptions);
     return SuggestionOutput.newBuilder()
         .setAnalyzerClassname(analyzerClassname)
-        .addMissingInput(e.getMissingInputClass().getName())
+        .addAllMissingInput(
+            missingInputExceptions.stream()
+                .map(e -> e.getMissingInputClass().getName())
+                .collect(Collectors.toList()))
         .build();
   }
 
