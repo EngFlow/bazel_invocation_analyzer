@@ -54,6 +54,9 @@ public class DataManager {
     }
 
     Object datum = entry.supplier.supply();
+    if (datum == null) {
+      return null;
+    }
     if (!clazz.equals(datum.getClass())) {
       throw new IllegalStateException(
           String.format(

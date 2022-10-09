@@ -51,8 +51,37 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
   }
 
   @Test
+  public void shouldNotReturnSuggestionForMissingBazelPhaseDescriptions() {
+    bazelPhaseDescriptions = null;
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(NegligiblePhaseSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList())
+        .contains(BazelPhaseDescriptions.class.getName());
+  }
+
+  @Test
+  public void shouldNotReturnSuggestionForMissingTotalDuration() {
+    totalDuration = null;
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(NegligiblePhaseSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).contains(TotalDuration.class.getName());
+  }
+
+  @Test
   public void shouldNotReturnSuggestionForShortDuration() throws Exception {
     totalDuration = new TotalDuration(Duration.ofMillis(20));
+    for (BazelProfilePhase phase : BazelProfilePhase.values()) {
+      bazelPhaseDescriptions.add(
+          phase, new BazelPhaseDescription(Timestamp.ofMicros(0), Timestamp.ofSeconds(5)));
+    }
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     verify(dataManager).getDatum(TotalDuration.class);
@@ -62,6 +91,18 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
         .isEqualTo(NegligiblePhaseSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
+  }
+
+  @Test
+  public void shouldNotReturnSuggestionForMissingPhases() {
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(NegligiblePhaseSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
   }
 
   @Test
