@@ -25,9 +25,10 @@ Alternatively, email data to <bia-dev@engflow.com> while referencing the created
 
 Details about the environment this bug was observed in, e.g. OS.
 
-* OS:
-* Browser:
-* Other:
+- Bazel Invocation Analyzer Version: [version number or commit id]
+- Browser: [e.g. Chrome, Safari]
+- Operating System: [e.g. Linux, macOS, Windows including version]
+- Other:
 
 ### Step-by-step guide on how to reproduce the bug
 
@@ -44,6 +45,8 @@ Optionally include the tool's output, either in its entirety (e.g. as a text fil
 ```
 output
 ```
+
+or attach a screenshot.
 
 ### File(s) scanned
 
