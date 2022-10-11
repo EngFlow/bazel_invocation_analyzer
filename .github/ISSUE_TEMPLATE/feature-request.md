@@ -17,9 +17,9 @@ A clear and concise description of how the problem might be solved.
 
 This may include
 
-* Implementation details
-* Tradeoffs
-* Caveats and considerations for future work
+- Implementation details
+- Tradeoffs
+- Caveats and considerations for future work
 
 ## (Optional) Alternative solution
 
