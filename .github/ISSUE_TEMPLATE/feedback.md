@@ -1,6 +1,6 @@
 ---
 name: 💬 Feedback
-about: Issue template for providing feedback.
+about: Provide feedback on Bazel Invocation Analyzer
 title: "{😀/😐/🙁 short headline describing the feedback}"
 labels:
   - type/feedback
@@ -25,12 +25,12 @@ either in its entirety or only the relevant section(s). Inline the output as a c
 attach a text file.
 
 ```
-output
+example output
 ```
 
 ### File(s) scanned
 
-Optionally attach the file (e.g. Bazel profile).
+Optionally attach the Bazel profile(s) you had Bazel Invocation Analyzer scan.
 
 ### Further details
 

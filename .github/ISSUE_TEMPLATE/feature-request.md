@@ -1,6 +1,6 @@
 ---
 name: ✨ Feature Request
-about: Issue template for feature requests.
+about: Request a feature.
 title: "{short headline describing the requested feature}"
 labels:
   - type/feat
@@ -9,7 +9,7 @@ labels:
 
 ## Problem
 
-Description of the problem observed.
+A clear and concise description of the problem observed.
 
 ## (Optional) Preferred solution
 
@@ -30,6 +30,7 @@ If proposing different solutions, present each one separately.
 Supplemental data helps acting on issues more quickly and reliably.
 
 Provide as many details as you feel comfortable sharing publicly.
-Alternatively, email data to <bia-dev@engflow.com> while referencing the created issue, or opt to send the feature request entirely by email.
+Alternatively, email data to <bia-dev@engflow.com> while referencing the created issue, or opt to
+send the feature request entirely by email.
 
 For example, you may want to include example files, reference other issues, etc.

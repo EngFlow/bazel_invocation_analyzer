@@ -1,25 +1,38 @@
 ---
 name: 🐛 Bug Report
-about: Issue template for bugs.
+about: Report a bug.
 title: "{short headline describing the bug, not the fix}"
 labels:
   - type/bug
 ---
 
-## Observed behavior
+## Description
 
-Description of observed behavior.
+A clear and concise description of what the bug is.
 
-## Expected behavior
+### Observed behavior
 
-Description of what the behavior should be.
+A clear and concise description of the observed behavior.
 
-## Details
+### Expected behavior
+
+A clear and concise description of what the behavior should be.
+
+### Step-by-step guide on how to reproduce the bug
+
+1. Use numbered steps for easier later reference.
+1. If you used the CLI, include the command you ran:
+    ```bash
+    the command run
+    ```
+
+## Additional context
 
 Supplemental data helps debug issues more quickly and reliably.
 
 Provide as many details as you feel comfortable sharing publicly.
-Alternatively, email data to <bia-dev@engflow.com> while referencing the created issue, or opt to send the bug report entirely by email.
+Alternatively, email data to <bia-dev@engflow.com> while referencing the created issue, or opt to
+send the bug report entirely by email.
 
 ### Environment
 
@@ -30,26 +43,20 @@ Details about the environment this bug was observed in, e.g. OS.
 - Operating System: [e.g. Linux, macOS, Windows including version]
 - Other:
 
-### Step-by-step guide on how to reproduce the bug
-
-1. Use numbered steps for easier later reference.
-1. If you used the CLI, include the command you ran:
-    ```bash
-    the command run 
-    ```
-
 ### Output
 
-Optionally include the tool's output, either in its entirety (e.g. as a text file), or only the relevant section(s) (e.g. inline here).
+Optionally include the tool's output. You can add a screenshot, or copy and paste the text output
+either in its entirety or only the relevant section(s). Inline the output as a codeblock here or
+attach a text file.
 
 ```
-output
+example output
 ```
-
-or attach a screenshot.
 
 ### File(s) scanned
 
 Optionally attach the file (e.g. Bazel profile).
 
 ### Further details
+
+Provide other data related to this issue that may prove helpful.
