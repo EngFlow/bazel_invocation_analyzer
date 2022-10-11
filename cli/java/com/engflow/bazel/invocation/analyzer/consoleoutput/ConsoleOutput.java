@@ -36,6 +36,7 @@ public class ConsoleOutput {
 
   private static final String CONSOLE_FORMAT_DELIMITER = ";";
   private static final String CONSOLE_FORMAT_STRING = "\u001B[%sm%s\u001B[0m";
+  private static final String DATA_HEADER = "Data from analysis:";
   private static final String ERROR = "An error occurred while trying to analyze your profile.";
   private static final String HEADING_CAVEATS = "Caveats";
   private static final String HEADING_POTENTIAL_IMPROVEMENT = "Potential improvement";
@@ -45,10 +46,21 @@ public class ConsoleOutput {
   private static final String NO_SUGGESTIONS =
       "The tool did not produce any suggestions for this profile. Try again with a different"
           + " profile or use a later version of this tool.";
+  private static final String NOTE = "Note:";
   private static final String SUGGEST_VERBOSE_MODE =
       "Try running this tool with --verbose to get more data.";
-  private static final String TITLE = "Bazel Profile Analyzer by EngFlow";
-  private static final String DATA_HEADER = "Data from analysis:";
+  private static final String TITLE = "Bazel Invocation Analyzer by EngFlow";
+  private static final String FEEDBACK_TITLE = "Help improve this tool";
+  private static final String FEEDBACK_OPTIONS_INTRO =
+      "You can provide feedback on Bazel Invocation Analyzer as follows:";
+  private static final String FEEDBACK_OPTION_GITHUB_FORMAT = "%s%s to file an issue";
+  private static final String FEEDBACK_OPTION_EMAIL_FORMAT = "%s%s to send us an email";
+  private static final String FEEDBACK_CONTRIBUTE =
+      "Bazel Invocation Analyzer is open source. We welcome contributions!";
+  private static final String TAB = "\t";
+  private static final String FEEDBACK_OPEN_NEW_ISSUE =
+      "https://github.com/EngFlow/bazel_invocation_analyzer/issues/new";
+  private static final String FEEDBACK_EMAIL_ADDRESS = "bia-dev@engflow.com";
 
   private final boolean disableFormatting;
   private final boolean verbose;
@@ -66,8 +78,26 @@ public class ConsoleOutput {
   }
 
   public void outputNote(String warning) {
-    System.out.println(format("Note:", ConsoleOutputStyle.TEXT_BOLD));
+    System.out.println(format(NOTE, ConsoleOutputStyle.TEXT_BOLD));
     System.out.println(warning);
+    System.out.println();
+  }
+
+  public void outputFeedbackOptions() {
+    System.out.println();
+    System.out.println(formatAsHeading(FEEDBACK_TITLE));
+    System.out.println(FEEDBACK_OPTIONS_INTRO);
+    System.out.println(
+        String.format(
+            FEEDBACK_OPTION_GITHUB_FORMAT,
+            TAB,
+            format(FEEDBACK_OPEN_NEW_ISSUE, ConsoleOutputStyle.TEXT_UNDERLINE)));
+    System.out.println(
+        String.format(
+            FEEDBACK_OPTION_EMAIL_FORMAT,
+            TAB,
+            format(FEEDBACK_EMAIL_ADDRESS, ConsoleOutputStyle.TEXT_UNDERLINE)));
+    System.out.println(FEEDBACK_CONTRIBUTE);
     System.out.println();
   }
 
@@ -92,8 +122,8 @@ public class ConsoleOutput {
             .reduce(Boolean::logicalOr)
             .orElse(false);
 
+    System.out.println();
     if (!anyOutput) {
-      System.out.println();
       System.out.println(format(NO_SUGGESTIONS, ConsoleOutputStyle.TEXT_YELLOW));
     }
   }

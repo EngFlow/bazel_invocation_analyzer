@@ -123,8 +123,10 @@ public class Main {
       } else if (modes.contains(Mode.USED_DATA)) {
         consoleOutput.outputAnalysisData(dataManager.getUsedDataByProvider());
       }
+      consoleOutput.outputFeedbackOptions();
     } catch (Throwable t) {
       consoleOutput.outputError(t);
+      consoleOutput.outputFeedbackOptions();
       System.exit(1);
     }
   }
