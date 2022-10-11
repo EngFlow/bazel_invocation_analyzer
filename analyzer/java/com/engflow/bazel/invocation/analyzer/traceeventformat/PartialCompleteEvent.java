@@ -38,7 +38,7 @@ public class PartialCompleteEvent {
   }
 
   /**
-   * Returns whether the event is cropped. The even is cropped, if the timing information of this
+   * Returns whether the event is cropped. The event is cropped, if the timing information of this
    * event and the contained {@llink CompleteEvent} do not match.
    *
    * @return Whether the event is cropped.
