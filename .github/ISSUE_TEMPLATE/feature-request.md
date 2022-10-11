@@ -13,7 +13,7 @@ A clear and concise description of the problem observed.
 
 ## (Optional) Preferred solution
 
-Description of how the problem might be solved.
+A clear and concise description of how the problem might be solved.
 
 This may include
 
