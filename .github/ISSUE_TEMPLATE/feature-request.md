@@ -21,9 +21,9 @@ This may include
 * Tradeoffs
 * Caveats and considerations for future work
 
-If proposing different solutions, present each one separately.
-
 ## (Optional) Alternative solution
+
+If proposing different solutions, present each one separately.
 
 ## Additional information
 
