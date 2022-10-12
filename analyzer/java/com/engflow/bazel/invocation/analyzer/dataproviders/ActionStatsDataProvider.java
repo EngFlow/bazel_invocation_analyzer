@@ -87,40 +87,47 @@ public class ActionStatsDataProvider extends DataProvider {
             event ->
                 bottlenecks.forEach(
                     bottleneck -> {
-                      if (BazelProfileConstants.CAT_ACTION_PROCESSING.equals(event.category)) {
-                        // Add events to bottleneck, if at least partially contained.
+                      switch (event.category) {
+                        case BazelProfileConstants.CAT_ACTION_PROCESSING:
+                          // Add events to bottleneck, if at least partially contained.
 
-                        if (event.start.compareTo(bottleneck.getEnd()) > 0) {
-                          // Event started after bottleneck.
+                          if (event.start.compareTo(bottleneck.getEnd()) > 0) {
+                            // Event started after bottleneck.
+                            return;
+                          }
+                          if (event.end.compareTo(bottleneck.getStart()) < 0) {
+                            // Event ended before bottleneck.
+                            return;
+                          }
+                          bottleneck.addEvent(event);
+                          break;
+                        case BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME:
+                          // Add queuing duration to bottleneck, if at least partially contained.
+                          // TODO: Consider storing the queuing per CAT_ACTION_PROCESSING event.
+
+                          if (event.start.compareTo(bottleneck.getEnd()) > 0) {
+                            // Queuing event started after bottleneck.
+                            return;
+                          }
+                          if (event.end.compareTo(bottleneck.getStart()) < 0) {
+                            // Queuing event ended before bottleneck.
+                            return;
+                          }
+                          // Only consider the queuing that is part of the bottleneck.
+                          Duration partialQueuingDuration =
+                              TimeUtil.getDurationBetween(
+                                  bottleneck.getStart().compareTo(event.start) > 0
+                                      ? bottleneck.getStart()
+                                      : event.start,
+                                  bottleneck.getEnd().compareTo(event.end) < 0
+                                      ? bottleneck.getEnd()
+                                      : event.end);
+                          bottleneck.addQueuingDuration(
+                              new ThreadId(event.processId, event.threadId),
+                              partialQueuingDuration);
+                          break;
+                        default:
                           return;
-                        }
-                        if (event.end.compareTo(bottleneck.getStart()) < 0) {
-                          // Event ended before bottleneck.
-                          return;
-                        }
-                        bottleneck.addEvent(event);
-                      } else if (BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME.equals(
-                          event.category)) {
-                        // Add queuing duration to bottleneck, if at least partially contained.
-                        if (event.start.compareTo(bottleneck.getEnd()) > 0) {
-                          // Queuing event started after bottleneck.
-                          return;
-                        }
-                        if (event.end.compareTo(bottleneck.getStart()) < 0) {
-                          // Queuing event ended before bottleneck.
-                          return;
-                        }
-                        // Only consider the queuing that is part of the bottleneck.
-                        Duration partialQueuingDuration =
-                            TimeUtil.getDurationBetween(
-                                bottleneck.getStart().compareTo(event.start) > 0
-                                    ? bottleneck.getStart()
-                                    : event.start,
-                                bottleneck.getEnd().compareTo(event.end) < 0
-                                    ? bottleneck.getEnd()
-                                    : event.end);
-                        bottleneck.addQueuingDuration(
-                            new ThreadId(event.processId, event.threadId), partialQueuingDuration);
                       }
                     }));
     return new ActionStats(bottlenecks.stream().map(b -> b.build()).collect(Collectors.toList()));
