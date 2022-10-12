@@ -26,6 +26,7 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.BazelPhaseDescription
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
+import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,8 +35,8 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
   // are set up with reasonable defaults before each test is run, but can be overridden within the
   // tests when custom values are desired for the testing being conducted (without the need to
   // re-initialize the mocking).
-  private TotalDuration totalDuration;
-  private BazelPhaseDescriptions.Builder bazelPhaseDescriptions;
+  @Nullable private TotalDuration totalDuration;
+  @Nullable private BazelPhaseDescriptions.Builder bazelPhaseDescriptions;
 
   @Before
   public void setup() throws Exception {

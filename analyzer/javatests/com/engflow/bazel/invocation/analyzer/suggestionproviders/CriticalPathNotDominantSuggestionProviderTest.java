@@ -41,9 +41,9 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
   // re-initialize the mocking).
   private BazelPhaseDescriptions.Builder phases;
   @Nullable private CriticalPathDuration criticalPathDuration;
-  private TotalDuration totalDuration;
+  @Nullable private TotalDuration totalDuration;
   private RemoteExecutionUsed remoteExecutionUsed;
-  private EstimatedCoresUsed estimatedCoresUsed;
+  @Nullable private EstimatedCoresUsed estimatedCoresUsed;
   private EstimatedJobsFlagValue estimatedJobsFlagValue;
 
   @Before
