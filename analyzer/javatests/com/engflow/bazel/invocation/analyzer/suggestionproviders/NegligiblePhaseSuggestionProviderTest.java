@@ -45,7 +45,7 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
     when(dataManager.getDatum(TotalDuration.class)).thenAnswer(i -> totalDuration);
     bazelPhaseDescriptions = BazelPhaseDescriptions.newBuilder();
     when(dataManager.getDatum(BazelPhaseDescriptions.class))
-        .thenAnswer(i -> bazelPhaseDescriptions.build());
+        .thenAnswer(i -> bazelPhaseDescriptions == null ? null : bazelPhaseDescriptions.build());
 
     suggestionProvider = new NegligiblePhaseSuggestionProvider();
   }
