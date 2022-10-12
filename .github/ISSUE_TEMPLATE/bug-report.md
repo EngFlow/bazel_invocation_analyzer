@@ -36,9 +36,9 @@ send the bug report entirely by email.
 
 ### Environment
 
-Details about the environment this bug was observed in, e.g. OS.
+Details about the environment this bug was observed in.
 
-- Bazel Invocation Analyzer Version: [version number or commit id]
+- Bazel Invocation Analyzer: [version number or commit id]
 - Browser: [e.g. Chrome, Safari]
 - Operating System: [e.g. Linux, macOS, Windows including version]
 - Other:

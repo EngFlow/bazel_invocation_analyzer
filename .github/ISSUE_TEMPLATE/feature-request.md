@@ -6,7 +6,6 @@ labels:
   - type/feat
 ---
 
-
 ## Problem
 
 A clear and concise description of the problem observed.
@@ -27,7 +26,7 @@ If proposing different solutions, present each one separately.
 
 ## Additional information
 
-Supplemental data helps acting on issues more quickly and reliably.
+Supplemental data helps evaluate and implement feature requests more quickly and reliably.
 
 Provide as many details as you feel comfortable sharing publicly.
 Alternatively, email data to <bia-dev@engflow.com> while referencing the created issue, or opt to
