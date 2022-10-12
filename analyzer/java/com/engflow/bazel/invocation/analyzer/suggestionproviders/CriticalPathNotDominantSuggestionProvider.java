@@ -96,17 +96,27 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
 
       List<Suggestion> suggestions = new ArrayList<>();
 
+      TotalDuration totalDurationDatum = dataManager.getDatum(TotalDuration.class);
+      if (totalDurationDatum == null) {
+        throw new MissingInputException(TotalDuration.class);
+      }
       Duration totalDuration = dataManager.getDatum(TotalDuration.class).getTotalDuration();
       Duration minimumDuration = totalDuration.minus(executionDuration).plus(criticalPathDuration);
-      long estimatedCoresUsed = dataManager.getDatum(EstimatedCoresUsed.class).getEstimatedCores();
+      double durationReductionPercent =
+          100 * (1 - minimumDuration.toMillis() / (double) totalDuration.toMillis());
+
+      EstimatedCoresUsed estimatedCoresUsedDatum = dataManager.getDatum(EstimatedCoresUsed.class);
+      if (estimatedCoresUsedDatum == null) {
+        throw new MissingInputException(EstimatedCoresUsed.class);
+      }
+      long estimatedCoresUsed = estimatedCoresUsedDatum.getEstimatedCores();
       long optimalCores =
           (long)
               Math.ceil(
                   estimatedCoresUsed
                       * totalDuration.toMillis()
                       / (double) minimumDuration.toMillis());
-      double durationReductionPercent =
-          100 * (1 - minimumDuration.toMillis() / (double) totalDuration.toMillis());
+
       PotentialImprovement potentialImprovement =
           SuggestionProviderUtil.createPotentialImprovement(
               String.format(

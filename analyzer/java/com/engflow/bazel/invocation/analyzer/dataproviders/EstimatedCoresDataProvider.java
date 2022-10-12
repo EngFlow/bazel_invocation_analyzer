@@ -64,6 +64,11 @@ public class EstimatedCoresDataProvider extends DataProvider {
       throws MissingInputException, InvalidProfileException {
     determineEstimatedCoresAvailable();
     determineEstimatedCoresUsed();
+    if (executionPhaseSkyframeEvaluatorsMaxValue == null
+        || evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue == null) {
+      // The Bazel profile does not include enough data to provide this Datum.
+      return null;
+    }
     return new EstimatedJobsFlagValue(
         executionPhaseSkyframeEvaluatorsMaxValue + 1,
         !executionPhaseSkyframeEvaluatorsMaxValue.equals(
@@ -74,6 +79,11 @@ public class EstimatedCoresDataProvider extends DataProvider {
   EstimatedCoresAvailable getEstimatedCoresAvailable()
       throws MissingInputException, InvalidProfileException {
     determineEstimatedCoresAvailable();
+    if (evaluateAndDependenciesPhaseSkyframeEvaluators == null
+        || evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue == null) {
+      // The Bazel profile does not include enough data to provide this Datum.
+      return null;
+    }
     return new EstimatedCoresAvailable(
         evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue + 1,
         getGaps(
@@ -84,6 +94,11 @@ public class EstimatedCoresDataProvider extends DataProvider {
   @VisibleForTesting
   EstimatedCoresUsed getEstimatedCoresUsed() throws MissingInputException, InvalidProfileException {
     determineEstimatedCoresUsed();
+    if (executionPhaseSkyframeEvaluators == null
+        || executionPhaseSkyframeEvaluatorsMaxValue == null) {
+      // The Bazel profile does not include enough data to provide this Datum.
+      return null;
+    }
     return new EstimatedCoresUsed(
         executionPhaseSkyframeEvaluators.size(),
         getGaps(executionPhaseSkyframeEvaluators, executionPhaseSkyframeEvaluatorsMaxValue));
@@ -106,14 +121,23 @@ public class EstimatedCoresDataProvider extends DataProvider {
       BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
       BazelPhaseDescriptions bazelPhaseDescriptions =
           getDataManager().getDatum(BazelPhaseDescriptions.class);
-      // Ideally, evaluate only events within the target pattern evaluation and dependency analysis
-      // phases. If the phase markers are not present, extend the range only as much as necessary.
-      Timestamp start =
-          bazelPhaseDescriptions.getOrClosestBefore(BazelProfilePhase.EVALUATE).getStart();
-      Timestamp end =
-          bazelPhaseDescriptions.getOrClosestAfter(BazelProfilePhase.DEPENDENCIES).getEnd();
+      // Evaluate only events within the target pattern evaluation and dependency analysis
+      // phases. These phases should use as many cores as there are available, irrespective of
+      // whether the Bazel flag `--jobs` is set or not.
+      BazelPhaseDescription start =
+          bazelPhaseDescriptions.has(BazelProfilePhase.EVALUATE)
+              ? bazelPhaseDescriptions.get(BazelProfilePhase.EVALUATE)
+              : bazelPhaseDescriptions.get(BazelProfilePhase.DEPENDENCIES);
+      BazelPhaseDescription end =
+          bazelPhaseDescriptions.has(BazelProfilePhase.DEPENDENCIES)
+              ? bazelPhaseDescriptions.get(BazelProfilePhase.DEPENDENCIES)
+              : bazelPhaseDescriptions.get(BazelProfilePhase.EVALUATE);
+      if (start == null || end == null) {
+        // The profile does not include that data necessary.
+        return;
+      }
       evaluateAndDependenciesPhaseSkyframeEvaluators =
-          getSkyframeEvaluators(bazelProfile, start, end);
+          getSkyframeEvaluators(bazelProfile, start.getStart(), end.getEnd());
       evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue =
           evaluateAndDependenciesPhaseSkyframeEvaluators.stream().max(Integer::compareTo).get();
     }
@@ -125,12 +149,14 @@ public class EstimatedCoresDataProvider extends DataProvider {
       BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
       BazelPhaseDescriptions bazelPhaseDescriptions =
           getDataManager().getDatum(BazelPhaseDescriptions.class);
-      // Ideally, evaluate only threads with events in the execution phase. If the phase marker is
-      // not present, extend the range only as much as necessary.
-      Timestamp start =
-          bazelPhaseDescriptions.getOrClosestBefore(BazelProfilePhase.EXECUTE).getStart();
-      Timestamp end = bazelPhaseDescriptions.getOrClosestAfter(BazelProfilePhase.EXECUTE).getEnd();
-      executionPhaseSkyframeEvaluators = getSkyframeEvaluators(bazelProfile, start, end);
+      // Evaluate only threads with events in the execution phase, as the Bazel flag `--jobs`
+      // applies to that phase specifically.
+      BazelPhaseDescription execution = bazelPhaseDescriptions.get(BazelProfilePhase.EXECUTE);
+      if (execution == null) {
+        return;
+      }
+      executionPhaseSkyframeEvaluators =
+          getSkyframeEvaluators(bazelProfile, execution.getStart(), execution.getEnd());
       executionPhaseSkyframeEvaluatorsMaxValue =
           executionPhaseSkyframeEvaluators.stream().max(Integer::compareTo).get();
     }

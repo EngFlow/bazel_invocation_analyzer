@@ -83,20 +83,38 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
   public SuggestionOutput getSuggestions(DataManager dataManager) {
     try {
       final var actionStats = dataManager.getDatum(ActionStats.class);
-      final var cores = dataManager.getDatum(EstimatedCoresUsed.class).getEstimatedCores();
-      final var totalDuration = dataManager.getDatum(TotalDuration.class).getTotalDuration();
-      final List<Caveat> caveats = new ArrayList<>();
+      final var coresUsedDatum = dataManager.getDatum(EstimatedCoresUsed.class);
+      final var totalDurationDatum = dataManager.getDatum(TotalDuration.class);
+      List<MissingInputException> missingInputExceptions = new ArrayList<>();
+      if (actionStats == null) {
+        missingInputExceptions.add(new MissingInputException(ActionStats.class));
+      }
+      if (coresUsedDatum == null) {
+        missingInputExceptions.add(new MissingInputException((EstimatedCoresUsed.class)));
+      }
+      if (totalDurationDatum == null) {
+        missingInputExceptions.add(new MissingInputException((TotalDuration.class)));
+      }
+      if (!missingInputExceptions.isEmpty()) {
+        return SuggestionProviderUtil.createSuggestionOutputForMissingInputs(
+            ANALYZER_CLASSNAME, missingInputExceptions);
+      }
 
+      final var coresUsed = coresUsedDatum.getEstimatedCores();
+      final var totalDuration =
+          totalDurationDatum == null ? null : totalDurationDatum.getTotalDuration();
+      final List<Caveat> caveats = new ArrayList<>();
       final var suggestions =
           actionStats.bottlenecks.stream()
               // Only consider bottlenecks with sufficiently fewer actions than cores used.
-              .filter(bottleneck -> bottleneck.getAvgActionCount() / cores < maxActionCountRatio)
+              .filter(
+                  bottleneck -> bottleneck.getAvgActionCount() / coresUsed < maxActionCountRatio)
               // Only consider bottlenecks that are sufficiently long.
               .filter(bottleneck -> bottleneck.getDuration().compareTo(minDuration) >= 0)
               .map(
                   bottleneck ->
                       BottleneckStats.fromBottleneckAndCoresAndWallDuration(
-                          bottleneck, cores, totalDuration))
+                          bottleneck, coresUsed, totalDuration))
               .filter(bottleneckStats -> bottleneckStats.improvement >= minImprovementRatio)
               .sorted(
                   Comparator.<BottleneckStats>comparingDouble(

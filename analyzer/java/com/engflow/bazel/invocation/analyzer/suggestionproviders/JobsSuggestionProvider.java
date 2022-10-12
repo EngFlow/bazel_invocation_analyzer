@@ -53,6 +53,20 @@ public class JobsSuggestionProvider extends SuggestionProviderBase {
       EstimatedJobsFlagValue estimatedJobs = dataManager.getDatum(EstimatedJobsFlagValue.class);
       RemoteExecutionUsed remoteExecutionUsed = dataManager.getDatum(RemoteExecutionUsed.class);
       RemoteCachingUsed remoteCachingUsed = dataManager.getDatum(RemoteCachingUsed.class);
+      List<MissingInputException> missingInputExceptions = new ArrayList<>();
+      if (estimatedJobs == null) {
+        missingInputExceptions.add(new MissingInputException(EstimatedJobsFlagValue.class));
+      }
+      if (remoteExecutionUsed == null) {
+        missingInputExceptions.add(new MissingInputException((RemoteExecutionUsed.class)));
+      }
+      if (remoteCachingUsed == null) {
+        missingInputExceptions.add(new MissingInputException((RemoteCachingUsed.class)));
+      }
+      if (!missingInputExceptions.isEmpty()) {
+        return SuggestionProviderUtil.createSuggestionOutputForMissingInputs(
+            ANALYZER_CLASSNAME, missingInputExceptions);
+      }
 
       if (!remoteExecutionUsed.isRemoteExecutionUsed()
           && !remoteCachingUsed.isRemoteCachingUsed()
@@ -60,7 +74,13 @@ public class JobsSuggestionProvider extends SuggestionProviderBase {
         // The profile seems to be for a fully local build where --jobs was set.
         EstimatedCoresAvailable coresAvailable =
             dataManager.getDatum(EstimatedCoresAvailable.class);
+        if (coresAvailable == null) {
+          throw new MissingInputException(EstimatedCoresAvailable.class);
+        }
         EstimatedCoresUsed coresUsed = dataManager.getDatum(EstimatedCoresUsed.class);
+        if (coresUsed == null) {
+          throw new MissingInputException(EstimatedCoresUsed.class);
+        }
         String title = "Unset the value of of the Bazel flag --jobs";
         String recommendation =
             "For local builds, setting the Bazel flag --jobs to a number is not"

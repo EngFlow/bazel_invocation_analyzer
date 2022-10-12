@@ -19,8 +19,8 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
  * flag `--jobs`. This value may both be higher or lower than {@link EstimatedCoresUsed}.
  */
 public class EstimatedCoresAvailable extends EstimatedCores {
-  public EstimatedCoresAvailable(int estimatedCoresUsed, int gaps) {
-    super(estimatedCoresUsed, gaps);
+  public EstimatedCoresAvailable(int estimatedCoresAvailable, int gaps) {
+    super(estimatedCoresAvailable, gaps);
   }
 
   @Override

@@ -40,6 +40,50 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
   }
 
   @Test
+  public void doesNotCreateSuggestionsIfActionStatsIsMissing()
+      throws MissingInputException, InvalidProfileException {
+    when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
+    when(dataManager.getDatum(TotalDuration.class))
+        .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
+
+    final var bottleneckSuggestionProvider =
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0, 1.);
+    final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
+    assertThat(suggestions.getSuggestionList()).isEmpty();
+    assertThat(suggestions.hasFailure()).isFalse();
+    assertThat(suggestions.getMissingInputList()).contains(ActionStats.class.getName());
+  }
+
+  @Test
+  public void doesNotCreateSuggestionsIfEstimatedCoresUsedIsMissing()
+      throws MissingInputException, InvalidProfileException {
+    when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of()));
+    when(dataManager.getDatum(TotalDuration.class))
+        .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
+
+    final var bottleneckSuggestionProvider =
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0, 1.);
+    final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
+    assertThat(suggestions.getSuggestionList()).isEmpty();
+    assertThat(suggestions.hasFailure()).isFalse();
+    assertThat(suggestions.getMissingInputList()).contains(EstimatedCoresUsed.class.getName());
+  }
+
+  @Test
+  public void doesNotCreateSuggestionsIfTotalDurationIsMissing()
+      throws MissingInputException, InvalidProfileException {
+    when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of()));
+    when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
+
+    final var bottleneckSuggestionProvider =
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0, 1.);
+    final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
+    assertThat(suggestions.getSuggestionList()).isEmpty();
+    assertThat(suggestions.hasFailure()).isFalse();
+    assertThat(suggestions.getMissingInputList()).contains(TotalDuration.class.getName());
+  }
+
+  @Test
   public void doesNotCreateSuggestionsIfThereAreNoBottlenecks()
       throws MissingInputException, InvalidProfileException {
     when(dataManager.getDatum(TotalDuration.class))

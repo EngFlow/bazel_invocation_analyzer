@@ -102,7 +102,56 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void shouldReturnEstimatedCoresAvailablePhaseMarkersMissing() throws Exception {
+  public void shouldNotReturnEstimatedCoresAvailableEvaluatePhaseMarkerMissing() throws Exception {
+    int maxIndexInRelevantPhase = 3;
+    Timestamp start = Timestamp.ofMicros(20_000);
+    Timestamp within1 = Timestamp.ofMicros(22_000);
+    Timestamp end = Timestamp.ofMicros(30_000);
+    Timestamp outsideRange = Timestamp.ofMicros(30_001);
+    useProfile(
+        metaData(),
+        trace(
+            skyFrameThread(maxIndexInRelevantPhase, within1, Duration.ZERO),
+            skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
+
+    BazelPhaseDescriptions bazelPhaseDescriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(start, end))
+            .build();
+
+    when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
+
+    assertThat(provider.getEstimatedCoresAvailable().getEstimatedCores())
+        .isEqualTo(maxIndexInRelevantPhase + 1);
+  }
+
+  @Test
+  public void shouldNotReturnEstimatedCoresAvailableDependenciesPhaseMarkerMissing()
+      throws Exception {
+    int maxIndexInRelevantPhase = 3;
+    Timestamp start = Timestamp.ofMicros(20_000);
+    Timestamp within1 = Timestamp.ofMicros(22_000);
+    Timestamp end = Timestamp.ofMicros(30_000);
+    Timestamp outsideRange = Timestamp.ofMicros(30_001);
+    useProfile(
+        metaData(),
+        trace(
+            skyFrameThread(maxIndexInRelevantPhase, within1, Duration.ZERO),
+            skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
+
+    BazelPhaseDescriptions bazelPhaseDescriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.EVALUATE, new BazelPhaseDescription(start, end))
+            .build();
+
+    when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
+
+    assertThat(provider.getEstimatedCoresAvailable().getEstimatedCores())
+        .isEqualTo(maxIndexInRelevantPhase + 1);
+  }
+
+  @Test
+  public void shouldNotReturnEstimatedCoresAvailablePhaseMarkersMissing() throws Exception {
     int maxIndexInRelevantPhase = 3;
     Timestamp start = Timestamp.ofMicros(20_000);
     Timestamp within1 = Timestamp.ofMicros(22_000);
@@ -123,8 +172,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
-    EstimatedCoresAvailable estimatedCores = provider.getEstimatedCoresAvailable();
-    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(maxIndexInRelevantPhase + 1);
+    assertThat(provider.getEstimatedCoresAvailable()).isNull();
   }
 
   @Test
@@ -174,7 +222,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void shouldReturnEstimatedCoresUsedExecutePhaseMarkerMissing() throws Exception {
+  public void shouldNotReturnEstimatedCoresUsedExecutePhaseMarkerMissing() throws Exception {
     Timestamp outsideRangeBefore = Timestamp.ofMicros(19_999);
     Timestamp start = Timestamp.ofMicros(20_000);
     Timestamp within1 = Timestamp.ofMicros(22_000);
@@ -196,8 +244,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
-    EstimatedCoresUsed estimatedCores = provider.getEstimatedCoresUsed();
-    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(2);
+    assertThat(provider.getEstimatedCoresUsed()).isNull();
   }
 
   @Test
