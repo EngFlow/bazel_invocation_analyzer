@@ -17,6 +17,7 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfilePhase;
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
+import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,10 +26,14 @@ import java.util.Map;
  * Bazel profile.
  */
 public class BazelPhaseDescriptions implements Datum {
-  private final Map<BazelProfilePhase, BazelPhaseDescription> phaseToDescription = new HashMap<>();
+  private final ImmutableMap<BazelProfilePhase, BazelPhaseDescription> phaseToDescription;
 
-  public void add(BazelProfilePhase phase, BazelPhaseDescription description) {
-    phaseToDescription.put(phase, description);
+  private BazelPhaseDescriptions(Map<BazelProfilePhase, BazelPhaseDescription> phaseToDescription) {
+    this.phaseToDescription = ImmutableMap.copyOf(phaseToDescription);
+  }
+
+  public static BazelPhaseDescriptions.Builder newBuilder() {
+    return new BazelPhaseDescriptions.Builder();
   }
 
   public BazelPhaseDescription get(BazelProfilePhase phase) {
@@ -102,5 +107,22 @@ public class BazelPhaseDescriptions implements Datum {
       }
     }
     return sb.toString();
+  }
+
+  public static class Builder {
+    private final Map<BazelProfilePhase, BazelPhaseDescription> phaseToDescription;
+
+    private Builder() {
+      this.phaseToDescription = new HashMap<>();
+    }
+
+    public Builder add(BazelProfilePhase phase, BazelPhaseDescription description) {
+      phaseToDescription.put(phase, description);
+      return this;
+    }
+
+    public BazelPhaseDescriptions build() {
+      return new BazelPhaseDescriptions(phaseToDescription);
+    }
   }
 }

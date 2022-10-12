@@ -35,7 +35,7 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
   // tests when custom values are desired for the testing being conducted (without the need to
   // re-initialize the mocking).
   private TotalDuration totalDuration;
-  private BazelPhaseDescriptions bazelPhaseDescriptions;
+  private BazelPhaseDescriptions.Builder bazelPhaseDescriptions;
 
   @Before
   public void setup() throws Exception {
@@ -43,9 +43,9 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
     // are requested.
     totalDuration = new TotalDuration(Duration.ofSeconds(60));
     when(dataManager.getDatum(TotalDuration.class)).thenAnswer(i -> totalDuration);
-    bazelPhaseDescriptions = new BazelPhaseDescriptions();
+    bazelPhaseDescriptions = BazelPhaseDescriptions.newBuilder();
     when(dataManager.getDatum(BazelPhaseDescriptions.class))
-        .thenAnswer(i -> bazelPhaseDescriptions);
+        .thenAnswer(i -> bazelPhaseDescriptions.build());
 
     suggestionProvider = new NegligiblePhaseSuggestionProvider();
   }

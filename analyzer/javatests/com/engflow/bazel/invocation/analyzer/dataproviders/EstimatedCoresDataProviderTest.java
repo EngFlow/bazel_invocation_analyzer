@@ -62,11 +62,11 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
             skyFrameThread(2, within, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase, within, Duration.ZERO)));
 
-    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
-    bazelPhaseDescriptions.add(
-        BazelProfilePhase.EVALUATE, new BazelPhaseDescription(start, within));
-    bazelPhaseDescriptions.add(
-        BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(within, end));
+    BazelPhaseDescriptions bazelPhaseDescriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.EVALUATE, new BazelPhaseDescription(start, within))
+            .add(BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(within, end))
+            .build();
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
@@ -89,11 +89,11 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
             skyFrameThread(maxIndexInRelevantPhase, end, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
 
-    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
-    bazelPhaseDescriptions.add(
-        BazelProfilePhase.EVALUATE, new BazelPhaseDescription(start, within));
-    bazelPhaseDescriptions.add(
-        BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(within, end));
+    BazelPhaseDescriptions bazelPhaseDescriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.EVALUATE, new BazelPhaseDescription(start, within))
+            .add(BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(within, end))
+            .build();
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
@@ -115,9 +115,11 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
             skyFrameThread(maxIndexInRelevantPhase, within1, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
 
-    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
-    bazelPhaseDescriptions.add(BazelProfilePhase.INIT, new BazelPhaseDescription(start, within1));
-    bazelPhaseDescriptions.add(BazelProfilePhase.EXECUTE, new BazelPhaseDescription(within2, end));
+    BazelPhaseDescriptions bazelPhaseDescriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.INIT, new BazelPhaseDescription(start, within1))
+            .add(BazelProfilePhase.EXECUTE, new BazelPhaseDescription(within2, end))
+            .build();
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
@@ -136,8 +138,10 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
             skyFrameThread(1, start, Duration.ZERO),
             skyFrameThread(2, start, Duration.ZERO),
             skyFrameThread(3, start, Duration.ZERO)));
-    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
-    bazelPhaseDescriptions.add(BazelProfilePhase.EXECUTE, new BazelPhaseDescription(start, end));
+    BazelPhaseDescriptions bazelPhaseDescriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.EXECUTE, new BazelPhaseDescription(start, end))
+            .build();
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
@@ -158,8 +162,10 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
             skyFrameThread(1, start, Duration.ZERO),
             skyFrameThread(2, start, Duration.ZERO),
             skyFrameThread(3, outsideRangeBefore, Duration.ZERO)));
-    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
-    bazelPhaseDescriptions.add(BazelProfilePhase.EXECUTE, new BazelPhaseDescription(start, end));
+    BazelPhaseDescriptions bazelPhaseDescriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.EXECUTE, new BazelPhaseDescription(start, end))
+            .build();
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
@@ -182,10 +188,11 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
             skyFrameThread(1, within2, Duration.ZERO),
             skyFrameThread(2, outsideRangeAfter, Duration.ZERO),
             skyFrameThread(3, within1, Duration.ZERO)));
-    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
-    bazelPhaseDescriptions.add(
-        BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(start, within1));
-    bazelPhaseDescriptions.add(BazelProfilePhase.FINISH, new BazelPhaseDescription(within2, end));
+    BazelPhaseDescriptions bazelPhaseDescriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(start, within1))
+            .add(BazelProfilePhase.FINISH, new BazelPhaseDescription(within2, end))
+            .build();
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
