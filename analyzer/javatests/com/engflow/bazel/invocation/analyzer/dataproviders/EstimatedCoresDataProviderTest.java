@@ -114,9 +114,10 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
             skyFrameThread(maxIndexInRelevantPhase, within1, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
 
-    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
-    bazelPhaseDescriptions.add(
-        BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(start, end));
+    BazelPhaseDescriptions bazelPhaseDescriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(start, end))
+            .build();
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
@@ -138,8 +139,10 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
             skyFrameThread(maxIndexInRelevantPhase, within1, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
 
-    BazelPhaseDescriptions bazelPhaseDescriptions = new BazelPhaseDescriptions();
-    bazelPhaseDescriptions.add(BazelProfilePhase.EVALUATE, new BazelPhaseDescription(start, end));
+    BazelPhaseDescriptions bazelPhaseDescriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.EVALUATE, new BazelPhaseDescription(start, end))
+            .build();
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
