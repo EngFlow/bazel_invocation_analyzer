@@ -56,7 +56,11 @@ public class NegligiblePhaseSuggestionProvider extends SuggestionProviderBase {
   @Override
   public SuggestionOutput getSuggestions(DataManager dataManager) {
     try {
-      Duration totalDuration = dataManager.getDatum(TotalDuration.class).getTotalDuration();
+      TotalDuration totalDurationDatum = dataManager.getDatum(TotalDuration.class);
+      if (totalDurationDatum == null) {
+        throw new MissingInputException(TotalDuration.class);
+      }
+      Duration totalDuration = totalDurationDatum.getTotalDuration();
       if (totalDuration.compareTo(MIN_DURATION) < 0) {
         // Too short for this check to be valid
         Caveat caveat =
@@ -66,9 +70,12 @@ public class NegligiblePhaseSuggestionProvider extends SuggestionProviderBase {
             ANALYZER_CLASSNAME, null, List.of(caveat));
       }
       BazelPhaseDescriptions phaseDurations = dataManager.getDatum(BazelPhaseDescriptions.class);
+      if (phaseDurations == null) {
+        throw new MissingInputException(BazelPhaseDescriptions.class);
+      }
       List<Suggestion> suggestions = new ArrayList<>();
       for (BazelProfilePhase phase : BazelProfilePhase.values()) {
-        if (NON_NEGLIGIBLE_PHASES.contains(phase)) {
+        if (!phaseDurations.has(phase) || NON_NEGLIGIBLE_PHASES.contains(phase)) {
           continue;
         }
         Duration phaseDuration = phaseDurations.get(phase).getDuration();
