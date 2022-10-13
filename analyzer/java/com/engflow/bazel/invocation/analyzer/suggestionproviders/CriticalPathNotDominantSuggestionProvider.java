@@ -70,13 +70,14 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
             ANALYZER_CLASSNAME, null, List.of(caveat));
       }
 
-      CriticalPathDuration criticalPathDurationDatum =
-          dataManager.getDatum(CriticalPathDuration.class);
-      if (criticalPathDurationDatum == null) {
+      Optional<Duration> optionalCriticalPathDuration =
+          dataManager.getDatum(CriticalPathDuration.class).getCriticalPathDuration();
+      if (optionalCriticalPathDuration.isEmpty()) {
         // We cannot make any suggestions if we have no data about the critical path.
-        return SuggestionProviderUtil.createSuggestionOutput(ANALYZER_CLASSNAME, null, null);
+        return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+            ANALYZER_CLASSNAME, CriticalPathDuration.class);
       }
-      Duration criticalPathDuration = criticalPathDurationDatum.getCriticalPathDuration();
+      Duration criticalPathDuration = optionalCriticalPathDuration.get();
       if (executionDuration.compareTo(criticalPathDuration) < 0) {
         // Execution phase shorter than critical path.
         Caveat caveat =

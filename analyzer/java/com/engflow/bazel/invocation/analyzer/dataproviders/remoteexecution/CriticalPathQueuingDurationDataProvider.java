@@ -57,7 +57,7 @@ public class CriticalPathQueuingDurationDataProvider extends DataProvider {
     // within the time interval.
     Set<CompleteEvent> criticalPathEventsInThreads = new HashSet<>();
     if (bazelProfile.getCriticalPath().isEmpty()) {
-      return null;
+      return new CriticalPathQueuingDuration(null);
     }
     bazelProfile
         .getCriticalPath()

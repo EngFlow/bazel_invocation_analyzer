@@ -88,7 +88,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
         microseconds.stream()
             .map(m -> TimeUtil.getDurationForMicros(m / 10))
             .reduce(Duration.ZERO, Duration::plus);
-    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().get())
         .isEqualTo(totalQueueing);
   }
 
@@ -141,7 +141,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
         microseconds.stream()
             .map(m -> TimeUtil.getDurationForMicros(m / 10))
             .reduce(Duration.ZERO, Duration::plus);
-    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().get())
         .isEqualTo(totalQueueing);
   }
 
@@ -190,7 +190,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                                 Timestamp.ofMicros(m),
                                 TimeUtil.getDurationForMicros(m / 10)))))));
 
-    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().get())
         .isEqualTo(Duration.ZERO);
   }
 
@@ -238,7 +238,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                                 Timestamp.ofMicros(m),
                                 TimeUtil.getDurationForMicros(m + divergence)))))));
 
-    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().get())
         .isEqualTo(Duration.ZERO);
   }
 
@@ -284,7 +284,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
                                 Timestamp.ofMicros(m),
                                 TimeUtil.getDurationForMicros(m / 10)))))));
 
-    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().get())
         .isEqualTo(Duration.ZERO);
   }
 
@@ -292,14 +292,15 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
   public void shouldReturnZeroQueuingDurationWhenCriticalPathIsEmpty() throws Exception {
     useProfile(metaData(), trace(thread(0, 0, BazelProfileConstants.THREAD_CRITICAL_PATH)));
 
-    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration())
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().get())
         .isEqualTo(Duration.ZERO);
   }
 
   @Test
-  public void shouldBeNullWhenCriticalPathIsMissing() throws Exception {
+  public void shouldBeEmptyWhenCriticalPathIsMissing() throws Exception {
     useProfile(metaData(), trace());
 
-    assertThat(provider.getCriticalPathQueuingDuration()).isNull();
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().isEmpty())
+        .isTrue();
   }
 }

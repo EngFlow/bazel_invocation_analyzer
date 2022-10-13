@@ -70,18 +70,20 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
   }
 
   @Test
-  public void shouldNotReturnSuggestionIfCriticalPathDurationIsMissing() {
+  public void shouldNotReturnSuggestionIfCriticalPathDurationIsEmpty() {
     phases.add(
         BazelProfilePhase.EXECUTE,
         new BazelPhaseDescription(Timestamp.ofMicros(0), Timestamp.ofSeconds(100)));
-    criticalPathDuration = null;
+    criticalPathDuration = new CriticalPathDuration(null);
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(CriticalPathNotDominantSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
-    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
+    assertThat(suggestionOutput.getCaveatList()).hasSize(1);
+    assertThat(suggestionOutput.getCaveat(0).getMessage())
+        .contains(CriticalPathDuration.class.getName());
   }
 
   @Test

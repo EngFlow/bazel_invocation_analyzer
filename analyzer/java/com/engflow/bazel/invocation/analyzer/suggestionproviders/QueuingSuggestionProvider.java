@@ -49,10 +49,12 @@ public class QueuingSuggestionProvider extends SuggestionProviderBase {
       if (hasQueuing) {
         Duration totalQueuingDuration =
             dataManager.getDatum(TotalQueuingDuration.class).getTotalQueuingDuration();
-        CriticalPathQueuingDuration criticalPathQueuingDuration =
-            dataManager.getDatum(CriticalPathQueuingDuration.class);
-        CriticalPathDuration criticalPathDuration =
-            dataManager.getDatum(CriticalPathDuration.class);
+        Optional<Duration> optionalCriticalPathQueuingDuration =
+            dataManager
+                .getDatum(CriticalPathQueuingDuration.class)
+                .getCriticalPathQueuingDuration();
+        Optional<Duration> optionalCriticalPathDuration =
+            dataManager.getDatum(CriticalPathDuration.class).getCriticalPathDuration();
 
         String title = "Increase the remote execution cluster size";
         String recommendation =
@@ -60,12 +62,12 @@ public class QueuingSuggestionProvider extends SuggestionProviderBase {
                 + " consider increasing the number of workers to avoid queuing and review"
                 + " the cluster's autoscaling settings.";
         PotentialImprovement potentialImprovement = null;
-        if (criticalPathQueuingDuration != null
-            && !criticalPathQueuingDuration.getCriticalPathQueuingDuration().isZero()
-            && criticalPathDuration != null
-            && !criticalPathDuration.getCriticalPathDuration().isZero()) {
-          Duration queuing = criticalPathQueuingDuration.getCriticalPathQueuingDuration();
-          Duration criticalPath = criticalPathDuration.getCriticalPathDuration();
+        if (optionalCriticalPathQueuingDuration.isPresent()
+            && !optionalCriticalPathQueuingDuration.get().isZero()
+            && optionalCriticalPathDuration.isPresent()
+            && !optionalCriticalPathDuration.get().isZero()) {
+          Duration criticalPathDuration = optionalCriticalPathDuration.get();
+          Duration queuingDuration = optionalCriticalPathQueuingDuration.get();
           Optional<Duration> optionalTotalDuration =
               dataManager.getDatum(TotalDuration.class).getTotalDuration();
           if (optionalTotalDuration.isEmpty()) {
@@ -74,20 +76,20 @@ public class QueuingSuggestionProvider extends SuggestionProviderBase {
           }
           Duration totalDuration = optionalTotalDuration.get();
           double invocationDurationReductionPercentage =
-              100 * queuing.toMillis() / (double) totalDuration.toMillis();
+              100 * queuingDuration.toMillis() / (double) totalDuration.toMillis();
           potentialImprovement =
               SuggestionProviderUtil.createPotentialImprovement(
                   String.format(
                       Locale.US,
                       "The critical path includes queuing for %s. Without queuing it could be"
                           + " reduced by %.2f%%, from %s to %s.",
-                      DurationUtil.formatDuration(queuing),
+                      DurationUtil.formatDuration(queuingDuration),
                       100
                           * (1
-                              - criticalPath.minus(queuing).toMillis()
-                                  / (double) criticalPath.toMillis()),
-                      DurationUtil.formatDuration(criticalPath),
-                      DurationUtil.formatDuration(criticalPath.minus(queuing))),
+                              - criticalPathDuration.minus(queuingDuration).toMillis()
+                                  / (double) criticalPathDuration.toMillis()),
+                      DurationUtil.formatDuration(criticalPathDuration),
+                      DurationUtil.formatDuration(criticalPathDuration.minus(queuingDuration))),
                   invocationDurationReductionPercentage);
         }
         String rationale =

@@ -56,14 +56,14 @@ public class CriticalPathDurationDataProviderTest extends DataProviderUnitTestBa
                             "some action", "some category", Timestamp.ofMicros(0), duration)))));
 
     Duration totalDuration = Stream.of(durations).reduce(Duration.ZERO, Duration::plus);
-    assertThat(provider.getCriticalPathDuration().getCriticalPathDuration())
+    assertThat(provider.getCriticalPathDuration().getCriticalPathDuration().get())
         .isEqualTo(totalDuration);
   }
 
   @Test
-  public void shouldBeNullWhenCriticalPathIsMissing() throws Exception {
+  public void shouldBeEmptyWhenCriticalPathIsMissing() throws Exception {
     useProfile(metaData(), trace());
 
-    assertThat(provider.getCriticalPathDuration()).isNull();
+    assertThat(provider.getCriticalPathDuration().getCriticalPathDuration().isEmpty()).isTrue();
   }
 }
