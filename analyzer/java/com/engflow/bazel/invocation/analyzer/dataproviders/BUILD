@@ -56,5 +56,6 @@ java_library(
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/time",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/traceeventformat",
         "//third_party/guava",
+        "//third_party/jsr305",
     ],
 )

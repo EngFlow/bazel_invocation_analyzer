@@ -55,7 +55,7 @@ public class DataManager {
 
     Object datum = entry.supplier.supply();
     if (datum == null) {
-      return null;
+      throw new MissingInputException(clazz);
     }
     if (!clazz.equals(datum.getClass())) {
       throw new IllegalStateException(

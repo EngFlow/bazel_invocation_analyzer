@@ -29,6 +29,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /** A {@link SuggestionProvider} that provides suggestions regarding garbage collection. */
 public class GarbageCollectionSuggestionProvider extends SuggestionProviderBase {
@@ -47,7 +48,13 @@ public class GarbageCollectionSuggestionProvider extends SuggestionProviderBase 
       GarbageCollectionStats gcStats = dataManager.getDatum(GarbageCollectionStats.class);
 
       if (gcStats.hasMajorGarbageCollection()) {
-        Duration totalDuration = dataManager.getDatum(TotalDuration.class).getTotalDuration();
+        Optional<Duration> optionalTotalDuration =
+            dataManager.getDatum(TotalDuration.class).getTotalDuration();
+        if (optionalTotalDuration.isEmpty()) {
+          return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+              ANALYZER_CLASSNAME, TotalDuration.class);
+        }
+        Duration totalDuration = optionalTotalDuration.get();
         double percentOfTotal =
             100.0
                 * gcStats.getMajorGarbageCollectionDuration().toMillis()

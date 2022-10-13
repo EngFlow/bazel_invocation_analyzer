@@ -15,18 +15,18 @@
 package com.engflow.bazel.invocation.analyzer.suggestionproviders;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.engflow.bazel.invocation.analyzer.Suggestion;
 import com.engflow.bazel.invocation.analyzer.SuggestionCategory;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
+import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.GarbageCollectionStats;
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import java.time.Duration;
 import java.util.Locale;
+import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ public class GarbageCollectionSuggestionProviderTest extends SuggestionProviderU
   // are set up with reasonable defaults before each test is run, but can be overridden within the
   // tests when custom values are desired for the testing being conducted (without the need to
   // re-initialize the mocking).
-  private GarbageCollectionStats garbageCollectionStats;
+  @Nullable private GarbageCollectionStats garbageCollectionStats;
   private TotalDuration totalDuration;
 
   @Before
@@ -52,12 +52,40 @@ public class GarbageCollectionSuggestionProviderTest extends SuggestionProviderU
   }
 
   @Test
-  public void shouldNotReturnSuggestionForNoMajorGarbageCollection() throws Exception {
-    garbageCollectionStats = new GarbageCollectionStats(Duration.ZERO);
+  public void shouldNotReturnSuggestionForMissingGarbageCollectionStats() throws Exception {
+    when(dataManager.getDatum(GarbageCollectionStats.class))
+        .thenThrow(new MissingInputException(GarbageCollectionStats.class));
+
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
-    verify(dataManager).getDatum(GarbageCollectionStats.class);
-    verifyNoMoreInteractions(dataManager);
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(GarbageCollectionSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).hasSize(1);
+    assertThat(suggestionOutput.getMissingInput(0))
+        .isEqualTo(GarbageCollectionStats.class.getName());
+  }
+
+  @Test
+  public void shouldNotReturnSuggestionForEmptyTotalDuration() {
+    totalDuration = new TotalDuration(null);
+
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(GarbageCollectionSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getCaveatList()).hasSize(1);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains(TotalDuration.class.getName());
+  }
+
+  @Test
+  public void shouldNotReturnSuggestionForNoMajorGarbageCollection() throws Exception {
+    garbageCollectionStats = new GarbageCollectionStats(Duration.ZERO);
+
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(GarbageCollectionSuggestionProvider.class.getName());
@@ -66,19 +94,16 @@ public class GarbageCollectionSuggestionProviderTest extends SuggestionProviderU
   }
 
   @Test
-  public void shouldReturnSuggestionsForMajorGarbageCollection() throws Exception {
+  public void shouldReturnSuggestionsForMajorGarbageCollection() {
     long fraction =
         (long) Math.floor(100 / GarbageCollectionSuggestionProvider.MAJOR_GC_MIN_PERCENTAGE);
     int secondsOfGc = 5;
     garbageCollectionStats = new GarbageCollectionStats(Duration.ofSeconds(secondsOfGc));
     totalDuration = new TotalDuration(Duration.ofSeconds(fraction * secondsOfGc));
+    double percent = 100.0 / fraction;
+
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
-    verify(dataManager).getDatum(GarbageCollectionStats.class);
-    verify(dataManager).getDatum(TotalDuration.class);
-    verifyNoMoreInteractions(dataManager);
-
-    double percent = 100.0 / fraction;
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(GarbageCollectionSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList().size()).isEqualTo(2);

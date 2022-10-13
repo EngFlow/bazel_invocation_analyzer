@@ -34,6 +34,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * A {@link SuggestionProvider} that provides suggestions on how to speed up the invocation if the
@@ -96,11 +97,13 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
 
       List<Suggestion> suggestions = new ArrayList<>();
 
-      TotalDuration totalDurationDatum = dataManager.getDatum(TotalDuration.class);
-      if (totalDurationDatum == null) {
-        throw new MissingInputException(TotalDuration.class);
+      Optional<Duration> optionalTotalDuration =
+          dataManager.getDatum(TotalDuration.class).getTotalDuration();
+      if (optionalTotalDuration.isEmpty()) {
+        return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+            ANALYZER_CLASSNAME, TotalDuration.class);
       }
-      Duration totalDuration = dataManager.getDatum(TotalDuration.class).getTotalDuration();
+      Duration totalDuration = optionalTotalDuration.get();
       Duration minimumDuration = totalDuration.minus(executionDuration).plus(criticalPathDuration);
       double durationReductionPercent =
           100 * (1 - minimumDuration.toMillis() / (double) totalDuration.toMillis());

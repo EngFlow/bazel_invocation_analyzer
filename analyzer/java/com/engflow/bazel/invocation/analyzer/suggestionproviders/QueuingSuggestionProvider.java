@@ -31,6 +31,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * A {@link SuggestionProvider} that provides suggestions on how to reduce remote execution queuing.
@@ -65,7 +66,13 @@ public class QueuingSuggestionProvider extends SuggestionProviderBase {
             && !criticalPathDuration.getCriticalPathDuration().isZero()) {
           Duration queuing = criticalPathQueuingDuration.getCriticalPathQueuingDuration();
           Duration criticalPath = criticalPathDuration.getCriticalPathDuration();
-          Duration totalDuration = dataManager.getDatum(TotalDuration.class).getTotalDuration();
+          Optional<Duration> optionalTotalDuration =
+              dataManager.getDatum(TotalDuration.class).getTotalDuration();
+          if (optionalTotalDuration.isEmpty()) {
+            return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+                ANALYZER_CLASSNAME, TotalDuration.class);
+          }
+          Duration totalDuration = optionalTotalDuration.get();
           double invocationDurationReductionPercentage =
               100 * queuing.toMillis() / (double) totalDuration.toMillis();
           potentialImprovement =

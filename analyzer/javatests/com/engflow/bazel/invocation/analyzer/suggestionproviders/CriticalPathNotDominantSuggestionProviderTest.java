@@ -41,7 +41,7 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
   // re-initialize the mocking).
   private BazelPhaseDescriptions.Builder phases;
   @Nullable private CriticalPathDuration criticalPathDuration;
-  @Nullable private TotalDuration totalDuration;
+  private TotalDuration totalDuration;
   private RemoteExecutionUsed remoteExecutionUsed;
   @Nullable private EstimatedCoresUsed estimatedCoresUsed;
   private EstimatedJobsFlagValue estimatedJobsFlagValue;
@@ -85,18 +85,19 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
   }
 
   @Test
-  public void shouldNotReturnSuggestionIfTotalDurationIsMissing() {
+  public void shouldNotReturnSuggestionIfTotalDurationIsEmpty() {
     phases.add(
         BazelProfilePhase.EXECUTE,
         new BazelPhaseDescription(Timestamp.ofMicros(0), Timestamp.ofSeconds(100)));
-    totalDuration = null;
+    totalDuration = new TotalDuration(null);
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(CriticalPathNotDominantSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
-    assertThat(suggestionOutput.getMissingInputList()).contains(TotalDuration.class.getName());
+    assertThat(suggestionOutput.getCaveatList()).hasSize(1);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains(TotalDuration.class.getName());
   }
 
   @Test

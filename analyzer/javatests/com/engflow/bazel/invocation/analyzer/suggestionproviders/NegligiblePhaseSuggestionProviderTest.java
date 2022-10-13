@@ -15,8 +15,6 @@
 package com.engflow.bazel.invocation.analyzer.suggestionproviders;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
@@ -35,7 +33,7 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
   // are set up with reasonable defaults before each test is run, but can be overridden within the
   // tests when custom values are desired for the testing being conducted (without the need to
   // re-initialize the mocking).
-  @Nullable private TotalDuration totalDuration;
+  private TotalDuration totalDuration;
   @Nullable private BazelPhaseDescriptions.Builder bazelPhaseDescriptions;
 
   @Before
@@ -65,15 +63,16 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
   }
 
   @Test
-  public void shouldNotReturnSuggestionForMissingTotalDuration() {
-    totalDuration = null;
+  public void shouldNotReturnSuggestionForEmptyTotalDuration() {
+    totalDuration = new TotalDuration(null);
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(NegligiblePhaseSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
-    assertThat(suggestionOutput.getMissingInputList()).contains(TotalDuration.class.getName());
+    assertThat(suggestionOutput.getCaveatList()).hasSize(1);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains(TotalDuration.class.getName());
   }
 
   @Test
@@ -85,8 +84,6 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
     }
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
-    verify(dataManager).getDatum(TotalDuration.class);
-    verifyNoMoreInteractions(dataManager);
 
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(NegligiblePhaseSuggestionProvider.class.getName());
@@ -115,10 +112,6 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
-    verify(dataManager).getDatum(TotalDuration.class);
-    verify(dataManager).getDatum(BazelPhaseDescriptions.class);
-    verifyNoMoreInteractions(dataManager);
-
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(NegligiblePhaseSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
@@ -138,9 +131,6 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
     }
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
-    verify(dataManager).getDatum(TotalDuration.class);
-    verify(dataManager).getDatum(BazelPhaseDescriptions.class);
-    verifyNoMoreInteractions(dataManager);
 
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(NegligiblePhaseSuggestionProvider.class.getName());
@@ -161,10 +151,6 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
     }
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
-
-    verify(dataManager).getDatum(TotalDuration.class);
-    verify(dataManager).getDatum(BazelPhaseDescriptions.class);
-    verifyNoMoreInteractions(dataManager);
 
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(NegligiblePhaseSuggestionProvider.class.getName());

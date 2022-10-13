@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class BottleneckSuggestionProvider extends SuggestionProviderBase {
@@ -84,7 +85,8 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
     try {
       final var actionStats = dataManager.getDatum(ActionStats.class);
       final var coresUsedDatum = dataManager.getDatum(EstimatedCoresUsed.class);
-      final var totalDurationDatum = dataManager.getDatum(TotalDuration.class);
+      Optional<Duration> optionalTotalDuration =
+          dataManager.getDatum(TotalDuration.class).getTotalDuration();
       List<MissingInputException> missingInputExceptions = new ArrayList<>();
       if (actionStats == null) {
         missingInputExceptions.add(new MissingInputException(ActionStats.class));
@@ -92,8 +94,9 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
       if (coresUsedDatum == null) {
         missingInputExceptions.add(new MissingInputException((EstimatedCoresUsed.class)));
       }
-      if (totalDurationDatum == null) {
-        missingInputExceptions.add(new MissingInputException((TotalDuration.class)));
+      if (optionalTotalDuration.isEmpty()) {
+        return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+            ANALYZER_CLASSNAME, TotalDuration.class);
       }
       if (!missingInputExceptions.isEmpty()) {
         return SuggestionProviderUtil.createSuggestionOutputForMissingInputs(
@@ -101,8 +104,7 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
       }
 
       final var coresUsed = coresUsedDatum.getEstimatedCores();
-      final var totalDuration =
-          totalDurationDatum == null ? null : totalDurationDatum.getTotalDuration();
+      final var totalDuration = optionalTotalDuration.get();
       final List<Caveat> caveats = new ArrayList<>();
       final var suggestions =
           actionStats.bottlenecks.stream()
