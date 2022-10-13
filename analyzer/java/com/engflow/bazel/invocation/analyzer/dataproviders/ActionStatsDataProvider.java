@@ -44,14 +44,13 @@ public class ActionStatsDataProvider extends DataProvider {
     var actionCounts =
         bazelProfile.getMainThread().getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT);
     if (actionCounts == null) {
-      return null;
+      return ActionStats.empty();
     }
 
     Optional<Integer> optionalEstimatedCoresUsed =
         getDataManager().getDatum(EstimatedCoresUsed.class).getEstimatedCores();
     if (optionalEstimatedCoresUsed.isEmpty()) {
-      // TODO: Return Optional.empty once ActionStats supports it.
-      return null;
+      return ActionStats.empty();
     }
     var coresUsed = optionalEstimatedCoresUsed.get();
 

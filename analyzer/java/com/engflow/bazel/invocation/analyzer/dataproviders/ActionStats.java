@@ -16,8 +16,10 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
+import com.google.common.base.Preconditions;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This class collects all high-level aggregations of action level metrics:
@@ -26,10 +28,23 @@ import java.util.List;
  *     as the optimal one the build should always be running at.
  */
 public class ActionStats implements Datum {
-  public final List<Bottleneck> bottlenecks;
+  private final Optional<List<Bottleneck>> bottlenecks;
+
+  private ActionStats() {
+    this.bottlenecks = Optional.empty();
+  }
 
   public ActionStats(List<Bottleneck> bottlenecks) {
-    this.bottlenecks = bottlenecks;
+    Preconditions.checkNotNull(bottlenecks);
+    this.bottlenecks = Optional.of(bottlenecks);
+  }
+
+  public static ActionStats empty() {
+    return new ActionStats();
+  }
+
+  public Optional<List<Bottleneck>> getBottlenecks() {
+    return bottlenecks;
   }
 
   @Override
@@ -40,11 +55,14 @@ public class ActionStats implements Datum {
 
   @Override
   public String getSummary() {
-    var duration = bottlenecks.stream().map(b -> b.getDuration()).reduce(Duration::plus);
-    if (bottlenecks.size() > 0 && duration.isPresent()) {
+    if (bottlenecks.isEmpty()) {
+      return "n/a";
+    }
+    var duration = bottlenecks.get().stream().map(b -> b.getDuration()).reduce(Duration::plus);
+    if (bottlenecks.get().size() > 0 && duration.isPresent()) {
       return String.format(
           "%d bottlenecks found for a total duration of %s.",
-          bottlenecks.size(), DurationUtil.formatDuration(duration.get()));
+          bottlenecks.get().size(), DurationUtil.formatDuration(duration.get()));
     }
     return null;
   }
