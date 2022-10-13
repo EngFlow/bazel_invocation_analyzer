@@ -17,16 +17,17 @@ package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import java.time.Duration;
+import java.util.Optional;
 
 /** The total time spent queued on the critical path */
 public class CriticalPathQueuingDuration implements Datum {
-  private final Duration criticalPathQueuingDuration;
+  private final Optional<Duration> criticalPathQueuingDuration;
 
   public CriticalPathQueuingDuration(Duration criticalPathQueuingDuration) {
-    this.criticalPathQueuingDuration = criticalPathQueuingDuration;
+    this.criticalPathQueuingDuration = Optional.ofNullable(criticalPathQueuingDuration);
   }
 
-  public Duration getCriticalPathQueuingDuration() {
+  public Optional<Duration> getCriticalPathQueuingDuration() {
     return criticalPathQueuingDuration;
   }
 
@@ -37,6 +38,9 @@ public class CriticalPathQueuingDuration implements Datum {
 
   @Override
   public String getSummary() {
-    return DurationUtil.formatDuration(criticalPathQueuingDuration);
+    if (criticalPathQueuingDuration.isEmpty()) {
+      return "n/a";
+    }
+    return DurationUtil.formatDuration(criticalPathQueuingDuration.get());
   }
 }

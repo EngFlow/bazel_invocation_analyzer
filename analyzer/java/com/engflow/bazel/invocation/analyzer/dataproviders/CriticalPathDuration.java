@@ -17,16 +17,17 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import java.time.Duration;
+import java.util.Optional;
 
 /** The duration of the critical path */
 public class CriticalPathDuration implements Datum {
-  private final Duration criticalPathDuration;
+  private final Optional<Duration> criticalPathDuration;
 
   public CriticalPathDuration(Duration criticalPathDuration) {
-    this.criticalPathDuration = criticalPathDuration;
+    this.criticalPathDuration = Optional.ofNullable(criticalPathDuration);
   }
 
-  public Duration getCriticalPathDuration() {
+  public Optional<Duration> getCriticalPathDuration() {
     return criticalPathDuration;
   }
 
@@ -37,6 +38,9 @@ public class CriticalPathDuration implements Datum {
 
   @Override
   public String getSummary() {
-    return DurationUtil.formatDuration(criticalPathDuration);
+    if (criticalPathDuration.isEmpty()) {
+      return "n/a";
+    }
+    return DurationUtil.formatDuration(criticalPathDuration.get());
   }
 }

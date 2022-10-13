@@ -42,7 +42,7 @@ public class CriticalPathDurationDataProvider extends DataProvider {
       throws MissingInputException, InvalidProfileException {
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
     if (bazelProfile.getCriticalPath().isEmpty()) {
-      return null;
+      return new CriticalPathDuration(null);
     }
     Duration duration =
         bazelProfile.getCriticalPath().get().getCompleteEvents().stream()
