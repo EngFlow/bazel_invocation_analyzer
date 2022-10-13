@@ -59,7 +59,7 @@ public class ConsoleOutput {
       "Bazel Invocation Analyzer is open source. We welcome contributions!";
   private static final String TAB = "\t";
   private static final String FEEDBACK_OPEN_NEW_ISSUE =
-      "https://github.com/EngFlow/bazel_invocation_analyzer/issues/new/choose";
+      "https://github.com/EngFlow/bazel_invocation_analyzer/issues";
   private static final String FEEDBACK_EMAIL_ADDRESS = "bia-dev@engflow.com";
 
   private final boolean disableFormatting;
