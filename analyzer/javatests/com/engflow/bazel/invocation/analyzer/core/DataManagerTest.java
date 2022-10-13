@@ -32,12 +32,12 @@ public class DataManagerTest {
 
   @Test
   public void shouldFetchRegisteredDataProvider() throws Exception {
+    Character c = (char) (new Random().nextInt(26) + 'a');
     var dataManager = new DataManager();
-    var dataProvider = new CharDataProvider();
+    var dataProvider = new CharDataProvider(c);
     dataProvider.register(dataManager);
 
-    assertThat(dataManager.getDatum(CharDatum.class).getMyChar())
-        .isEqualTo(dataProvider.returnedChar.getMyChar());
+    assertThat(dataManager.getDatum(CharDatum.class).getMyChar()).isEqualTo(c);
   }
 
   @Test
@@ -75,7 +75,7 @@ public class DataManagerTest {
   }
 
   @Test
-  public void shouldThrowMissingDataException() throws Exception {
+  public void shouldThrowMissingDataExceptionWhenInputIsMissing() throws Exception {
     var dataManager = new DataManager();
     new StringDataProvider().register(dataManager);
 
@@ -90,9 +90,37 @@ public class DataManagerTest {
   }
 
   @Test
+  public void shouldThrowMissingDataExceptionWhenNotRegistered() throws Exception {
+    var dataManager = new DataManager();
+
+    var ex =
+        assertThrows(MissingInputException.class, () -> dataManager.getDatum(StringDatum.class));
+    assertThat(ex)
+        .hasMessageThat()
+        .isEqualTo(
+            "Missing data provider for class"
+                + " \"com.engflow.bazel.invocation.analyzer.core.TestDatum$StringDatum\". Please"
+                + " register a DataProvider that supplies this type with the DataManager.");
+  }
+
+  @Test
+  public void shouldThrowMissingDataExceptionWhenSupplyingNull() throws Exception {
+    var dataManager = new DataManager();
+    new CharDataProvider(null).register(dataManager);
+
+    var ex = assertThrows(MissingInputException.class, () -> dataManager.getDatum(CharDatum.class));
+    assertThat(ex)
+        .hasMessageThat()
+        .isEqualTo(
+            "Missing data provider for class"
+                + " \"com.engflow.bazel.invocation.analyzer.core.TestDatum$CharDatum\". Please"
+                + " register a DataProvider that supplies this type with the DataManager.");
+  }
+
+  @Test
   public void shouldAllowDataProvidersToCallOneAnother() throws Exception {
     var dataManager = new DataManager();
-    CharDataProvider charDataProvider = new CharDataProvider();
+    CharDataProvider charDataProvider = new CharDataProvider('a');
     charDataProvider.register(dataManager);
     new StringDataProvider().register(dataManager);
 
@@ -105,7 +133,7 @@ public class DataManagerTest {
   @Test
   public void getAllDataByProvider() throws Exception {
     var dataManager = new DataManager();
-    var charDataProvider = new CharDataProvider();
+    var charDataProvider = new CharDataProvider('a');
     charDataProvider.register(dataManager);
     var numericDataProvider = new NumericDataProvider();
     numericDataProvider.register(dataManager);
@@ -138,7 +166,7 @@ public class DataManagerTest {
   @Test
   public void getUsedDataByProvider() throws Exception {
     var dataManager = new DataManager();
-    var charDataProvider = new CharDataProvider();
+    var charDataProvider = new CharDataProvider('a');
     charDataProvider.register(dataManager);
     var numericDataProvider = new NumericDataProvider();
     numericDataProvider.register(dataManager);
@@ -180,8 +208,8 @@ public class DataManagerTest {
   private static class CharDataProvider extends DataProvider {
     private final CharDatum returnedChar;
 
-    public CharDataProvider() {
-      this.returnedChar = new CharDatum((char) (new Random().nextInt(26) + 'a'));
+    public CharDataProvider(Character c) {
+      this.returnedChar = c == null ? null : new CharDatum(c);
     }
 
     @Override

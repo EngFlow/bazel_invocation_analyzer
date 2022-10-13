@@ -17,16 +17,18 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import java.time.Duration;
+import java.util.Optional;
+import javax.annotation.Nullable;
 
 /** The total duration of the invocation */
 public class TotalDuration implements Datum {
-  private final Duration totalDuration;
+  private final Optional<Duration> totalDuration;
 
-  public TotalDuration(Duration totalDuration) {
-    this.totalDuration = totalDuration;
+  public TotalDuration(@Nullable Duration totalDuration) {
+    this.totalDuration = Optional.ofNullable(totalDuration);
   }
 
-  public Duration getTotalDuration() {
+  public Optional<Duration> getTotalDuration() {
     return totalDuration;
   }
 
@@ -37,6 +39,6 @@ public class TotalDuration implements Datum {
 
   @Override
   public String getSummary() {
-    return DurationUtil.formatDuration(totalDuration);
+    return totalDuration.isEmpty() ? "n/a" : DurationUtil.formatDuration(totalDuration.get());
   }
 }

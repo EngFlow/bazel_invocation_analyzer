@@ -15,8 +15,6 @@
 package com.engflow.bazel.invocation.analyzer.suggestionproviders;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
@@ -107,12 +105,23 @@ public class QueuingSuggestionProviderTest extends SuggestionProviderUnitTestBas
   }
 
   @Test
+  public void shouldNotReturnSuggestionForEmptyTotalDuration() {
+    totalDuration = new TotalDuration(null);
+
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(QueuingSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getCaveatList()).hasSize(1);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains(TotalDuration.class.getName());
+  }
+
+  @Test
   public void shouldNotReturnSuggestionForInvocationWithoutQueuing() throws Exception {
     queuingObserved = new QueuingObserved(false);
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
-    verify(dataManager).getDatum(QueuingObserved.class);
-    verifyNoMoreInteractions(dataManager);
 
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(QueuingSuggestionProvider.class.getName());

@@ -19,6 +19,7 @@ import com.engflow.bazel.invocation.analyzer.PotentialImprovement;
 import com.engflow.bazel.invocation.analyzer.Suggestion;
 import com.engflow.bazel.invocation.analyzer.SuggestionCategory;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
+import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.SuggestionProvider;
 import com.google.common.base.Preconditions;
@@ -179,6 +180,28 @@ public class SuggestionProviderUtil {
       builder.addAllCaveat(caveats);
     }
     return builder.build();
+  }
+
+  /**
+   * Creates a {@link SuggestionOutput} when an essential input is empty.
+   *
+   * @param analyzerClassname The name of the analyzer that produces this output.
+   * @param emptyClazz The class of the {@link Datum} that was empty.
+   * @return A {@link SuggestionOutput} with a caveat surfacing which input is empty.
+   */
+  public static SuggestionOutput createSuggestionOutputForEmptyInput(
+      String analyzerClassname, Class<? extends Datum> emptyClazz) {
+    Preconditions.checkNotNull(analyzerClassname);
+    Preconditions.checkNotNull(emptyClazz);
+    return SuggestionOutput.newBuilder()
+        .setAnalyzerClassname(analyzerClassname)
+        .addCaveat(
+            createCaveat(
+                String.format(
+                    "An essential input for determining suggestions was empty: %s",
+                    emptyClazz.getName()),
+                false))
+        .build();
   }
 
   /**

@@ -29,6 +29,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A {@link SuggestionProvider} that highlights Bazel phases if they take longer than expected
@@ -56,11 +57,13 @@ public class NegligiblePhaseSuggestionProvider extends SuggestionProviderBase {
   @Override
   public SuggestionOutput getSuggestions(DataManager dataManager) {
     try {
-      TotalDuration totalDurationDatum = dataManager.getDatum(TotalDuration.class);
-      if (totalDurationDatum == null) {
-        throw new MissingInputException(TotalDuration.class);
+      Optional<Duration> optionalTotalDuration =
+          dataManager.getDatum(TotalDuration.class).getTotalDuration();
+      if (optionalTotalDuration.isEmpty()) {
+        return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+            ANALYZER_CLASSNAME, TotalDuration.class);
       }
-      Duration totalDuration = totalDurationDatum.getTotalDuration();
+      Duration totalDuration = optionalTotalDuration.get();
       if (totalDuration.compareTo(MIN_DURATION) < 0) {
         // Too short for this check to be valid
         Caveat caveat =

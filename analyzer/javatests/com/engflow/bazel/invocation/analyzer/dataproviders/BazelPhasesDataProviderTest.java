@@ -255,7 +255,8 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                     FINISH_TIME))));
 
     TotalDuration duration = provider.getTotalDuration();
-    assertThat(duration.getTotalDuration())
+    assertThat(duration.getTotalDuration().isPresent()).isTrue();
+    assertThat(duration.getTotalDuration().get())
         .isEqualTo(TimeUtil.getDurationBetween(LAUNCH_START, FINISH_TIME));
   }
 
@@ -272,7 +273,8 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                 createPhaseEvents(LAUNCH_START, null, null, null, null, null, null, FINISH_TIME))));
 
     TotalDuration duration = provider.getTotalDuration();
-    assertThat(duration.getTotalDuration())
+    assertThat(duration.getTotalDuration().isPresent()).isTrue();
+    assertThat(duration.getTotalDuration().get())
         .isEqualTo(TimeUtil.getDurationBetween(LAUNCH_START, FINISH_TIME));
   }
 
