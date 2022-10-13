@@ -55,8 +55,9 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void shouldReturnNullOnMissingEstimatedCoresUsed()
+  public void shouldReturnNullOnEmptyEstimatedCoresUsed()
       throws DuplicateProviderException, MissingInputException, InvalidProfileException {
+    useEstimatedCoresUsed(null);
     useProfile(
         metaData(),
         trace(
@@ -154,9 +155,9 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
     assertThat(actionStats.bottlenecks).isEmpty();
   }
 
-  private void useEstimatedCoresUsed(int count)
+  private void useEstimatedCoresUsed(Integer count)
       throws MissingInputException, InvalidProfileException {
     when(dataManager.getDatum(EstimatedCoresUsed.class))
-        .thenReturn(new EstimatedCoresUsed(count, 0));
+        .thenReturn(new EstimatedCoresUsed(count, count == null ? null : 0));
   }
 }

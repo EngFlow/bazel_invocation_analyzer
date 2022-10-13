@@ -15,23 +15,31 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
+import com.google.common.base.Preconditions;
+import java.util.Optional;
 
 /** Estimate of the number of cores used or available. */
 public abstract class EstimatedCores implements Datum {
-  private final int estimatedCores;
-  private final int gaps;
+  private final Optional<Integer> estimatedCores;
+  private final Optional<Integer> gaps;
 
-  EstimatedCores(int estimatedCoresUsed, int gaps) {
-    this.estimatedCores = estimatedCoresUsed;
-    this.gaps = gaps;
+  EstimatedCores(Integer estimatedCores, Integer gaps) {
+    Preconditions.checkArgument(
+        estimatedCores != null && gaps != null || estimatedCores == null && gaps == null);
+    this.estimatedCores = Optional.ofNullable(estimatedCores);
+    this.gaps = Optional.ofNullable(gaps);
   }
 
-  public int getEstimatedCores() {
+  public boolean isEmpty() {
+    return estimatedCores.isEmpty() && gaps.isEmpty();
+  }
+
+  public Optional<Integer> getEstimatedCores() {
     return estimatedCores;
   }
 
   public boolean hasGaps() {
-    return gaps > 0;
+    return gaps.isPresent() && gaps.get() > 0;
   }
 
   /**
@@ -44,11 +52,14 @@ public abstract class EstimatedCores implements Datum {
    * Dropped evaluators with a number above the maximum found are not detected. In that, the maximum
    * found only represent a lower bound for the maximum allowed.
    */
-  public int getGaps() {
+  public Optional<Integer> getGaps() {
     return gaps;
   }
 
   public String getSummary() {
-    return String.format("%d cores (with %d gaps)", estimatedCores, gaps);
+    if (estimatedCores.isEmpty() || gaps.isEmpty()) {
+      return "n/a";
+    }
+    return String.format("%d cores (with %d gaps)", estimatedCores.get(), gaps.get());
   }
 }

@@ -43,7 +43,7 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
   @Nullable private CriticalPathDuration criticalPathDuration;
   private TotalDuration totalDuration;
   private RemoteExecutionUsed remoteExecutionUsed;
-  @Nullable private EstimatedCoresUsed estimatedCoresUsed;
+  private EstimatedCoresUsed estimatedCoresUsed;
   private EstimatedJobsFlagValue estimatedJobsFlagValue;
 
   @Before
@@ -101,18 +101,20 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
   }
 
   @Test
-  public void shouldNotReturnSuggestionIfEstimatedCoresUsedIsMissing() {
+  public void shouldNotReturnSuggestionIfEstimatedCoresUsedIsEmpty() {
     phases.add(
         BazelProfilePhase.EXECUTE,
         new BazelPhaseDescription(Timestamp.ofMicros(0), Timestamp.ofSeconds(100)));
-    estimatedCoresUsed = null;
+    estimatedCoresUsed = new EstimatedCoresUsed(null, null);
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(CriticalPathNotDominantSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
-    assertThat(suggestionOutput.getMissingInputList()).contains(EstimatedCoresUsed.class.getName());
+    assertThat(suggestionOutput.getCaveatList()).hasSize(1);
+    assertThat(suggestionOutput.getCaveat(0).getMessage())
+        .contains(EstimatedCoresUsed.class.getName());
   }
 
   @Test

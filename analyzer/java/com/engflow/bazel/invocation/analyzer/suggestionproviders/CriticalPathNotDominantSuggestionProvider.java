@@ -108,11 +108,13 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
       double durationReductionPercent =
           100 * (1 - minimumDuration.toMillis() / (double) totalDuration.toMillis());
 
-      EstimatedCoresUsed estimatedCoresUsedDatum = dataManager.getDatum(EstimatedCoresUsed.class);
-      if (estimatedCoresUsedDatum == null) {
-        throw new MissingInputException(EstimatedCoresUsed.class);
+      Optional<Integer> optionalEstimatedCoresUsed =
+          dataManager.getDatum(EstimatedCoresUsed.class).getEstimatedCores();
+      if (optionalEstimatedCoresUsed.isEmpty()) {
+        return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+            ANALYZER_CLASSNAME, EstimatedCoresUsed.class);
       }
-      long estimatedCoresUsed = estimatedCoresUsedDatum.getEstimatedCores();
+      int estimatedCoresUsed = optionalEstimatedCoresUsed.get();
       long optimalCores =
           (long)
               Math.ceil(

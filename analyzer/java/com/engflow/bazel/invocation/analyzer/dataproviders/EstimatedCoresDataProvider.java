@@ -66,8 +66,8 @@ public class EstimatedCoresDataProvider extends DataProvider {
     determineEstimatedCoresUsed();
     if (executionPhaseSkyframeEvaluatorsMaxValue == null
         || evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue == null) {
-      // The Bazel profile does not include enough data to provide this Datum.
-      return null;
+      // The Bazel profile does not include the required data.
+      return EstimatedJobsFlagValue.empty();
     }
     return new EstimatedJobsFlagValue(
         executionPhaseSkyframeEvaluatorsMaxValue + 1,
@@ -81,8 +81,8 @@ public class EstimatedCoresDataProvider extends DataProvider {
     determineEstimatedCoresAvailable();
     if (evaluateAndDependenciesPhaseSkyframeEvaluators == null
         || evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue == null) {
-      // The Bazel profile does not include enough data to provide this Datum.
-      return null;
+      // The Bazel profile does not include the required data.
+      return EstimatedCoresAvailable.empty();
     }
     return new EstimatedCoresAvailable(
         evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue + 1,
@@ -96,8 +96,8 @@ public class EstimatedCoresDataProvider extends DataProvider {
     determineEstimatedCoresUsed();
     if (executionPhaseSkyframeEvaluators == null
         || executionPhaseSkyframeEvaluatorsMaxValue == null) {
-      // The Bazel profile does not include enough data to provide this Datum.
-      return null;
+      // The Bazel profile does not include the required data.
+      return EstimatedCoresUsed.empty();
     }
     return new EstimatedCoresUsed(
         executionPhaseSkyframeEvaluators.size(),

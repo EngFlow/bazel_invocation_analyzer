@@ -19,8 +19,12 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
  * set, this should match with {@link EstimatedCoresAvailable}.
  */
 public class EstimatedCoresUsed extends EstimatedCores {
-  public EstimatedCoresUsed(int estimatedCoresUsed, int gaps) {
+  public EstimatedCoresUsed(Integer estimatedCoresUsed, Integer gaps) {
     super(estimatedCoresUsed, gaps);
+  }
+
+  public static EstimatedCoresUsed empty() {
+    return new EstimatedCoresUsed(null, null);
   }
 
   @Override

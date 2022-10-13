@@ -35,8 +35,10 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
   }
 
   @Test
-  public void doesNotCreateSuggestionsIfEstimatedJobsFlagValueIsMissing()
+  public void doesNotCreateSuggestionsIfEstimatedJobsFlagValueIsEmpty()
       throws MissingInputException, InvalidProfileException {
+    when(dataManager.getDatum(EstimatedJobsFlagValue.class))
+        .thenReturn(EstimatedJobsFlagValue.empty());
     when(dataManager.getDatum(RemoteExecutionUsed.class))
         .thenReturn(new RemoteExecutionUsed(false));
     when(dataManager.getDatum(RemoteCachingUsed.class)).thenReturn(new RemoteCachingUsed(false));
@@ -44,7 +46,8 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
-    assertThat(suggestionOutput.getMissingInputList())
+    assertThat(suggestionOutput.getCaveatList()).hasSize(1);
+    assertThat(suggestionOutput.getCaveat(0).getMessage())
         .contains(EstimatedJobsFlagValue.class.getName());
   }
 
@@ -77,24 +80,27 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
   }
 
   @Test
-  public void doesNotCreateSuggestionsIfEstimatedCoresAvailableIsMissing()
+  public void doesNotCreateSuggestionsIfEstimatedCoresAvailableIsEmpty()
       throws MissingInputException, InvalidProfileException {
     when(dataManager.getDatum(EstimatedJobsFlagValue.class))
         .thenReturn(new EstimatedJobsFlagValue(4, true));
     when(dataManager.getDatum(RemoteExecutionUsed.class))
         .thenReturn(new RemoteExecutionUsed(false));
     when(dataManager.getDatum(RemoteCachingUsed.class)).thenReturn(new RemoteCachingUsed(false));
+    when(dataManager.getDatum(EstimatedCoresAvailable.class))
+        .thenReturn(new EstimatedCoresAvailable(null, null));
     when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
-    assertThat(suggestionOutput.getMissingInputList())
+    assertThat(suggestionOutput.getCaveatList()).hasSize(1);
+    assertThat(suggestionOutput.getCaveat(0).getMessage())
         .contains(EstimatedCoresAvailable.class.getName());
   }
 
   @Test
-  public void doesNotCreateSuggestionsIfEstimatedCoresUsedIsMissing()
+  public void doesNotCreateSuggestionsIfEstimatedCoresUsedIsEmpty()
       throws MissingInputException, InvalidProfileException {
     when(dataManager.getDatum(EstimatedJobsFlagValue.class))
         .thenReturn(new EstimatedJobsFlagValue(4, true));
@@ -103,11 +109,15 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
     when(dataManager.getDatum(RemoteCachingUsed.class)).thenReturn(new RemoteCachingUsed(false));
     when(dataManager.getDatum(EstimatedCoresAvailable.class))
         .thenReturn(new EstimatedCoresAvailable(2, 1));
+    when(dataManager.getDatum(EstimatedCoresUsed.class))
+        .thenReturn(new EstimatedCoresUsed(null, null));
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
-    assertThat(suggestionOutput.getMissingInputList()).contains(EstimatedCoresUsed.class.getName());
+    assertThat(suggestionOutput.getCaveatList()).hasSize(1);
+    assertThat(suggestionOutput.getCaveat(0).getMessage())
+        .contains(EstimatedCoresUsed.class.getName());
   }
 
   @Test

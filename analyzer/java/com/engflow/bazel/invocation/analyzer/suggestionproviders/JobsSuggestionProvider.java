@@ -51,12 +51,14 @@ public class JobsSuggestionProvider extends SuggestionProviderBase {
       List<Suggestion> suggestions = new ArrayList<>();
 
       EstimatedJobsFlagValue estimatedJobs = dataManager.getDatum(EstimatedJobsFlagValue.class);
+      if (estimatedJobs.isEmpty()) {
+        return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+            ANALYZER_CLASSNAME, EstimatedJobsFlagValue.class);
+      }
+
       RemoteExecutionUsed remoteExecutionUsed = dataManager.getDatum(RemoteExecutionUsed.class);
       RemoteCachingUsed remoteCachingUsed = dataManager.getDatum(RemoteCachingUsed.class);
       List<MissingInputException> missingInputExceptions = new ArrayList<>();
-      if (estimatedJobs == null) {
-        missingInputExceptions.add(new MissingInputException(EstimatedJobsFlagValue.class));
-      }
       if (remoteExecutionUsed == null) {
         missingInputExceptions.add(new MissingInputException((RemoteExecutionUsed.class)));
       }
@@ -74,12 +76,14 @@ public class JobsSuggestionProvider extends SuggestionProviderBase {
         // The profile seems to be for a fully local build where --jobs was set.
         EstimatedCoresAvailable coresAvailable =
             dataManager.getDatum(EstimatedCoresAvailable.class);
-        if (coresAvailable == null) {
-          throw new MissingInputException(EstimatedCoresAvailable.class);
+        if (coresAvailable.getEstimatedCores().isEmpty()) {
+          return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+              ANALYZER_CLASSNAME, EstimatedCoresAvailable.class);
         }
         EstimatedCoresUsed coresUsed = dataManager.getDatum(EstimatedCoresUsed.class);
-        if (coresUsed == null) {
-          throw new MissingInputException(EstimatedCoresUsed.class);
+        if (coresUsed.isEmpty()) {
+          return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+              ANALYZER_CLASSNAME, EstimatedCoresUsed.class);
         }
         String title = "Unset the value of of the Bazel flag --jobs";
         String recommendation =
@@ -97,9 +101,9 @@ public class JobsSuggestionProvider extends SuggestionProviderBase {
                 "It looks like this flag was set to %d%s. However, the profile"
                     + " suggests that %d cores are available on the machine that the"
                     + " invocation was run on.",
-                estimatedJobs.getLowerBound(),
+                estimatedJobs.getLowerBound().get(),
                 coresUsed.hasGaps() ? " or more" : "",
-                coresAvailable.getEstimatedCores());
+                coresAvailable.getEstimatedCores().get());
         Caveat caveat =
             SuggestionProviderUtil.createCaveat(
                 "The number of available cores and the value of --jobs are approximations."
@@ -116,7 +120,7 @@ public class JobsSuggestionProvider extends SuggestionProviderBase {
                 List.of(
                     rationaleGeneralInfo,
                     rationaleInvocationSpecific,
-                    coresAvailable.getEstimatedCores() < estimatedJobs.getLowerBound()
+                    coresAvailable.getEstimatedCores().get() < estimatedJobs.getLowerBound().get()
                         ? RATIONALE_FOR_LOCAL_TOO_HIGH_JOBS_VALUE
                         : RATIONALE_FOR_LOCAL_TOO_LOW_JOBS_VALUE),
                 List.of(caveat)));

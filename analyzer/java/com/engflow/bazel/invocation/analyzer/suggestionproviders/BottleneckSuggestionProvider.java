@@ -84,27 +84,23 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
   public SuggestionOutput getSuggestions(DataManager dataManager) {
     try {
       final var actionStats = dataManager.getDatum(ActionStats.class);
-      final var coresUsedDatum = dataManager.getDatum(EstimatedCoresUsed.class);
+
+      Optional<Integer> optionalCoresUsed =
+          dataManager.getDatum(EstimatedCoresUsed.class).getEstimatedCores();
+      if (optionalCoresUsed.isEmpty()) {
+        return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+            ANALYZER_CLASSNAME, EstimatedCoresUsed.class);
+      }
+      final var coresUsed = optionalCoresUsed.get();
+
       Optional<Duration> optionalTotalDuration =
           dataManager.getDatum(TotalDuration.class).getTotalDuration();
-      List<MissingInputException> missingInputExceptions = new ArrayList<>();
-      if (actionStats == null) {
-        missingInputExceptions.add(new MissingInputException(ActionStats.class));
-      }
-      if (coresUsedDatum == null) {
-        missingInputExceptions.add(new MissingInputException((EstimatedCoresUsed.class)));
-      }
       if (optionalTotalDuration.isEmpty()) {
         return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
             ANALYZER_CLASSNAME, TotalDuration.class);
       }
-      if (!missingInputExceptions.isEmpty()) {
-        return SuggestionProviderUtil.createSuggestionOutputForMissingInputs(
-            ANALYZER_CLASSNAME, missingInputExceptions);
-      }
-
-      final var coresUsed = coresUsedDatum.getEstimatedCores();
       final var totalDuration = optionalTotalDuration.get();
+
       final List<Caveat> caveats = new ArrayList<>();
       final var suggestions =
           actionStats.bottlenecks.stream()
