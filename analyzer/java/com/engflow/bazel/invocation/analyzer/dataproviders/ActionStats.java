@@ -58,12 +58,10 @@ public class ActionStats implements Datum {
     if (bottlenecks.isEmpty()) {
       return "n/a";
     }
-    var duration = bottlenecks.get().stream().map(b -> b.getDuration()).reduce(Duration::plus);
-    if (bottlenecks.get().size() > 0 && duration.isPresent()) {
-      return String.format(
-          "%d bottlenecks found for a total duration of %s.",
-          bottlenecks.get().size(), DurationUtil.formatDuration(duration.get()));
-    }
-    return null;
+    var duration =
+        bottlenecks.get().stream().map(b -> b.getDuration()).reduce(Duration.ZERO, Duration::plus);
+    return String.format(
+        "%d bottlenecks found for a total duration of %s.",
+        bottlenecks.get().size(), DurationUtil.formatDuration(duration));
   }
 }
