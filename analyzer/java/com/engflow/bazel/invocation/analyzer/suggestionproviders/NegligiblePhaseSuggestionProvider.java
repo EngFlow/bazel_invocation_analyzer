@@ -22,6 +22,7 @@ import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfilePhase;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.SuggestionProvider;
+import com.engflow.bazel.invocation.analyzer.dataproviders.BazelPhaseDescription;
 import com.engflow.bazel.invocation.analyzer.dataproviders.BazelPhaseDescriptions;
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
@@ -72,16 +73,19 @@ public class NegligiblePhaseSuggestionProvider extends SuggestionProviderBase {
         return SuggestionProviderUtil.createSuggestionOutput(
             ANALYZER_CLASSNAME, null, List.of(caveat));
       }
-      BazelPhaseDescriptions phaseDurations = dataManager.getDatum(BazelPhaseDescriptions.class);
-      if (phaseDurations == null) {
-        throw new MissingInputException(BazelPhaseDescriptions.class);
-      }
+      BazelPhaseDescriptions bazelPhaseDescriptions =
+          dataManager.getDatum(BazelPhaseDescriptions.class);
       List<Suggestion> suggestions = new ArrayList<>();
       for (BazelProfilePhase phase : BazelProfilePhase.values()) {
-        if (!phaseDurations.has(phase) || NON_NEGLIGIBLE_PHASES.contains(phase)) {
+        if (NON_NEGLIGIBLE_PHASES.contains(phase)) {
           continue;
         }
-        Duration phaseDuration = phaseDurations.get(phase).getDuration();
+        Optional<BazelPhaseDescription> optionalPhaseDescription =
+            bazelPhaseDescriptions.get(phase);
+        if (optionalPhaseDescription.isEmpty()) {
+          continue;
+        }
+        Duration phaseDuration = optionalPhaseDescription.get().getDuration();
         double percentOfTotal = phaseDuration.toMillis() / (double) totalDuration.toMillis() * 100;
         if (percentOfTotal > PCT_THRESHOLD) {
           String title = "Unusual Phase Duration";

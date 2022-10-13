@@ -67,31 +67,31 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                     FINISH_TIME))));
 
     BazelPhaseDescriptions descriptions = provider.getBazelPhaseDescriptions();
-    assertThat(descriptions.get(BazelProfilePhase.LAUNCH))
+    assertThat(descriptions.get(BazelProfilePhase.LAUNCH).get())
         .isEqualTo(
             new BazelPhaseDescription(
                 LAUNCH_START, TimeUtil.getDurationBetween(LAUNCH_START, INIT_START)));
-    assertThat(descriptions.get(BazelProfilePhase.INIT))
+    assertThat(descriptions.get(BazelProfilePhase.INIT).get())
         .isEqualTo(
             new BazelPhaseDescription(
                 INIT_START, TimeUtil.getDurationBetween(INIT_START, EVAL_START)));
-    assertThat(descriptions.get(BazelProfilePhase.EVALUATE))
+    assertThat(descriptions.get(BazelProfilePhase.EVALUATE).get())
         .isEqualTo(
             new BazelPhaseDescription(
                 EVAL_START, TimeUtil.getDurationBetween(EVAL_START, DEP_START)));
-    assertThat(descriptions.get(BazelProfilePhase.DEPENDENCIES))
+    assertThat(descriptions.get(BazelProfilePhase.DEPENDENCIES).get())
         .isEqualTo(
             new BazelPhaseDescription(
                 DEP_START, TimeUtil.getDurationBetween(DEP_START, PREP_START)));
-    assertThat(descriptions.get(BazelProfilePhase.PREPARE))
+    assertThat(descriptions.get(BazelProfilePhase.PREPARE).get())
         .isEqualTo(
             new BazelPhaseDescription(
                 PREP_START, TimeUtil.getDurationBetween(PREP_START, EXEC_START)));
-    assertThat(descriptions.get(BazelProfilePhase.EXECUTE))
+    assertThat(descriptions.get(BazelProfilePhase.EXECUTE).get())
         .isEqualTo(
             new BazelPhaseDescription(
                 EXEC_START, TimeUtil.getDurationBetween(EXEC_START, FINISH_START)));
-    assertThat(descriptions.get(BazelProfilePhase.FINISH))
+    assertThat(descriptions.get(BazelProfilePhase.FINISH).get())
         .isEqualTo(
             new BazelPhaseDescription(
                 FINISH_START, TimeUtil.getDurationBetween(FINISH_START, FINISH_TIME)));
@@ -117,19 +117,19 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                     FINISH_TIME))));
 
     BazelPhaseDescriptions descriptions = provider.getBazelPhaseDescriptions();
-    assertThat(descriptions.get(BazelProfilePhase.LAUNCH))
+    assertThat(descriptions.get(BazelProfilePhase.LAUNCH).get())
         .isEqualTo(
             new BazelPhaseDescription(
                 LAUNCH_START, TimeUtil.getDurationBetween(LAUNCH_START, INIT_START)));
-    assertThat(descriptions.get(BazelProfilePhase.INIT))
+    assertThat(descriptions.get(BazelProfilePhase.INIT).get())
         .isEqualTo(
             new BazelPhaseDescription(
                 INIT_START, TimeUtil.getDurationBetween(INIT_START, PREP_START)));
-    assertThat(descriptions.get(BazelProfilePhase.PREPARE))
+    assertThat(descriptions.get(BazelProfilePhase.PREPARE).get())
         .isEqualTo(
             new BazelPhaseDescription(
                 PREP_START, TimeUtil.getDurationBetween(PREP_START, FINISH_START)));
-    assertThat(descriptions.get(BazelProfilePhase.FINISH))
+    assertThat(descriptions.get(BazelProfilePhase.FINISH).get())
         .isEqualTo(
             new BazelPhaseDescription(
                 FINISH_START, TimeUtil.getDurationBetween(FINISH_START, FINISH_TIME)));
@@ -148,7 +148,7 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                 createPhaseEvents(LAUNCH_START, null, null, null, null, null, null, FINISH_TIME))));
 
     BazelPhaseDescriptions descriptions = provider.getBazelPhaseDescriptions();
-    assertThat(descriptions.get(BazelProfilePhase.FINISH))
+    assertThat(descriptions.get(BazelProfilePhase.FINISH).get())
         .isEqualTo(
             new BazelPhaseDescription(
                 LAUNCH_START, TimeUtil.getDurationBetween(LAUNCH_START, FINISH_TIME)));
