@@ -15,6 +15,8 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
+import com.google.common.base.Preconditions;
+import java.util.Optional;
 
 /**
  * Estimated value of the Bazel flag `--jobs`. The Bazel profile includes information from which we
@@ -23,15 +25,29 @@ import com.engflow.bazel.invocation.analyzer.core.Datum;
  * cores, more likely than not the flag `--jobs` was set.
  */
 public class EstimatedJobsFlagValue implements Datum {
-  private final int lowerBound;
+  private final Optional<Integer> lowerBound;
   private final boolean likelySet;
 
-  public EstimatedJobsFlagValue(int lowerBound, boolean likelySet) {
-    this.lowerBound = lowerBound;
+  private EstimatedJobsFlagValue() {
+    this.lowerBound = Optional.empty();
+    this.likelySet = false;
+  }
+
+  public EstimatedJobsFlagValue(Integer lowerBound, boolean likelySet) {
+    Preconditions.checkNotNull(lowerBound);
+    this.lowerBound = Optional.ofNullable(lowerBound);
     this.likelySet = likelySet;
   }
 
-  public int getLowerBound() {
+  public static EstimatedJobsFlagValue empty() {
+    return new EstimatedJobsFlagValue();
+  }
+
+  public boolean isEmpty() {
+    return lowerBound.isEmpty();
+  }
+
+  public Optional<Integer> getLowerBound() {
     return lowerBound;
   }
 
@@ -47,7 +63,11 @@ public class EstimatedJobsFlagValue implements Datum {
 
   @Override
   public String getSummary() {
+    if (lowerBound.isEmpty()) {
+      return "n/a";
+    }
     return String.format(
-        "Lower bound of %d; --jobs flag is likely %s", lowerBound, likelySet ? "set" : "not set");
+        "Lower bound of %d; --jobs flag is likely %s",
+        lowerBound.get(), likelySet ? "set" : "not set");
   }
 }

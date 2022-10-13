@@ -53,17 +53,17 @@ public class JobsSuggestionProviderIntegrationTest extends IntegerationTestBase 
 
     EstimatedCoresAvailable estimatedCoresAvailable =
         dataManager.getDatum(EstimatedCoresAvailable.class);
-    assertThat(estimatedCoresAvailable.getEstimatedCores()).isEqualTo(16);
-    assertThat(estimatedCoresAvailable.getGaps()).isEqualTo(0);
+    assertThat(estimatedCoresAvailable.getEstimatedCores().get()).isEqualTo(16);
+    assertThat(estimatedCoresAvailable.getGaps().get()).isEqualTo(0);
 
     EstimatedCoresUsed estimatedCoresUsed = dataManager.getDatum(EstimatedCoresUsed.class);
-    assertThat(estimatedCoresUsed.getEstimatedCores()).isEqualTo(16);
-    assertThat(estimatedCoresUsed.getGaps()).isEqualTo(0);
+    assertThat(estimatedCoresUsed.getEstimatedCores().get()).isEqualTo(16);
+    assertThat(estimatedCoresUsed.getGaps().get()).isEqualTo(0);
 
     EstimatedJobsFlagValue estimatedJobsFlagValue =
         dataManager.getDatum(EstimatedJobsFlagValue.class);
     assertThat(estimatedJobsFlagValue.isLikelySet()).isFalse();
-    assertThat(estimatedJobsFlagValue.getLowerBound()).isEqualTo(16);
+    assertThat(estimatedJobsFlagValue.getLowerBound().get()).isEqualTo(16);
 
     SuggestionOutput output = provider.getSuggestions(dataManager);
     assertThat(output.hasFailure()).isFalse();
@@ -77,17 +77,17 @@ public class JobsSuggestionProviderIntegrationTest extends IntegerationTestBase 
 
     EstimatedCoresAvailable estimatedCoresAvailable =
         dataManager.getDatum(EstimatedCoresAvailable.class);
-    assertThat(estimatedCoresAvailable.getEstimatedCores()).isEqualTo(16);
-    assertThat(estimatedCoresAvailable.getGaps()).isEqualTo(0);
+    assertThat(estimatedCoresAvailable.getEstimatedCores().get()).isEqualTo(16);
+    assertThat(estimatedCoresAvailable.getGaps().get()).isEqualTo(0);
 
     EstimatedCoresUsed estimatedCoresUsed = dataManager.getDatum(EstimatedCoresUsed.class);
-    assertThat(estimatedCoresUsed.getEstimatedCores()).isEqualTo(4);
-    assertThat(estimatedCoresUsed.getGaps()).isEqualTo(0);
+    assertThat(estimatedCoresUsed.getEstimatedCores().get()).isEqualTo(4);
+    assertThat(estimatedCoresUsed.getGaps().get()).isEqualTo(0);
 
     EstimatedJobsFlagValue estimatedJobsFlagValue =
         dataManager.getDatum(EstimatedJobsFlagValue.class);
     assertThat(estimatedJobsFlagValue.isLikelySet()).isTrue();
-    assertThat(estimatedJobsFlagValue.getLowerBound()).isEqualTo(4);
+    assertThat(estimatedJobsFlagValue.getLowerBound().get()).isEqualTo(4);
 
     SuggestionOutput output = provider.getSuggestions(dataManager);
     assertThat(output.hasFailure()).isFalse();
@@ -102,17 +102,17 @@ public class JobsSuggestionProviderIntegrationTest extends IntegerationTestBase 
 
     EstimatedCoresAvailable estimatedCoresAvailable =
         dataManager.getDatum(EstimatedCoresAvailable.class);
-    assertThat(estimatedCoresAvailable.getEstimatedCores()).isEqualTo(16);
-    assertThat(estimatedCoresAvailable.getGaps()).isEqualTo(0);
+    assertThat(estimatedCoresAvailable.getEstimatedCores().get()).isEqualTo(16);
+    assertThat(estimatedCoresAvailable.getGaps().get()).isEqualTo(0);
 
     EstimatedCoresUsed estimatedCoresUsed = dataManager.getDatum(EstimatedCoresUsed.class);
-    assertThat(estimatedCoresUsed.getEstimatedCores()).isEqualTo(51);
-    assertThat(estimatedCoresUsed.getGaps()).isEqualTo(46);
+    assertThat(estimatedCoresUsed.getEstimatedCores().get()).isEqualTo(51);
+    assertThat(estimatedCoresUsed.getGaps().get()).isEqualTo(46);
 
     EstimatedJobsFlagValue estimatedJobsFlagValue =
         dataManager.getDatum(EstimatedJobsFlagValue.class);
     assertThat(estimatedJobsFlagValue.isLikelySet()).isTrue();
-    assertThat(estimatedJobsFlagValue.getLowerBound()).isEqualTo(97);
+    assertThat(estimatedJobsFlagValue.getLowerBound().get()).isEqualTo(97);
 
     SuggestionOutput output = provider.getSuggestions(dataManager);
     assertThat(output.hasFailure()).isFalse();

@@ -28,6 +28,7 @@ import com.engflow.bazel.invocation.analyzer.traceeventformat.CounterEvent;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /** A {@link DataProvider} that supplies data on action counts, including bottleneck statistics. */
@@ -46,11 +47,13 @@ public class ActionStatsDataProvider extends DataProvider {
       return null;
     }
 
-    var estimatedCoresUsedDatum = getDataManager().getDatum(EstimatedCoresUsed.class);
-    if (estimatedCoresUsedDatum == null) {
+    Optional<Integer> optionalEstimatedCoresUsed =
+        getDataManager().getDatum(EstimatedCoresUsed.class).getEstimatedCores();
+    if (optionalEstimatedCoresUsed.isEmpty()) {
+      // TODO: Return Optional.empty once ActionStats supports it.
       return null;
     }
-    var coresUsed = estimatedCoresUsedDatum.getEstimatedCores();
+    var coresUsed = optionalEstimatedCoresUsed.get();
 
     List<Bottleneck.Builder> bottlenecks = new ArrayList<>();
     Bottleneck.Builder currentBottleneck = null;

@@ -71,7 +71,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
     EstimatedCoresAvailable estimatedCores = provider.getEstimatedCoresAvailable();
-    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(maxIndexInRelevantPhase + 1);
+    assertThat(estimatedCores.getEstimatedCores().get()).isEqualTo(maxIndexInRelevantPhase + 1);
   }
 
   @Test
@@ -98,7 +98,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
     EstimatedCoresAvailable estimatedCores = provider.getEstimatedCoresAvailable();
-    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(maxIndexInRelevantPhase + 1);
+    assertThat(estimatedCores.getEstimatedCores().get()).isEqualTo(maxIndexInRelevantPhase + 1);
   }
 
   @Test
@@ -121,7 +121,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
-    assertThat(provider.getEstimatedCoresAvailable().getEstimatedCores())
+    assertThat(provider.getEstimatedCoresAvailable().getEstimatedCores().get())
         .isEqualTo(maxIndexInRelevantPhase + 1);
   }
 
@@ -146,12 +146,12 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
-    assertThat(provider.getEstimatedCoresAvailable().getEstimatedCores())
+    assertThat(provider.getEstimatedCoresAvailable().getEstimatedCores().get())
         .isEqualTo(maxIndexInRelevantPhase + 1);
   }
 
   @Test
-  public void shouldNotReturnEstimatedCoresAvailablePhaseMarkersMissing() throws Exception {
+  public void shouldReturnEmptyEstimatedCoresAvailablePhaseMarkersMissing() throws Exception {
     int maxIndexInRelevantPhase = 3;
     Timestamp start = Timestamp.ofMicros(20_000);
     Timestamp within1 = Timestamp.ofMicros(22_000);
@@ -172,7 +172,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
-    assertThat(provider.getEstimatedCoresAvailable()).isNull();
+    assertThat(provider.getEstimatedCoresAvailable().getEstimatedCores().isEmpty()).isTrue();
   }
 
   @Test
@@ -194,7 +194,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
     EstimatedCoresUsed estimatedCores = provider.getEstimatedCoresUsed();
-    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(4);
+    assertThat(estimatedCores.getEstimatedCores().get()).isEqualTo(4);
   }
 
   @Test
@@ -218,11 +218,12 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
     EstimatedCoresUsed estimatedCores = provider.getEstimatedCoresUsed();
-    assertThat(estimatedCores.getEstimatedCores()).isEqualTo(2);
+    assertThat(estimatedCores.getEstimatedCores().get()).isEqualTo(2);
   }
 
   @Test
-  public void shouldNotReturnEstimatedCoresUsedExecutePhaseMarkerMissing() throws Exception {
+  public void shouldReturnEmptyEstimatedCoresUsedWhenExecutePhaseMarkerIsMissing()
+      throws Exception {
     Timestamp outsideRangeBefore = Timestamp.ofMicros(19_999);
     Timestamp start = Timestamp.ofMicros(20_000);
     Timestamp within1 = Timestamp.ofMicros(22_000);
@@ -244,7 +245,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
 
-    assertThat(provider.getEstimatedCoresUsed()).isNull();
+    assertThat(provider.getEstimatedCoresUsed().isEmpty()).isTrue();
   }
 
   @Test
