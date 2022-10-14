@@ -25,6 +25,7 @@ import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -124,20 +125,20 @@ public class EstimatedCoresDataProvider extends DataProvider {
       // Evaluate only events within the target pattern evaluation and dependency analysis
       // phases. These phases should use as many cores as there are available, irrespective of
       // whether the Bazel flag `--jobs` is set or not.
-      BazelPhaseDescription start =
+      Optional<BazelPhaseDescription> start =
           bazelPhaseDescriptions.has(BazelProfilePhase.EVALUATE)
               ? bazelPhaseDescriptions.get(BazelProfilePhase.EVALUATE)
               : bazelPhaseDescriptions.get(BazelProfilePhase.DEPENDENCIES);
-      BazelPhaseDescription end =
+      Optional<BazelPhaseDescription> end =
           bazelPhaseDescriptions.has(BazelProfilePhase.DEPENDENCIES)
               ? bazelPhaseDescriptions.get(BazelProfilePhase.DEPENDENCIES)
               : bazelPhaseDescriptions.get(BazelProfilePhase.EVALUATE);
-      if (start == null || end == null) {
+      if (start.isEmpty() || end.isEmpty()) {
         // The profile does not include that data necessary.
         return;
       }
       evaluateAndDependenciesPhaseSkyframeEvaluators =
-          getSkyframeEvaluators(bazelProfile, start.getStart(), end.getEnd());
+          getSkyframeEvaluators(bazelProfile, start.get().getStart(), end.get().getEnd());
       evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue =
           evaluateAndDependenciesPhaseSkyframeEvaluators.stream().max(Integer::compareTo).get();
     }
@@ -151,12 +152,13 @@ public class EstimatedCoresDataProvider extends DataProvider {
           getDataManager().getDatum(BazelPhaseDescriptions.class);
       // Evaluate only threads with events in the execution phase, as the Bazel flag `--jobs`
       // applies to that phase specifically.
-      BazelPhaseDescription execution = bazelPhaseDescriptions.get(BazelProfilePhase.EXECUTE);
-      if (execution == null) {
+      Optional<BazelPhaseDescription> execution =
+          bazelPhaseDescriptions.get(BazelProfilePhase.EXECUTE);
+      if (execution.isEmpty()) {
         return;
       }
       executionPhaseSkyframeEvaluators =
-          getSkyframeEvaluators(bazelProfile, execution.getStart(), execution.getEnd());
+          getSkyframeEvaluators(bazelProfile, execution.get().getStart(), execution.get().getEnd());
       executionPhaseSkyframeEvaluatorsMaxValue =
           executionPhaseSkyframeEvaluators.stream().max(Integer::compareTo).get();
     }

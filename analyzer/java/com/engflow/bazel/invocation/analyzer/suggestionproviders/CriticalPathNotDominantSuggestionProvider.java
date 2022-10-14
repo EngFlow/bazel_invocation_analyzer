@@ -23,6 +23,7 @@ import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfilePhase;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.SuggestionProvider;
+import com.engflow.bazel.invocation.analyzer.dataproviders.BazelPhaseDescription;
 import com.engflow.bazel.invocation.analyzer.dataproviders.BazelPhaseDescriptions;
 import com.engflow.bazel.invocation.analyzer.dataproviders.CriticalPathDuration;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresUsed;
@@ -53,12 +54,20 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
   public SuggestionOutput getSuggestions(DataManager dataManager) {
     try {
       BazelPhaseDescriptions phases = dataManager.getDatum(BazelPhaseDescriptions.class);
-      if (!phases.has(BazelProfilePhase.EXECUTE)) {
+      Optional<BazelPhaseDescription> optionalExecutionPhaseDescription =
+          phases.get(BazelProfilePhase.EXECUTE);
+      if (optionalExecutionPhaseDescription.isEmpty()) {
         // No execution phase found, so critical path analysis not applicable.
-        return SuggestionProviderUtil.createSuggestionOutput(ANALYZER_CLASSNAME, null, null);
+        Caveat caveat =
+            SuggestionProviderUtil.createCaveat(
+                "The Bazel profile does not include an execution phase for this invocation, which"
+                    + " is necessary to analyze whether the critical path is dominant or not.",
+                false);
+        return SuggestionProviderUtil.createSuggestionOutput(
+            ANALYZER_CLASSNAME, null, List.of(caveat));
       }
 
-      Duration executionDuration = phases.get(BazelProfilePhase.EXECUTE).getDuration();
+      Duration executionDuration = optionalExecutionPhaseDescription.get().getDuration();
       if (executionDuration.compareTo(MIN_DURATION_FOR_EVALUATION) < 0) {
         Caveat caveat =
             SuggestionProviderUtil.createCaveat(

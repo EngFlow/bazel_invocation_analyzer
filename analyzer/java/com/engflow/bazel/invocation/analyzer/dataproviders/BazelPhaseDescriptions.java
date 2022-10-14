@@ -20,6 +20,7 @@ import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * A mapping from {@link BazelProfilePhase} to its {@link BazelPhaseDescription} in the provided
@@ -36,38 +37,38 @@ public class BazelPhaseDescriptions implements Datum {
     return new BazelPhaseDescriptions.Builder();
   }
 
-  public BazelPhaseDescription get(BazelProfilePhase phase) {
-    return phaseToDescription.get(phase);
+  public Optional<BazelPhaseDescription> get(BazelProfilePhase phase) {
+    return Optional.ofNullable(phaseToDescription.get(phase));
   }
 
   public boolean has(BazelProfilePhase phase) {
     return phaseToDescription.containsKey(phase);
   }
 
-  public BazelPhaseDescription getOrClosestBefore(BazelProfilePhase phase) {
+  public Optional<BazelPhaseDescription> getOrClosestBefore(BazelProfilePhase phase) {
     if (phaseToDescription.containsKey(phase)) {
-      return phaseToDescription.get(phase);
+      return Optional.of(phaseToDescription.get(phase));
     }
     while (phase != BazelProfilePhase.LAUNCH) {
       phase = phase.getPrevious();
       if (phaseToDescription.containsKey(phase)) {
-        return phaseToDescription.get(phase);
+        return Optional.of(phaseToDescription.get(phase));
       }
     }
-    return null;
+    return Optional.empty();
   }
 
-  public BazelPhaseDescription getOrClosestAfter(BazelProfilePhase phase) {
+  public Optional<BazelPhaseDescription> getOrClosestAfter(BazelProfilePhase phase) {
     if (phaseToDescription.containsKey(phase)) {
-      return phaseToDescription.get(phase);
+      return Optional.of(phaseToDescription.get(phase));
     }
     while (phase != BazelProfilePhase.FINISH) {
       phase = phase.getNext();
       if (phaseToDescription.containsKey(phase)) {
-        return phaseToDescription.get(phase);
+        return Optional.of(phaseToDescription.get(phase));
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   @Override

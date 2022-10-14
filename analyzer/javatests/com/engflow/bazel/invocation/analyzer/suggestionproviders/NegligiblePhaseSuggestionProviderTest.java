@@ -24,7 +24,6 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.BazelPhaseDescription
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
-import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,7 +33,7 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
   // tests when custom values are desired for the testing being conducted (without the need to
   // re-initialize the mocking).
   private TotalDuration totalDuration;
-  @Nullable private BazelPhaseDescriptions.Builder bazelPhaseDescriptions;
+  private BazelPhaseDescriptions.Builder bazelPhaseDescriptions;
 
   @Before
   public void setup() throws Exception {
@@ -47,19 +46,6 @@ public class NegligiblePhaseSuggestionProviderTest extends SuggestionProviderUni
         .thenAnswer(i -> bazelPhaseDescriptions == null ? null : bazelPhaseDescriptions.build());
 
     suggestionProvider = new NegligiblePhaseSuggestionProvider();
-  }
-
-  @Test
-  public void shouldNotReturnSuggestionForMissingBazelPhaseDescriptions() {
-    bazelPhaseDescriptions = null;
-    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
-
-    assertThat(suggestionOutput.getAnalyzerClassname())
-        .isEqualTo(NegligiblePhaseSuggestionProvider.class.getName());
-    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
-    assertThat(suggestionOutput.hasFailure()).isFalse();
-    assertThat(suggestionOutput.getMissingInputList())
-        .contains(BazelPhaseDescriptions.class.getName());
   }
 
   @Test
