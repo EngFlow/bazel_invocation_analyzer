@@ -35,11 +35,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class BottleneckSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME = BottleneckSuggestionProvider.class.getName();
+
+  @VisibleForTesting
+  static final String EMPTY_REASON_PREFIX = "No bottleneck optimizations could be suggested. ";
 
   @VisibleForTesting
   static final String SUGGESTION_ID_BREAK_DOWN_BOTTLENECK_ACTIONS = "BreakDownBottleneckActions";
@@ -83,28 +85,26 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
   @Override
   public SuggestionOutput getSuggestions(DataManager dataManager) {
     try {
-      var optionalBottlenecks = dataManager.getDatum(ActionStats.class).getBottlenecks();
-      if (optionalBottlenecks.isEmpty()) {
+      ActionStats actionStats = dataManager.getDatum(ActionStats.class);
+      if (actionStats.isEmpty()) {
         return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
-            ANALYZER_CLASSNAME, ActionStats.class);
+            ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + actionStats.getEmptyReason());
       }
-      List<Bottleneck> bottlenecks = optionalBottlenecks.get();
+      List<Bottleneck> bottlenecks = actionStats.getBottlenecks().get();
 
-      Optional<Integer> optionalCoresUsed =
-          dataManager.getDatum(EstimatedCoresUsed.class).getEstimatedCores();
-      if (optionalCoresUsed.isEmpty()) {
+      EstimatedCoresUsed estimatedCoresUsedDatum = dataManager.getDatum(EstimatedCoresUsed.class);
+      if (estimatedCoresUsedDatum.isEmpty()) {
         return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
-            ANALYZER_CLASSNAME, EstimatedCoresUsed.class);
+            ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + estimatedCoresUsedDatum.getEmptyReason());
       }
-      final var coresUsed = optionalCoresUsed.get();
+      final var coresUsed = estimatedCoresUsedDatum.getEstimatedCores().get();
 
-      Optional<Duration> optionalTotalDuration =
-          dataManager.getDatum(TotalDuration.class).getTotalDuration();
-      if (optionalTotalDuration.isEmpty()) {
+      TotalDuration totalDurationDatum = dataManager.getDatum(TotalDuration.class);
+      if (totalDurationDatum.isEmpty()) {
         return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
-            ANALYZER_CLASSNAME, TotalDuration.class);
+            ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + totalDurationDatum.getEmptyReason());
       }
-      final var totalDuration = optionalTotalDuration.get();
+      final var totalDuration = totalDurationDatum.getTotalDuration().get();
 
       final List<Caveat> caveats = new ArrayList<>();
       final var suggestions =

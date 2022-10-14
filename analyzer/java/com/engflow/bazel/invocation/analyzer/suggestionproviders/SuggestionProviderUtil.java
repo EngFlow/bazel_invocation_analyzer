@@ -183,7 +183,9 @@ public class SuggestionProviderUtil {
   }
 
   /**
-   * Creates a {@link SuggestionOutput} when an essential input is empty.
+   * Creates a basic {@link SuggestionOutput} when an essential input is empty. Prefer using {@link
+   * #createSuggestionOutputForEmptyInput(String, String)} and provide a meaningful message
+   * explaining why the empty input prevents further analysis.
    *
    * @param analyzerClassname The name of the analyzer that produces this output.
    * @param emptyClazz The class of the {@link Datum} that was empty.
@@ -199,8 +201,17 @@ public class SuggestionProviderUtil {
             createCaveat(
                 String.format(
                     "An essential input for determining suggestions was empty: %s",
-                    emptyClazz.getName()),
+                    emptyClazz.getSimpleName()),
                 false))
+        .build();
+  }
+
+  public static SuggestionOutput createSuggestionOutputForEmptyInput(
+      String analyzerClassname, String reason) {
+    Preconditions.checkNotNull(analyzerClassname);
+    return SuggestionOutput.newBuilder()
+        .setAnalyzerClassname(analyzerClassname)
+        .addCaveat(createCaveat(reason, false))
         .build();
   }
 

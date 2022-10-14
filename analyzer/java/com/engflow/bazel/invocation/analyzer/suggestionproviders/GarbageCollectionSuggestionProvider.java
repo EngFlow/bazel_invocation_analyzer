@@ -29,12 +29,16 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 /** A {@link SuggestionProvider} that provides suggestions regarding garbage collection. */
 public class GarbageCollectionSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME =
       GarbageCollectionSuggestionProvider.class.getName();
+
+  @VisibleForTesting
+  static final String EMPTY_REASON_PREFIX =
+      "No garbage collection optimizations could be suggested. ";
+
   private static final String SUGGESTION_ID_INCREASE_JAVA_HEAP_SIZE = "IncreaseJavaHeapSize";
   private static final String SUGGESTION_ID_REDUCE_RULES_MEMORY_USAGE = "ReduceRulesMemoryUsage";
   // Only return a suggestion if major garbage collection takes up a significant portion of the
@@ -48,13 +52,12 @@ public class GarbageCollectionSuggestionProvider extends SuggestionProviderBase 
       GarbageCollectionStats gcStats = dataManager.getDatum(GarbageCollectionStats.class);
 
       if (gcStats.hasMajorGarbageCollection()) {
-        Optional<Duration> optionalTotalDuration =
-            dataManager.getDatum(TotalDuration.class).getTotalDuration();
-        if (optionalTotalDuration.isEmpty()) {
+        TotalDuration totalDurationDatum = dataManager.getDatum(TotalDuration.class);
+        if (totalDurationDatum.isEmpty()) {
           return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
-              ANALYZER_CLASSNAME, TotalDuration.class);
+              ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + totalDurationDatum.getEmptyReason());
         }
-        Duration totalDuration = optionalTotalDuration.get();
+        Duration totalDuration = totalDurationDatum.getTotalDuration().get();
         double percentOfTotal =
             100.0
                 * gcStats.getMajorGarbageCollectionDuration().toMillis()

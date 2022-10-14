@@ -42,7 +42,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
   @Test
   public void doesNotCreateSuggestionsIfActionStatsIsEmpty()
       throws MissingInputException, InvalidProfileException {
-    when(dataManager.getDatum(ActionStats.class)).thenReturn(ActionStats.empty());
+    when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats("empty"));
     when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
     when(dataManager.getDatum(TotalDuration.class))
         .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
@@ -53,7 +53,9 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
     assertThat(suggestions.getSuggestionList()).isEmpty();
     assertThat(suggestions.hasFailure()).isFalse();
     assertThat(suggestions.getCaveatList()).hasSize(1);
-    assertThat(suggestions.getCaveat(0).getMessage()).contains(ActionStats.class.getName());
+    assertThat(suggestions.getCaveat(0).getMessage())
+        .contains(BottleneckSuggestionProvider.EMPTY_REASON_PREFIX);
+    assertThat(suggestions.getCaveat(0).getMessage()).contains("empty");
   }
 
   @Test
@@ -61,7 +63,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
       throws MissingInputException, InvalidProfileException {
     when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of()));
     when(dataManager.getDatum(EstimatedCoresUsed.class))
-        .thenReturn(new EstimatedCoresUsed(null, null));
+        .thenReturn(new EstimatedCoresUsed("empty"));
     when(dataManager.getDatum(TotalDuration.class))
         .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
 
@@ -71,7 +73,9 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
     assertThat(suggestions.getSuggestionList()).isEmpty();
     assertThat(suggestions.hasFailure()).isFalse();
     assertThat(suggestions.getCaveatList()).hasSize(1);
-    assertThat(suggestions.getCaveat(0).getMessage()).contains(EstimatedCoresUsed.class.getName());
+    assertThat(suggestions.getCaveat(0).getMessage())
+        .contains(BottleneckSuggestionProvider.EMPTY_REASON_PREFIX);
+    assertThat(suggestions.getCaveat(0).getMessage()).contains("empty");
   }
 
   @Test
@@ -79,7 +83,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
       throws MissingInputException, InvalidProfileException {
     when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of()));
     when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
-    when(dataManager.getDatum(TotalDuration.class)).thenReturn(new TotalDuration(null));
+    when(dataManager.getDatum(TotalDuration.class)).thenReturn(new TotalDuration("empty"));
 
     final var bottleneckSuggestionProvider =
         new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0, 1.);
@@ -87,7 +91,9 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
     assertThat(suggestions.getSuggestionList()).isEmpty();
     assertThat(suggestions.hasFailure()).isFalse();
     assertThat(suggestions.getCaveatList()).hasSize(1);
-    assertThat(suggestions.getCaveat(0).getMessage()).contains(TotalDuration.class.getName());
+    assertThat(suggestions.getCaveat(0).getMessage())
+        .contains(BottleneckSuggestionProvider.EMPTY_REASON_PREFIX);
+    assertThat(suggestions.getCaveat(0).getMessage()).contains("empty");
   }
 
   @Test

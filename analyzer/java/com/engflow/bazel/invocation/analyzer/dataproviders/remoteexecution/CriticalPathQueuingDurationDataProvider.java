@@ -38,6 +38,10 @@ import java.util.regex.Pattern;
  */
 public class CriticalPathQueuingDurationDataProvider extends DataProvider {
   private static final Pattern CRITICAL_PATH_TO_EVENT_NAME = Pattern.compile("^action '(.*)'$");
+  public static final String EMPTY_REASON =
+      "The Bazel profile does not include a critical path, which is required for determining"
+          + " whether it has queuing. Try analyzing a profile that processes actions, for example a"
+          + " build or test.";
 
   @Override
   public List<DatumSupplierSpecification<?>> getSuppliers() {
@@ -57,7 +61,7 @@ public class CriticalPathQueuingDurationDataProvider extends DataProvider {
     // within the time interval.
     Set<CompleteEvent> criticalPathEventsInThreads = new HashSet<>();
     if (bazelProfile.getCriticalPath().isEmpty()) {
-      return new CriticalPathQueuingDuration(null);
+      return new CriticalPathQueuingDuration(EMPTY_REASON);
     }
     bazelProfile
         .getCriticalPath()

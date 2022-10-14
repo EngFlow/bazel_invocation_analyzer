@@ -42,6 +42,14 @@ import java.util.logging.Logger;
  * </ul>
  */
 public class BazelPhasesDataProvider extends DataProvider {
+  private static final String TOTAL_DURATION_EMPTY_REASON_LAUNCH =
+      "The Bazel profile does not include a launch marker, which is required for determining the"
+          + " invocation's total duration. All Bazel profiles should include this data. Try"
+          + " creating a new profile.";
+  private static final String TOTAL_DURATION_EMPTY_REASON_COMPLETE =
+      "The Bazel profile does not include a completion marker, which is required for determining"
+          + " the invocation's total duration. All Bazel profiles should include this data. Try"
+          + " creating a new profile.";
   private static final Logger logger = Logger.getLogger(BazelProfile.class.getName());
 
   private Timestamp launchStart;
@@ -102,6 +110,12 @@ public class BazelPhasesDataProvider extends DataProvider {
   @VisibleForTesting
   TotalDuration getTotalDuration() throws MissingInputException, InvalidProfileException {
     determineStartAndEndTimestamps();
+    if (launchStart == null) {
+      return new TotalDuration(TOTAL_DURATION_EMPTY_REASON_LAUNCH);
+    }
+    if (finishEnd == null) {
+      return new TotalDuration(TOTAL_DURATION_EMPTY_REASON_COMPLETE);
+    }
     return new TotalDuration(TimeUtil.getDurationBetween(launchStart, finishEnd));
   }
 

@@ -42,6 +42,11 @@ import java.util.Optional;
 public class NegligiblePhaseSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME =
       NegligiblePhaseSuggestionProvider.class.getName();
+
+  @VisibleForTesting
+  static final String EMPTY_REASON_PREFIX =
+      "No phases could be checked for an unusual relative duration. ";
+
   private static final String SUGGESTION_ID_UNUSUAL_PHASE_DURATION_FORMAT =
       "UnusualPhaseDuration-%s";
 
@@ -58,13 +63,12 @@ public class NegligiblePhaseSuggestionProvider extends SuggestionProviderBase {
   @Override
   public SuggestionOutput getSuggestions(DataManager dataManager) {
     try {
-      Optional<Duration> optionalTotalDuration =
-          dataManager.getDatum(TotalDuration.class).getTotalDuration();
-      if (optionalTotalDuration.isEmpty()) {
+      TotalDuration totalDurationDatum = dataManager.getDatum(TotalDuration.class);
+      if (totalDurationDatum.isEmpty()) {
         return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
-            ANALYZER_CLASSNAME, TotalDuration.class);
+            ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + totalDurationDatum.getEmptyReason());
       }
-      Duration totalDuration = optionalTotalDuration.get();
+      Duration totalDuration = totalDurationDatum.getTotalDuration().get();
       if (totalDuration.compareTo(MIN_DURATION) < 0) {
         // Too short for this check to be valid
         Caveat caveat =

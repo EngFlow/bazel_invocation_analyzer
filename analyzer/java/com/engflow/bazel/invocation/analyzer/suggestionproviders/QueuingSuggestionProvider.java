@@ -27,6 +27,7 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.Criti
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.QueuingObserved;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.TotalQueuingDuration;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
+import com.google.common.annotations.VisibleForTesting;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,11 @@ import java.util.Optional;
  */
 public class QueuingSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME = QueuingSuggestionProvider.class.getName();
+
+  @VisibleForTesting
+  static final String EMPTY_REASON_PREFIX =
+      "No optimizations for reducing queuing could be suggested. ";
+
   private static final String SUGGESTION_ID_INCREASE_RE_CLUSTER_SIZE =
       "IncreaseRemoteExecutionClusterSize";
 
@@ -68,13 +74,12 @@ public class QueuingSuggestionProvider extends SuggestionProviderBase {
             && !optionalCriticalPathDuration.get().isZero()) {
           Duration criticalPathDuration = optionalCriticalPathDuration.get();
           Duration queuingDuration = optionalCriticalPathQueuingDuration.get();
-          Optional<Duration> optionalTotalDuration =
-              dataManager.getDatum(TotalDuration.class).getTotalDuration();
-          if (optionalTotalDuration.isEmpty()) {
+          TotalDuration totalDurationDatum = dataManager.getDatum(TotalDuration.class);
+          if (totalDurationDatum.isEmpty()) {
             return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
-                ANALYZER_CLASSNAME, TotalDuration.class);
+                ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + totalDurationDatum.getEmptyReason());
           }
-          Duration totalDuration = optionalTotalDuration.get();
+          Duration totalDuration = totalDurationDatum.getTotalDuration().get();
           double invocationDurationReductionPercentage =
               100 * queuingDuration.toMillis() / (double) totalDuration.toMillis();
           potentialImprovement =

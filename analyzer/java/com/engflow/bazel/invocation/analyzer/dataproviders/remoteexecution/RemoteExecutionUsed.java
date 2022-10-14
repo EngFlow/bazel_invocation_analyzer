@@ -29,6 +29,16 @@ public class RemoteExecutionUsed implements Datum {
   }
 
   @Override
+  public boolean isEmpty() {
+    return false;
+  }
+
+  @Override
+  public String getEmptyReason() {
+    return null;
+  }
+
+  @Override
   public String getDescription() {
     return "Whether the Bazel Profile includes events indicating that remote execution was used.";
   }

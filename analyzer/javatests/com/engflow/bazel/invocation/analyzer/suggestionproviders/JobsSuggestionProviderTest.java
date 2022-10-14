@@ -38,7 +38,7 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
   public void doesNotCreateSuggestionsIfEstimatedJobsFlagValueIsEmpty()
       throws MissingInputException, InvalidProfileException {
     when(dataManager.getDatum(EstimatedJobsFlagValue.class))
-        .thenReturn(EstimatedJobsFlagValue.empty());
+        .thenReturn(new EstimatedJobsFlagValue("empty"));
     when(dataManager.getDatum(RemoteExecutionUsed.class))
         .thenReturn(new RemoteExecutionUsed(false));
     when(dataManager.getDatum(RemoteCachingUsed.class)).thenReturn(new RemoteCachingUsed(false));
@@ -46,37 +46,11 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
     assertThat(suggestionOutput.getCaveatList()).hasSize(1);
     assertThat(suggestionOutput.getCaveat(0).getMessage())
-        .contains(EstimatedJobsFlagValue.class.getName());
-  }
-
-  @Test
-  public void doesNotCreateSuggestionsIfRemoteExecutionUsedIsMissing()
-      throws MissingInputException, InvalidProfileException {
-    when(dataManager.getDatum(EstimatedJobsFlagValue.class))
-        .thenReturn(new EstimatedJobsFlagValue(4, false));
-    when(dataManager.getDatum(RemoteCachingUsed.class)).thenReturn(new RemoteCachingUsed(false));
-
-    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
-    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
-    assertThat(suggestionOutput.hasFailure()).isFalse();
-    assertThat(suggestionOutput.getMissingInputList())
-        .contains(RemoteExecutionUsed.class.getName());
-  }
-
-  @Test
-  public void doesNotCreateSuggestionsIfRemoteCachingUsedIsMissing()
-      throws MissingInputException, InvalidProfileException {
-    when(dataManager.getDatum(EstimatedJobsFlagValue.class))
-        .thenReturn(new EstimatedJobsFlagValue(4, false));
-    when(dataManager.getDatum(RemoteExecutionUsed.class))
-        .thenReturn(new RemoteExecutionUsed(false));
-
-    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
-    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
-    assertThat(suggestionOutput.hasFailure()).isFalse();
-    assertThat(suggestionOutput.getMissingInputList()).contains(RemoteCachingUsed.class.getName());
+        .contains(JobsSuggestionProvider.EMPTY_REASON_PREFIX);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains("empty");
   }
 
   @Test
@@ -88,15 +62,17 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
         .thenReturn(new RemoteExecutionUsed(false));
     when(dataManager.getDatum(RemoteCachingUsed.class)).thenReturn(new RemoteCachingUsed(false));
     when(dataManager.getDatum(EstimatedCoresAvailable.class))
-        .thenReturn(new EstimatedCoresAvailable(null, null));
+        .thenReturn(new EstimatedCoresAvailable("empty"));
     when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
     assertThat(suggestionOutput.getCaveatList()).hasSize(1);
     assertThat(suggestionOutput.getCaveat(0).getMessage())
-        .contains(EstimatedCoresAvailable.class.getName());
+        .contains(JobsSuggestionProvider.EMPTY_REASON_PREFIX);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains("empty");
   }
 
   @Test
@@ -110,14 +86,16 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
     when(dataManager.getDatum(EstimatedCoresAvailable.class))
         .thenReturn(new EstimatedCoresAvailable(2, 1));
     when(dataManager.getDatum(EstimatedCoresUsed.class))
-        .thenReturn(new EstimatedCoresUsed(null, null));
+        .thenReturn(new EstimatedCoresUsed("empty"));
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
     assertThat(suggestionOutput.getCaveatList()).hasSize(1);
     assertThat(suggestionOutput.getCaveat(0).getMessage())
-        .contains(EstimatedCoresUsed.class.getName());
+        .contains(JobsSuggestionProvider.EMPTY_REASON_PREFIX);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains("empty");
   }
 
   @Test

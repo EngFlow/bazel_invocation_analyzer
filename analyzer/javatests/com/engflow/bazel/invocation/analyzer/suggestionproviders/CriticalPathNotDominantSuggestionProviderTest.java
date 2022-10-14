@@ -30,7 +30,6 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteExecutionUsed;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
-import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,7 +39,7 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
   // tests when custom values are desired for the testing being conducted (without the need to
   // re-initialize the mocking).
   private BazelPhaseDescriptions.Builder phases;
-  @Nullable private CriticalPathDuration criticalPathDuration;
+  private CriticalPathDuration criticalPathDuration;
   private TotalDuration totalDuration;
   private RemoteExecutionUsed remoteExecutionUsed;
   private EstimatedCoresUsed estimatedCoresUsed;
@@ -74,16 +73,18 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
     phases.add(
         BazelProfilePhase.EXECUTE,
         new BazelPhaseDescription(Timestamp.ofMicros(0), Timestamp.ofSeconds(100)));
-    criticalPathDuration = new CriticalPathDuration(null);
+    criticalPathDuration = new CriticalPathDuration("empty");
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(CriticalPathNotDominantSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
     assertThat(suggestionOutput.getCaveatList()).hasSize(1);
     assertThat(suggestionOutput.getCaveat(0).getMessage())
-        .contains(CriticalPathDuration.class.getName());
+        .contains(CriticalPathNotDominantSuggestionProvider.EMPTY_REASON_PREFIX);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains("empty");
   }
 
   @Test
@@ -91,15 +92,18 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
     phases.add(
         BazelProfilePhase.EXECUTE,
         new BazelPhaseDescription(Timestamp.ofMicros(0), Timestamp.ofSeconds(100)));
-    totalDuration = new TotalDuration(null);
+    totalDuration = new TotalDuration("empty");
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(CriticalPathNotDominantSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
     assertThat(suggestionOutput.getCaveatList()).hasSize(1);
-    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains(TotalDuration.class.getName());
+    assertThat(suggestionOutput.getCaveat(0).getMessage())
+        .contains(CriticalPathNotDominantSuggestionProvider.EMPTY_REASON_PREFIX);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains("empty");
   }
 
   @Test
@@ -107,16 +111,18 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
     phases.add(
         BazelProfilePhase.EXECUTE,
         new BazelPhaseDescription(Timestamp.ofMicros(0), Timestamp.ofSeconds(100)));
-    estimatedCoresUsed = new EstimatedCoresUsed(null, null);
+    estimatedCoresUsed = new EstimatedCoresUsed("empty");
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(CriticalPathNotDominantSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
     assertThat(suggestionOutput.getCaveatList()).hasSize(1);
     assertThat(suggestionOutput.getCaveat(0).getMessage())
-        .contains(EstimatedCoresUsed.class.getName());
+        .contains(CriticalPathNotDominantSuggestionProvider.EMPTY_REASON_PREFIX);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains("empty");
   }
 
   @Test
@@ -127,6 +133,10 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
         .isEqualTo(CriticalPathNotDominantSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
+    assertThat(suggestionOutput.getCaveatList()).hasSize(1);
+    assertThat(suggestionOutput.getCaveat(0).getMessage())
+        .contains(CriticalPathNotDominantSuggestionProvider.EMPTY_REASON_PREFIX);
   }
 
   @Test
@@ -141,6 +151,8 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
         .isEqualTo(CriticalPathNotDominantSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
+    assertThat(suggestionOutput.getCaveatList()).hasSize(1);
   }
 
   @Test
@@ -157,6 +169,8 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
 
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
+    assertThat(suggestionOutput.getCaveatList()).isEmpty();
   }
 
   @Test
@@ -177,6 +191,8 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
     assertThat(suggestionOutput.getSuggestionList().get(0).getRecommendation())
         .contains("more cores");
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
+    assertThat(suggestionOutput.getCaveatList()).isEmpty();
   }
 
   @Test
@@ -197,5 +213,7 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
     assertThat(suggestionOutput.getSuggestionList().size()).isEqualTo(1);
     assertThat(suggestionOutput.getSuggestionList().get(0).getRecommendation()).contains("--jobs");
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
+    assertThat(suggestionOutput.getCaveatList()).isEmpty();
   }
 }

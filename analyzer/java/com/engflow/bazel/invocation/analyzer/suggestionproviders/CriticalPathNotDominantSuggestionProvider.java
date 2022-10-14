@@ -31,6 +31,7 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedJobsFlagValu
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteExecutionUsed;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
+import com.google.common.annotations.VisibleForTesting;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,11 @@ import java.util.Optional;
 public class CriticalPathNotDominantSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME =
       CriticalPathNotDominantSuggestionProvider.class.getName();
+
+  @VisibleForTesting
+  static final String EMPTY_REASON_PREFIX =
+      "Investigating whether the critical path is dominant or not was not possible. ";
+
   private static final String SUGGESTION_ID_INCREASE_NUMBER_OF_CORES = "IncreaseNumberOfCores";
   private static final String SUGGESTION_ID_INCREASE_VALUE_OF_JOBS_FLAG = "IncreaseValueOfJobsFlag";
 
@@ -58,13 +64,11 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
           phases.get(BazelProfilePhase.EXECUTE);
       if (optionalExecutionPhaseDescription.isEmpty()) {
         // No execution phase found, so critical path analysis not applicable.
-        Caveat caveat =
-            SuggestionProviderUtil.createCaveat(
-                "The Bazel profile does not include an execution phase for this invocation, which"
-                    + " is necessary to analyze whether the critical path is dominant or not.",
-                false);
-        return SuggestionProviderUtil.createSuggestionOutput(
-            ANALYZER_CLASSNAME, null, List.of(caveat));
+        return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+            ANALYZER_CLASSNAME,
+            EMPTY_REASON_PREFIX
+                + "The Bazel profile does not include an execution phase, which"
+                + " is necessary for the analysis.");
       }
 
       Duration executionDuration = optionalExecutionPhaseDescription.get().getDuration();
@@ -79,14 +83,14 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
             ANALYZER_CLASSNAME, null, List.of(caveat));
       }
 
-      Optional<Duration> optionalCriticalPathDuration =
-          dataManager.getDatum(CriticalPathDuration.class).getCriticalPathDuration();
-      if (optionalCriticalPathDuration.isEmpty()) {
+      CriticalPathDuration criticalPathDurationDatum =
+          dataManager.getDatum(CriticalPathDuration.class);
+      if (criticalPathDurationDatum.isEmpty()) {
         // We cannot make any suggestions if we have no data about the critical path.
         return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
-            ANALYZER_CLASSNAME, CriticalPathDuration.class);
+            ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + criticalPathDurationDatum.getEmptyReason());
       }
-      Duration criticalPathDuration = optionalCriticalPathDuration.get();
+      Duration criticalPathDuration = criticalPathDurationDatum.getCriticalPathDuration().get();
       if (executionDuration.compareTo(criticalPathDuration) < 0) {
         // Execution phase shorter than critical path.
         Caveat caveat =
@@ -107,24 +111,22 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
 
       List<Suggestion> suggestions = new ArrayList<>();
 
-      Optional<Duration> optionalTotalDuration =
-          dataManager.getDatum(TotalDuration.class).getTotalDuration();
-      if (optionalTotalDuration.isEmpty()) {
+      TotalDuration totalDurationDatum = dataManager.getDatum(TotalDuration.class);
+      if (totalDurationDatum.isEmpty()) {
         return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
-            ANALYZER_CLASSNAME, TotalDuration.class);
+            ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + totalDurationDatum.getEmptyReason());
       }
-      Duration totalDuration = optionalTotalDuration.get();
+      Duration totalDuration = totalDurationDatum.getTotalDuration().get();
       Duration minimumDuration = totalDuration.minus(executionDuration).plus(criticalPathDuration);
       double durationReductionPercent =
           100 * (1 - minimumDuration.toMillis() / (double) totalDuration.toMillis());
 
-      Optional<Integer> optionalEstimatedCoresUsed =
-          dataManager.getDatum(EstimatedCoresUsed.class).getEstimatedCores();
-      if (optionalEstimatedCoresUsed.isEmpty()) {
+      EstimatedCoresUsed estimatedCoresUsedDatum = dataManager.getDatum(EstimatedCoresUsed.class);
+      if (estimatedCoresUsedDatum.isEmpty()) {
         return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
-            ANALYZER_CLASSNAME, EstimatedCoresUsed.class);
+            ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + estimatedCoresUsedDatum.getEmptyReason());
       }
-      int estimatedCoresUsed = optionalEstimatedCoresUsed.get();
+      int estimatedCoresUsed = estimatedCoresUsedDatum.getEstimatedCores().get();
       long optimalCores =
           (long)
               Math.ceil(

@@ -16,20 +16,40 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import java.time.Duration;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 /** The total duration of the invocation */
 public class TotalDuration implements Datum {
   private final Optional<Duration> totalDuration;
+  private final String emptyReason;
 
-  public TotalDuration(@Nullable Duration totalDuration) {
-    this.totalDuration = Optional.ofNullable(totalDuration);
+  public TotalDuration(String emptyReason) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(emptyReason));
+    this.totalDuration = Optional.empty();
+    this.emptyReason = emptyReason;
+  }
+
+  public TotalDuration(Duration totalDuration) {
+    Preconditions.checkNotNull(totalDuration);
+    this.totalDuration = Optional.of(totalDuration);
+    this.emptyReason = null;
   }
 
   public Optional<Duration> getTotalDuration() {
     return totalDuration;
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return totalDuration.isEmpty();
+  }
+
+  @Override
+  public String getEmptyReason() {
+    return emptyReason;
   }
 
   @Override
@@ -39,6 +59,6 @@ public class TotalDuration implements Datum {
 
   @Override
   public String getSummary() {
-    return totalDuration.isEmpty() ? "n/a" : DurationUtil.formatDuration(totalDuration.get());
+    return isEmpty() ? null : DurationUtil.formatDuration(totalDuration.get());
   }
 }

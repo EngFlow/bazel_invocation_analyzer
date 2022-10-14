@@ -16,7 +16,9 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Estimated value of the Bazel flag `--jobs`. The Bazel profile includes information from which we
@@ -27,24 +29,20 @@ import java.util.Optional;
 public class EstimatedJobsFlagValue implements Datum {
   private final Optional<Integer> lowerBound;
   private final boolean likelySet;
+  @Nullable private final String emptyReason;
 
-  private EstimatedJobsFlagValue() {
+  public EstimatedJobsFlagValue(String emptyReason) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(emptyReason));
     this.lowerBound = Optional.empty();
     this.likelySet = false;
+    this.emptyReason = emptyReason;
   }
 
   public EstimatedJobsFlagValue(Integer lowerBound, boolean likelySet) {
     Preconditions.checkNotNull(lowerBound);
     this.lowerBound = Optional.ofNullable(lowerBound);
     this.likelySet = likelySet;
-  }
-
-  public static EstimatedJobsFlagValue empty() {
-    return new EstimatedJobsFlagValue();
-  }
-
-  public boolean isEmpty() {
-    return lowerBound.isEmpty();
+    this.emptyReason = null;
   }
 
   public Optional<Integer> getLowerBound() {
@@ -56,6 +54,16 @@ public class EstimatedJobsFlagValue implements Datum {
   }
 
   @Override
+  public boolean isEmpty() {
+    return lowerBound.isEmpty();
+  }
+
+  @Override
+  public String getEmptyReason() {
+    return emptyReason;
+  }
+
+  @Override
   public String getDescription() {
     return "Based on the Bazel profile, the estimated value that the Bazel flag `--jobs` was set"
         + " to.";
@@ -63,11 +71,10 @@ public class EstimatedJobsFlagValue implements Datum {
 
   @Override
   public String getSummary() {
-    if (lowerBound.isEmpty()) {
-      return "n/a";
-    }
-    return String.format(
-        "Lower bound of %d; --jobs flag is likely %s",
-        lowerBound.get(), likelySet ? "set" : "not set");
+    return isEmpty()
+        ? null
+        : String.format(
+            "Lower bound of %d; --jobs flag is likely %s",
+            lowerBound.get(), likelySet ? "set" : "not set");
   }
 }

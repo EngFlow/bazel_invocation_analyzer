@@ -69,7 +69,7 @@ public class GarbageCollectionSuggestionProviderTest extends SuggestionProviderU
 
   @Test
   public void shouldNotReturnSuggestionForEmptyTotalDuration() {
-    totalDuration = new TotalDuration(null);
+    totalDuration = new TotalDuration("empty");
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
@@ -78,7 +78,9 @@ public class GarbageCollectionSuggestionProviderTest extends SuggestionProviderU
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
     assertThat(suggestionOutput.getCaveatList()).hasSize(1);
-    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains(TotalDuration.class.getName());
+    assertThat(suggestionOutput.getCaveat(0).getMessage())
+        .contains(GarbageCollectionSuggestionProvider.EMPTY_REASON_PREFIX);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains("empty");
   }
 
   @Test
