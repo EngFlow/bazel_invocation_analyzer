@@ -17,18 +17,6 @@ Pass in the path of a Bazel profile on your filesystem as the first argument. Us
 bazel run //cli -- /path/to/bazel_profile.json.gz
 ```
 
-## Contributing
-
-### Prerequisites
-
-You need to have:
-- [Bazelisk](https://github.com/bazelbuild/bazelisk): A version manager for Bazel. This ensures we are all using the same version of Bazel.
-- JVM 11 or higher
-
-### Setup
-
-You need to run `./infra/setup.sh` to setup git hooks.
-
 ## References
 
 - [Generating a Bazel profile](https://bazel.build/rules/performance#performance-profiling)
