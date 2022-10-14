@@ -21,17 +21,20 @@ package com.engflow.bazel.invocation.analyzer.core;
 public class NullDatumException extends Exception {
   private static final long serialVersionUID = 1L;
 
+  private final Class<? extends DataProvider> dataProviderClass;
   private final Class<? extends Datum> datumClass;
 
-  public NullDatumException(Class<? extends Datum> datumClass) {
+  public NullDatumException(
+      Class<? extends DataProvider> dataProviderClass, Class<? extends Datum> datumClass) {
+    this.dataProviderClass = dataProviderClass;
     this.datumClass = datumClass;
   }
 
   @Override
   public String getMessage() {
     return String.format(
-        "The DataProvider registered with the DataManager for supplying \"%s\" supplied null.",
-        datumClass.getName());
+        "The DataProvider \"%s\" for supplying \"%s\" supplied null.",
+        dataProviderClass.getName(), datumClass.getName());
   }
 
   public Class<? extends Datum> getDatumClass() {

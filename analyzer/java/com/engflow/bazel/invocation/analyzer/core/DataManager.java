@@ -55,7 +55,7 @@ public class DataManager {
 
     Object datum = entry.supplier.supply();
     if (datum == null) {
-      throw new NullDatumException(clazz);
+      throw new NullDatumException(entry.dataProviderClass, clazz);
     }
     if (!clazz.equals(datum.getClass())) {
       throw new IllegalStateException(

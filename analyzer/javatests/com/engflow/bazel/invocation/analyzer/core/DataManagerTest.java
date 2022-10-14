@@ -113,7 +113,9 @@ public class DataManagerTest {
     assertThat(ex)
         .hasMessageThat()
         .isEqualTo(
-            "The DataProvider registered with the DataManager for supplying"
+            "The DataProvider"
+                + " \"com.engflow.bazel.invocation.analyzer.core.DataManagerTest$CharDataProvider\""
+                + " for supplying"
                 + " \"com.engflow.bazel.invocation.analyzer.core.TestDatum$CharDatum\" supplied"
                 + " null.");
   }
