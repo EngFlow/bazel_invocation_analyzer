@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import javax.annotation.Nullable;
 import org.junit.Test;
 
 public class DataManagerTest {
@@ -104,17 +105,19 @@ public class DataManagerTest {
   }
 
   @Test
-  public void shouldThrowMissingDataExceptionWhenSupplyingNull() throws Exception {
+  public void shouldThrowNullDatumExceptionWhenSupplyingNull() throws Exception {
     var dataManager = new DataManager();
     new CharDataProvider(null).register(dataManager);
 
-    var ex = assertThrows(MissingInputException.class, () -> dataManager.getDatum(CharDatum.class));
+    var ex = assertThrows(NullDatumException.class, () -> dataManager.getDatum(CharDatum.class));
     assertThat(ex)
         .hasMessageThat()
         .isEqualTo(
-            "Missing data provider for class"
-                + " \"com.engflow.bazel.invocation.analyzer.core.TestDatum$CharDatum\". Please"
-                + " register a DataProvider that supplies this type with the DataManager.");
+            "The DataProvider"
+                + " \"com.engflow.bazel.invocation.analyzer.core.DataManagerTest$CharDataProvider\""
+                + " for supplying"
+                + " \"com.engflow.bazel.invocation.analyzer.core.TestDatum$CharDatum\" supplied"
+                + " null.");
   }
 
   @Test
@@ -206,7 +209,7 @@ public class DataManagerTest {
   }
 
   private static class CharDataProvider extends DataProvider {
-    private final CharDatum returnedChar;
+    @Nullable private final CharDatum returnedChar;
 
     public CharDataProvider(Character c) {
       this.returnedChar = c == null ? null : new CharDatum(c);

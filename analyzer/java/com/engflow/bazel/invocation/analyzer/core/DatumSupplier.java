@@ -37,7 +37,7 @@ public interface DatumSupplier<DatumType extends Datum> {
    * @throws InvalidProfileException If the required input data cannot be parsed from the Bazel
    *     profile.
    */
-  DatumType supply() throws MissingInputException, InvalidProfileException;
+  DatumType supply() throws InvalidProfileException, MissingInputException, NullDatumException;
 
   /**
    * Returns a memoized version of a {@link DatumSupplier}.
@@ -55,7 +55,7 @@ public interface DatumSupplier<DatumType extends Datum> {
       @Nullable private T cachedOutput;
 
       @Override
-      public T supply() throws MissingInputException, InvalidProfileException {
+      public T supply() throws InvalidProfileException, MissingInputException, NullDatumException {
         // If we already have the value return early.
         if (cachedOutput != null) {
           return cachedOutput;

@@ -20,6 +20,7 @@ import com.engflow.bazel.invocation.analyzer.core.DatumSupplier;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -37,7 +38,7 @@ public class MergedEventsPresentDataProvider extends DataProvider {
 
   @VisibleForTesting
   MergedEventsPresent getMergedEventsPresent()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     BazelProfile profile = getDataManager().getDatum(BazelProfile.class);
     return new MergedEventsPresent(
         profile

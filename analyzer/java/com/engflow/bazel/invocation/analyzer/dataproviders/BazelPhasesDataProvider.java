@@ -22,6 +22,7 @@ import com.engflow.bazel.invocation.analyzer.core.DatumSupplier;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.InstantEvent;
@@ -65,7 +66,7 @@ public class BazelPhasesDataProvider extends DataProvider {
   }
 
   private void determineStartAndEndTimestamps()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     if (launchStart == null || finishEnd == null) {
       BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
 
@@ -108,7 +109,8 @@ public class BazelPhasesDataProvider extends DataProvider {
   }
 
   @VisibleForTesting
-  TotalDuration getTotalDuration() throws MissingInputException, InvalidProfileException {
+  TotalDuration getTotalDuration()
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     determineStartAndEndTimestamps();
     if (launchStart == null) {
       return new TotalDuration(TOTAL_DURATION_EMPTY_REASON_LAUNCH);
@@ -121,7 +123,7 @@ public class BazelPhasesDataProvider extends DataProvider {
 
   @VisibleForTesting
   BazelPhaseDescriptions getBazelPhaseDescriptions()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     determineStartAndEndTimestamps();
 
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);

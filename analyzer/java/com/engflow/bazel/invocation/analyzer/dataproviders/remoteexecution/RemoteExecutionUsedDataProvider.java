@@ -21,6 +21,7 @@ import com.engflow.bazel.invocation.analyzer.core.DatumSupplier;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class RemoteExecutionUsedDataProvider extends DataProvider {
    */
   @VisibleForTesting
   RemoteExecutionUsed getRemoteExecutionUsed()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     BazelProfile profile = getDataManager().getDatum(BazelProfile.class);
     return new RemoteExecutionUsed(
         profile

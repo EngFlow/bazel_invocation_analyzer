@@ -21,6 +21,7 @@ import com.engflow.bazel.invocation.analyzer.core.DatumSupplier;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.google.common.annotations.VisibleForTesting;
 import java.time.Duration;
 import java.util.List;
@@ -41,7 +42,7 @@ public class TotalQueuingDurationDataProvider extends DataProvider {
 
   @VisibleForTesting
   TotalQueuingDuration getTotalQueuingDuration()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
     Duration duration =
         bazelProfile

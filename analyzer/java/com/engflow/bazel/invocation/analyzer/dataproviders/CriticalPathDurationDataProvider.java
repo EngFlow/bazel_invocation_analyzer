@@ -20,6 +20,7 @@ import com.engflow.bazel.invocation.analyzer.core.DatumSupplier;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.google.common.annotations.VisibleForTesting;
 import java.time.Duration;
 import java.util.List;
@@ -43,7 +44,7 @@ public class CriticalPathDurationDataProvider extends DataProvider {
 
   @VisibleForTesting
   CriticalPathDuration getCriticalPathDuration()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
     if (bazelProfile.getCriticalPath().isEmpty()) {
       return new CriticalPathDuration(EMPTY_REASON);
