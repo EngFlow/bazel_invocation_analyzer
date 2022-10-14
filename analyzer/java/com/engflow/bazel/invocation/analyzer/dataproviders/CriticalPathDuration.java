@@ -16,19 +16,41 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import java.time.Duration;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /** The duration of the critical path */
 public class CriticalPathDuration implements Datum {
   private final Optional<Duration> criticalPathDuration;
+  @Nullable private final String emptyReason;
+
+  public CriticalPathDuration(String emptyReason) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(emptyReason));
+    this.criticalPathDuration = Optional.empty();
+    this.emptyReason = emptyReason;
+  }
 
   public CriticalPathDuration(Duration criticalPathDuration) {
-    this.criticalPathDuration = Optional.ofNullable(criticalPathDuration);
+    Preconditions.checkNotNull(criticalPathDuration);
+    this.criticalPathDuration = Optional.of(criticalPathDuration);
+    this.emptyReason = null;
   }
 
   public Optional<Duration> getCriticalPathDuration() {
     return criticalPathDuration;
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return criticalPathDuration.isEmpty();
+  }
+
+  @Override
+  public String getEmptyReason() {
+    return emptyReason;
   }
 
   @Override
@@ -38,9 +60,6 @@ public class CriticalPathDuration implements Datum {
 
   @Override
   public String getSummary() {
-    if (criticalPathDuration.isEmpty()) {
-      return "n/a";
-    }
-    return DurationUtil.formatDuration(criticalPathDuration.get());
+    return isEmpty() ? null : DurationUtil.formatDuration(criticalPathDuration.get());
   }
 }

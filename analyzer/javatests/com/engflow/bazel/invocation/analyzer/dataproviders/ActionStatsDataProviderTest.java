@@ -158,6 +158,7 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
   private void useEstimatedCoresUsed(Integer count)
       throws MissingInputException, InvalidProfileException {
     when(dataManager.getDatum(EstimatedCoresUsed.class))
-        .thenReturn(new EstimatedCoresUsed(count, count == null ? null : 0));
+        .thenReturn(
+            count == null ? new EstimatedCoresUsed("empty") : new EstimatedCoresUsed(count, 0));
   }
 }

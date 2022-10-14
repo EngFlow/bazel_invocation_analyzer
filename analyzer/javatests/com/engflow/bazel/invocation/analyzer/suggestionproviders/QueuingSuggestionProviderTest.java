@@ -93,8 +93,8 @@ public class QueuingSuggestionProviderTest extends SuggestionProviderUnitTestBas
   public void shouldReturnSuggestionForInvocationWithoutCriticalPath() {
     Duration totalQueuing = Duration.ofSeconds(10);
     totalQueuingDuration = new TotalQueuingDuration(totalQueuing);
-    criticalPathQueuingDuration = new CriticalPathQueuingDuration(null);
-    criticalPathDuration = new CriticalPathDuration(null);
+    criticalPathQueuingDuration = new CriticalPathQueuingDuration("empty");
+    criticalPathDuration = new CriticalPathDuration("empty");
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getAnalyzerClassname())
@@ -105,15 +105,18 @@ public class QueuingSuggestionProviderTest extends SuggestionProviderUnitTestBas
 
   @Test
   public void shouldNotReturnSuggestionForEmptyTotalDuration() {
-    totalDuration = new TotalDuration(null);
+    totalDuration = new TotalDuration("empty");
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
     assertThat(suggestionOutput.getAnalyzerClassname())
         .isEqualTo(QueuingSuggestionProvider.class.getName());
     assertThat(suggestionOutput.getSuggestionList()).isEmpty();
     assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getMissingInputList()).isEmpty();
     assertThat(suggestionOutput.getCaveatList()).hasSize(1);
-    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains(TotalDuration.class.getName());
+    assertThat(suggestionOutput.getCaveat(0).getMessage())
+        .contains(QueuingSuggestionProvider.EMPTY_REASON_PREFIX);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains("empty");
   }
 
   @Test

@@ -33,6 +33,15 @@ import java.util.stream.Collectors;
 
 /** A {@link DataProvider} that supplies data on action counts, including bottleneck statistics. */
 public class ActionStatsDataProvider extends DataProvider {
+  public static final String EMPTY_REASON_ACTION_COUNT =
+      "The Bazel profile does not include an action count, which is required for extracting"
+          + " bottlenecks. Try analyzing a profile that processes actions, for example a build or"
+          + " test.";
+  public static final String EMPTY_REASON_ESTIMATED_CORES_USED =
+      "The Bazel profile does not include the data required for estimating the number of cores"
+          + " used, which is needed for extracting bottlenecks. Try analyzing a profile that"
+          + " processes actions, for example a build or test.";
+
   @Override
   public List<DatumSupplierSpecification<?>> getSuppliers() {
     return List.of(
@@ -44,13 +53,13 @@ public class ActionStatsDataProvider extends DataProvider {
     var actionCounts =
         bazelProfile.getMainThread().getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT);
     if (actionCounts == null) {
-      return ActionStats.empty();
+      return new ActionStats(EMPTY_REASON_ACTION_COUNT);
     }
 
     Optional<Integer> optionalEstimatedCoresUsed =
         getDataManager().getDatum(EstimatedCoresUsed.class).getEstimatedCores();
     if (optionalEstimatedCoresUsed.isEmpty()) {
-      return ActionStats.empty();
+      return new ActionStats(EMPTY_REASON_ESTIMATED_CORES_USED);
     }
     var coresUsed = optionalEstimatedCoresUsed.get();
 

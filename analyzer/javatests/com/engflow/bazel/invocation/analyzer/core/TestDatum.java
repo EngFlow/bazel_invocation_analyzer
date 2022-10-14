@@ -28,6 +28,16 @@ public class TestDatum {
     }
 
     @Override
+    public boolean isEmpty() {
+      return false;
+    }
+
+    @Override
+    public String getEmptyReason() {
+      return null;
+    }
+
+    @Override
     public String getDescription() {
       return "An integer.";
     }
@@ -47,6 +57,16 @@ public class TestDatum {
 
     public double getMyDouble() {
       return myDouble;
+    }
+
+    @Override
+    public boolean isEmpty() {
+      return false;
+    }
+
+    @Override
+    public String getEmptyReason() {
+      return null;
     }
 
     @Override
@@ -72,6 +92,16 @@ public class TestDatum {
     }
 
     @Override
+    public boolean isEmpty() {
+      return false;
+    }
+
+    @Override
+    public String getEmptyReason() {
+      return null;
+    }
+
+    @Override
     public String getDescription() {
       return "A char.";
     }
@@ -91,6 +121,16 @@ public class TestDatum {
 
     public String getMyString() {
       return myString;
+    }
+
+    @Override
+    public boolean isEmpty() {
+      return myString == null;
+    }
+
+    @Override
+    public String getEmptyReason() {
+      return isEmpty() ? "because" : null;
     }
 
     @Override

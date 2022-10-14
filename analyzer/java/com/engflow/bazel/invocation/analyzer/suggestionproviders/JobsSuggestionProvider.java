@@ -33,6 +33,11 @@ import java.util.List;
 /** A {@link SuggestionProvider} that provides suggestions on setting the Bazel flag `--jobs`. */
 public class JobsSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME = JobsSuggestionProvider.class.getName();
+
+  @VisibleForTesting
+  static final String EMPTY_REASON_PREFIX =
+      "No optimizations regarding the value of the Bazel flag --jobs could be suggested. ";
+
   private static final String SUGGESTION_ID_UNSET_JOBS_FLAG = "UnsetJobsFlag";
 
   @VisibleForTesting
@@ -53,37 +58,25 @@ public class JobsSuggestionProvider extends SuggestionProviderBase {
       EstimatedJobsFlagValue estimatedJobs = dataManager.getDatum(EstimatedJobsFlagValue.class);
       if (estimatedJobs.isEmpty()) {
         return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
-            ANALYZER_CLASSNAME, EstimatedJobsFlagValue.class);
+            ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + estimatedJobs.getEmptyReason());
       }
 
       RemoteExecutionUsed remoteExecutionUsed = dataManager.getDatum(RemoteExecutionUsed.class);
       RemoteCachingUsed remoteCachingUsed = dataManager.getDatum(RemoteCachingUsed.class);
-      List<MissingInputException> missingInputExceptions = new ArrayList<>();
-      if (remoteExecutionUsed == null) {
-        missingInputExceptions.add(new MissingInputException((RemoteExecutionUsed.class)));
-      }
-      if (remoteCachingUsed == null) {
-        missingInputExceptions.add(new MissingInputException((RemoteCachingUsed.class)));
-      }
-      if (!missingInputExceptions.isEmpty()) {
-        return SuggestionProviderUtil.createSuggestionOutputForMissingInputs(
-            ANALYZER_CLASSNAME, missingInputExceptions);
-      }
-
       if (!remoteExecutionUsed.isRemoteExecutionUsed()
           && !remoteCachingUsed.isRemoteCachingUsed()
           && estimatedJobs.isLikelySet()) {
         // The profile seems to be for a fully local build where --jobs was set.
         EstimatedCoresAvailable coresAvailable =
             dataManager.getDatum(EstimatedCoresAvailable.class);
-        if (coresAvailable.getEstimatedCores().isEmpty()) {
+        if (coresAvailable.isEmpty()) {
           return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
-              ANALYZER_CLASSNAME, EstimatedCoresAvailable.class);
+              ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + coresAvailable.getEmptyReason());
         }
         EstimatedCoresUsed coresUsed = dataManager.getDatum(EstimatedCoresUsed.class);
         if (coresUsed.isEmpty()) {
           return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
-              ANALYZER_CLASSNAME, EstimatedCoresUsed.class);
+              ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + coresUsed.getEmptyReason());
         }
         String title = "Unset the value of of the Bazel flag --jobs";
         String recommendation =

@@ -16,6 +16,7 @@ package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
+import com.google.common.base.Preconditions;
 import java.time.Duration;
 
 /** Total time actions spent queued */
@@ -23,11 +24,22 @@ public class TotalQueuingDuration implements Datum {
   private final Duration totalQueuingDuration;
 
   public TotalQueuingDuration(Duration totalQueuingDuration) {
+    Preconditions.checkNotNull(totalQueuingDuration);
     this.totalQueuingDuration = totalQueuingDuration;
   }
 
   public Duration getTotalQueuingDuration() {
     return totalQueuingDuration;
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return false;
+  }
+
+  @Override
+  public String getEmptyReason() {
+    return null;
   }
 
   @Override

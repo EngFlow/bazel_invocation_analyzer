@@ -29,6 +29,10 @@ import java.util.List;
  * of the durations of all actions that are part of the critical path is calculated.
  */
 public class CriticalPathDurationDataProvider extends DataProvider {
+  public static final String EMPTY_REASON =
+      "The Bazel profile does not include a critical path, which is required for determining its"
+          + " duration. Try analyzing a profile that processes actions, for example a build or"
+          + " test.";
 
   @Override
   public List<DatumSupplierSpecification<?>> getSuppliers() {
@@ -42,7 +46,7 @@ public class CriticalPathDurationDataProvider extends DataProvider {
       throws MissingInputException, InvalidProfileException {
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
     if (bazelProfile.getCriticalPath().isEmpty()) {
-      return new CriticalPathDuration(null);
+      return new CriticalPathDuration(EMPTY_REASON);
     }
     Duration duration =
         bazelProfile.getCriticalPath().get().getCompleteEvents().stream()

@@ -16,18 +16,34 @@ package com.engflow.bazel.invocation.analyzer.core;
 
 /** Base class for all datum elements returned by {@link DataProvider}s */
 public interface Datum {
+
+  /**
+   * Check whether this datum includes any data. It may be that the input sources do not include the
+   * data required for providing information.
+   *
+   * @return Whether the datum includes no data.
+   */
+  boolean isEmpty();
+
+  /**
+   * If the datum {@link #isEmpty}, retrieve a reason explaining why it is empty.
+   *
+   * @return The reason why the datum is empty, or null if non-empty.
+   */
+  String getEmptyReason();
+
   /**
    * Get a description of the kind of data this datum provides. This description should be
    * independent of the data, i.e. static.
    *
-   * @return a description of this datum for display to the user
+   * @return A description of this datum for display to the user.
    */
   String getDescription();
 
   /**
-   * Get a summary of the actual data this datum provides.
+   * Get a summary of the actual data this datum provides. May return null if the datum is empty.
    *
-   * @return a summary of this datum for display to the user
+   * @return A summary of this datum for display to the user, or null.
    */
   String getSummary();
 }

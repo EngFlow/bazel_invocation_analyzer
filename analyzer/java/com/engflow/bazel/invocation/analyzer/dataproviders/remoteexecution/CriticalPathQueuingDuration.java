@@ -16,19 +16,41 @@ package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import java.time.Duration;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /** The total time spent queued on the critical path */
 public class CriticalPathQueuingDuration implements Datum {
   private final Optional<Duration> criticalPathQueuingDuration;
+  @Nullable private final String emptyReason;
+
+  public CriticalPathQueuingDuration(String emptyReason) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(emptyReason));
+    this.criticalPathQueuingDuration = Optional.empty();
+    this.emptyReason = emptyReason;
+  }
 
   public CriticalPathQueuingDuration(Duration criticalPathQueuingDuration) {
-    this.criticalPathQueuingDuration = Optional.ofNullable(criticalPathQueuingDuration);
+    Preconditions.checkNotNull(criticalPathQueuingDuration);
+    this.criticalPathQueuingDuration = Optional.of(criticalPathQueuingDuration);
+    this.emptyReason = null;
   }
 
   public Optional<Duration> getCriticalPathQueuingDuration() {
     return criticalPathQueuingDuration;
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return criticalPathQueuingDuration.isEmpty();
+  }
+
+  @Override
+  public String getEmptyReason() {
+    return emptyReason;
   }
 
   @Override
@@ -38,9 +60,6 @@ public class CriticalPathQueuingDuration implements Datum {
 
   @Override
   public String getSummary() {
-    if (criticalPathQueuingDuration.isEmpty()) {
-      return "n/a";
-    }
-    return DurationUtil.formatDuration(criticalPathQueuingDuration.get());
+    return isEmpty() ? null : DurationUtil.formatDuration(criticalPathQueuingDuration.get());
   }
 }

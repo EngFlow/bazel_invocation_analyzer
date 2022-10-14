@@ -17,9 +17,11 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * This class collects all high-level aggregations of action level metrics:
@@ -29,18 +31,28 @@ import java.util.Optional;
  */
 public class ActionStats implements Datum {
   private final Optional<List<Bottleneck>> bottlenecks;
+  @Nullable private final String emptyReason;
 
-  private ActionStats() {
+  public ActionStats(String emptyReason) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(emptyReason));
     this.bottlenecks = Optional.empty();
+    this.emptyReason = emptyReason;
   }
 
   public ActionStats(List<Bottleneck> bottlenecks) {
     Preconditions.checkNotNull(bottlenecks);
     this.bottlenecks = Optional.of(bottlenecks);
+    this.emptyReason = null;
   }
 
-  public static ActionStats empty() {
-    return new ActionStats();
+  @Override
+  public boolean isEmpty() {
+    return bottlenecks.isEmpty();
+  }
+
+  @Override
+  public String getEmptyReason() {
+    return emptyReason;
   }
 
   public Optional<List<Bottleneck>> getBottlenecks() {
@@ -55,8 +67,8 @@ public class ActionStats implements Datum {
 
   @Override
   public String getSummary() {
-    if (bottlenecks.isEmpty()) {
-      return "n/a";
+    if (isEmpty()) {
+      return null;
     }
     var duration =
         bottlenecks.get().stream().map(b -> b.getDuration()).reduce(Duration.ZERO, Duration::plus);

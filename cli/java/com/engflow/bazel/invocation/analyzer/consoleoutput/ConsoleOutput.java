@@ -185,7 +185,7 @@ public class ConsoleOutput {
   private String formatDatum(Class<? extends Datum> clazz, Datum datum) {
     var description = datum.getDescription();
     var summary = datum.getSummary();
-    if (!summary.isBlank()) {
+    if (!Strings.isNullOrEmpty(summary)) {
       return String.format(
           "%s: %s%s%s%s",
           format(getClassName(clazz), ConsoleOutputStyle.TEXT_GREEN),

@@ -16,22 +16,39 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /** Estimate of the number of cores used or available. */
 public abstract class EstimatedCores implements Datum {
   private final Optional<Integer> estimatedCores;
   private final Optional<Integer> gaps;
+  @Nullable private final String emptyReason;
 
   EstimatedCores(Integer estimatedCores, Integer gaps) {
-    Preconditions.checkArgument(
-        estimatedCores != null && gaps != null || estimatedCores == null && gaps == null);
-    this.estimatedCores = Optional.ofNullable(estimatedCores);
-    this.gaps = Optional.ofNullable(gaps);
+    Preconditions.checkNotNull(estimatedCores);
+    Preconditions.checkNotNull(gaps);
+    this.estimatedCores = Optional.of(estimatedCores);
+    this.gaps = Optional.of(gaps);
+    this.emptyReason = null;
   }
 
+  EstimatedCores(String emptyReason) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(emptyReason));
+    this.estimatedCores = Optional.empty();
+    this.gaps = Optional.empty();
+    this.emptyReason = emptyReason;
+  }
+
+  @Override
   public boolean isEmpty() {
     return estimatedCores.isEmpty() && gaps.isEmpty();
+  }
+
+  @Override
+  public String getEmptyReason() {
+    return emptyReason;
   }
 
   public Optional<Integer> getEstimatedCores() {
@@ -57,9 +74,8 @@ public abstract class EstimatedCores implements Datum {
   }
 
   public String getSummary() {
-    if (estimatedCores.isEmpty() || gaps.isEmpty()) {
-      return "n/a";
-    }
-    return String.format("%d cores (with %d gaps)", estimatedCores.get(), gaps.get());
+    return isEmpty()
+        ? null
+        : String.format("%d cores (with %d gaps)", estimatedCores.get(), gaps.get());
   }
 }

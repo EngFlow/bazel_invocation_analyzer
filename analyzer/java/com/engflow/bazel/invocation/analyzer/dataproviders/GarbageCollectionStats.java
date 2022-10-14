@@ -40,6 +40,16 @@ public class GarbageCollectionStats implements Datum {
   }
 
   @Override
+  public boolean isEmpty() {
+    return false;
+  }
+
+  @Override
+  public String getEmptyReason() {
+    return null;
+  }
+
+  @Override
   public String getDescription() {
     return "The total duration of major garbage collection as extracted from the Bazel profile.";
   }
