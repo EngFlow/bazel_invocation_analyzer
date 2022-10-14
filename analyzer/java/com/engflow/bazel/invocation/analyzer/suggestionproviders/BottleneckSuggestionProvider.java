@@ -83,7 +83,12 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
   @Override
   public SuggestionOutput getSuggestions(DataManager dataManager) {
     try {
-      final var actionStats = dataManager.getDatum(ActionStats.class);
+      var optionalBottlenecks = dataManager.getDatum(ActionStats.class).getBottlenecks();
+      if (optionalBottlenecks.isEmpty()) {
+        return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+            ANALYZER_CLASSNAME, ActionStats.class);
+      }
+      List<Bottleneck> bottlenecks = optionalBottlenecks.get();
 
       Optional<Integer> optionalCoresUsed =
           dataManager.getDatum(EstimatedCoresUsed.class).getEstimatedCores();
@@ -103,7 +108,7 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
 
       final List<Caveat> caveats = new ArrayList<>();
       final var suggestions =
-          actionStats.bottlenecks.stream()
+          bottlenecks.stream()
               // Only consider bottlenecks with sufficiently fewer actions than cores used.
               .filter(
                   bottleneck -> bottleneck.getAvgActionCount() / coresUsed < maxActionCountRatio)
@@ -122,26 +127,24 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
               .map(bottleneckStats -> generateSuggestion(bottleneckStats, totalDuration))
               .collect(Collectors.toList());
 
-      if (suggestions.size() < actionStats.bottlenecks.size()) {
+      if (suggestions.size() < bottlenecks.size()) {
         String caveat;
         switch (suggestions.size()) {
           case 0:
             caveat =
                 String.format(
-                    "None of the %d bottlenecks found were returned.",
-                    actionStats.bottlenecks.size());
+                    "None of the %d bottlenecks found were returned.", bottlenecks.size());
             break;
           case 1:
             caveat =
                 String.format(
-                    "Only one of the %d bottlenecks found was returned.",
-                    actionStats.bottlenecks.size());
+                    "Only one of the %d bottlenecks found was returned.", bottlenecks.size());
             break;
           default:
             caveat =
                 String.format(
                     "Only the %d most significant bottlenecks of the %d found were returned.",
-                    suggestions.size(), actionStats.bottlenecks.size());
+                    suggestions.size(), bottlenecks.size());
         }
         if (suggestions.size() < maxSuggestions) {
           caveat += " The withheld bottlenecks do not look sufficiently significant.";

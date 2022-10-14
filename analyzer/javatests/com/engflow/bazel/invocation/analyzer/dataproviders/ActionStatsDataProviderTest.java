@@ -46,16 +46,16 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void shouldReturnNullOnEmptyProfile()
+  public void shouldReturnEmptyOnEmptyProfile()
       throws DuplicateProviderException, MissingInputException, InvalidProfileException {
     useEstimatedCoresUsed(4);
     useProfile(metaData(), trace(thread(0, 0, BazelProfileConstants.THREAD_MAIN)));
 
-    assertThat(provider.getActionStats()).isNull();
+    assertThat(provider.getActionStats().getBottlenecks().isEmpty()).isTrue();
   }
 
   @Test
-  public void shouldReturnNullOnEmptyEstimatedCoresUsed()
+  public void shouldReturnEmptyOnEmptyEstimatedCoresUsed()
       throws DuplicateProviderException, MissingInputException, InvalidProfileException {
     useEstimatedCoresUsed(null);
     useProfile(
@@ -69,7 +69,7 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
                     IntStream.rangeClosed(0, 100).boxed(),
                     ts -> count(BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "4")))));
 
-    assertThat(provider.getActionStats()).isNull();
+    assertThat(provider.getActionStats().getBottlenecks().isEmpty()).isTrue();
   }
 
   @Test
@@ -106,8 +106,8 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
 
     final var actionStats = provider.getActionStats();
 
-    assertThat(actionStats.bottlenecks).hasSize(1);
-    final var bottleneck = actionStats.bottlenecks.get(0);
+    assertThat(actionStats.getBottlenecks().get()).hasSize(1);
+    final var bottleneck = actionStats.getBottlenecks().get().get(0);
     assertThat(bottleneck.getStart().getMicros()).isEqualTo(100);
     assertThat(bottleneck.getEnd().getMicros()).isEqualTo(200);
     assertThat(bottleneck.getAvgActionCount()).isWithin(.0001).of(1);
@@ -152,7 +152,7 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
 
     final var actionStats = provider.getActionStats();
 
-    assertThat(actionStats.bottlenecks).isEmpty();
+    assertThat(actionStats.getBottlenecks().get()).isEmpty();
   }
 
   private void useEstimatedCoresUsed(Integer count)
