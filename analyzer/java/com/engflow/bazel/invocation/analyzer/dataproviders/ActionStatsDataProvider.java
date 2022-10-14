@@ -23,6 +23,7 @@ import com.engflow.bazel.invocation.analyzer.core.DataProvider;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CounterEvent;
 import java.time.Duration;
@@ -48,7 +49,8 @@ public class ActionStatsDataProvider extends DataProvider {
         DatumSupplierSpecification.of(ActionStats.class, memoized(this::getActionStats)));
   }
 
-  public ActionStats getActionStats() throws MissingInputException, InvalidProfileException {
+  public ActionStats getActionStats()
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
     var actionCounts =
         bazelProfile.getMainThread().getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT);

@@ -16,6 +16,7 @@ java_test(
         "//third_party/guava",
         "//third_party/junit",
         "//third_party/truth",
+        "@jsr305//jar",
     ],
 )
 

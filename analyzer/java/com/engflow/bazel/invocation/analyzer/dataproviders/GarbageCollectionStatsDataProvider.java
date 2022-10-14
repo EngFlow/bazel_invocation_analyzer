@@ -22,6 +22,7 @@ import com.engflow.bazel.invocation.analyzer.core.DataProvider;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import java.time.Duration;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class GarbageCollectionStatsDataProvider extends DataProvider {
   }
 
   public GarbageCollectionStats getGarbageCollectionStats()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
     try {
       Duration majorGarbageCollection =

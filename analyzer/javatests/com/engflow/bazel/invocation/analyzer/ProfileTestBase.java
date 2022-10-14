@@ -25,6 +25,7 @@ import com.engflow.bazel.invocation.analyzer.core.DataManager;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.google.devtools.build.runfiles.Runfiles;
@@ -84,7 +85,8 @@ public abstract class ProfileTestBase {
    * @param bazelProfile BazelProfile to register
    */
   protected abstract void registerBazelProfile(BazelProfile bazelProfile)
-      throws InvalidProfileException, MissingInputException, DuplicateProviderException;
+      throws InvalidProfileException, MissingInputException, DuplicateProviderException,
+          NullDatumException;
 
   /**
    * Load the specified Bazel profile file and set up the {@link DataManager} to return the loaded
@@ -106,7 +108,8 @@ public abstract class ProfileTestBase {
    * @return the {@link BazelProfile} created
    */
   protected BazelProfile useProfile(WriteBazelProfile.ProfileSection... profileSections)
-      throws MissingInputException, InvalidProfileException, DuplicateProviderException {
+      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+          NullDatumException {
     var profile =
         BazelProfile.createFromInputStream(WriteBazelProfile.toInputStream(profileSections));
     registerBazelProfile(profile);

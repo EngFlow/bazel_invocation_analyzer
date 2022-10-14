@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 import com.engflow.bazel.invocation.analyzer.bazelprofile.ThreadId;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.ActionStats;
 import com.engflow.bazel.invocation.analyzer.dataproviders.Bottleneck;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresUsed;
@@ -41,7 +42,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
 
   @Test
   public void doesNotCreateSuggestionsIfActionStatsIsEmpty()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats("empty"));
     when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
     when(dataManager.getDatum(TotalDuration.class))
@@ -60,7 +61,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
 
   @Test
   public void doesNotCreateSuggestionsIfEstimatedCoresUsedIsEmpty()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of()));
     when(dataManager.getDatum(EstimatedCoresUsed.class))
         .thenReturn(new EstimatedCoresUsed("empty"));
@@ -80,7 +81,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
 
   @Test
   public void doesNotCreateSuggestionsIfTotalDurationIsEmpty()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of()));
     when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
     when(dataManager.getDatum(TotalDuration.class)).thenReturn(new TotalDuration("empty"));
@@ -98,7 +99,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
 
   @Test
   public void doesNotCreateSuggestionsIfThereAreNoBottlenecks()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     when(dataManager.getDatum(TotalDuration.class))
         .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
     when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
@@ -114,7 +115,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
 
   @Test
   public void doesNotCreateSuggestionsIfBottlenecksAreShorterThanMinDuration()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     final var minDuration = Duration.ofSeconds(2);
     Bottleneck bottleneck =
         Bottleneck.newBuilder(Timestamp.ofSeconds(0))
@@ -137,7 +138,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
 
   @Test
   public void createSuggestionIfThereAreBottlenecks()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     Bottleneck bottleneck =
         Bottleneck.newBuilder(Timestamp.ofSeconds(0))
             .setEnd(Timestamp.ofSeconds(10))
@@ -159,7 +160,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
 
   @Test
   public void createsQueuingSuggestionIfThereIsQueuing()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     Bottleneck bottleneck =
         Bottleneck.newBuilder(Timestamp.ofSeconds(0))
             .setEnd(Timestamp.ofSeconds(10))
@@ -184,7 +185,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
 
   @Test
   public void createsBreakDownActionsSuggestionOnLittleQueuing()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     Bottleneck bottleneck =
         Bottleneck.newBuilder(Timestamp.ofSeconds(0))
             .setEnd(Timestamp.ofSeconds(100))
@@ -209,7 +210,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
 
   @Test
   public void doesNotAddSuggestionIfBelowMinImprovementRatio()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     Bottleneck bottleneck =
         Bottleneck.newBuilder(Timestamp.ofSeconds(0))
             .setEnd(Timestamp.ofSeconds(10))
@@ -231,7 +232,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
 
   @Test
   public void doesNotAddSuggestionIfAboveMaxActionCountRatio()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     int actionCountSample = 1;
     int coresUsed = 4;
     Bottleneck bottleneck =
@@ -257,7 +258,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
 
   @Test
   public void createsOnlyLimitedSuggestions()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     Bottleneck minorBottleneck =
         Bottleneck.newBuilder(Timestamp.ofSeconds(0))
             .setEnd(Timestamp.ofSeconds(10))

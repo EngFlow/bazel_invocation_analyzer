@@ -21,6 +21,7 @@ import com.engflow.bazel.invocation.analyzer.core.DatumSupplier;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.HashSet;
@@ -79,7 +80,7 @@ public class EstimatedCoresDataProvider extends DataProvider {
 
   @VisibleForTesting
   EstimatedJobsFlagValue getEstimatedFlagValueJobs()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     determineEstimatedCoresAvailable();
     determineEstimatedCoresUsed();
     if (executionPhaseSkyframeEvaluatorsMaxValue == null) {
@@ -96,7 +97,7 @@ public class EstimatedCoresDataProvider extends DataProvider {
 
   @VisibleForTesting
   EstimatedCoresAvailable getEstimatedCoresAvailable()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     determineEstimatedCoresAvailable();
     if (evaluateAndDependenciesPhaseSkyframeEvaluators == null
         || evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue == null) {
@@ -111,7 +112,8 @@ public class EstimatedCoresDataProvider extends DataProvider {
   }
 
   @VisibleForTesting
-  EstimatedCoresUsed getEstimatedCoresUsed() throws MissingInputException, InvalidProfileException {
+  EstimatedCoresUsed getEstimatedCoresUsed()
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     determineEstimatedCoresUsed();
     if (executionPhaseSkyframeEvaluators == null
         || executionPhaseSkyframeEvaluatorsMaxValue == null) {
@@ -135,7 +137,7 @@ public class EstimatedCoresDataProvider extends DataProvider {
   }
 
   private synchronized void determineEstimatedCoresAvailable()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     if (evaluateAndDependenciesPhaseSkyframeEvaluators == null) {
       BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
       BazelPhaseDescriptions bazelPhaseDescriptions =
@@ -163,7 +165,7 @@ public class EstimatedCoresDataProvider extends DataProvider {
   }
 
   private synchronized void determineEstimatedCoresUsed()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     if (executionPhaseSkyframeEvaluators == null) {
       BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
       BazelPhaseDescriptions bazelPhaseDescriptions =

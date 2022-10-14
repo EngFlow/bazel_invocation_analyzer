@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresAvailable;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresUsed;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedJobsFlagValue;
@@ -36,7 +37,7 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
 
   @Test
   public void doesNotCreateSuggestionsIfEstimatedJobsFlagValueIsEmpty()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     when(dataManager.getDatum(EstimatedJobsFlagValue.class))
         .thenReturn(new EstimatedJobsFlagValue("empty"));
     when(dataManager.getDatum(RemoteExecutionUsed.class))
@@ -55,7 +56,7 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
 
   @Test
   public void doesNotCreateSuggestionsIfEstimatedCoresAvailableIsEmpty()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     when(dataManager.getDatum(EstimatedJobsFlagValue.class))
         .thenReturn(new EstimatedJobsFlagValue(4, true));
     when(dataManager.getDatum(RemoteExecutionUsed.class))
@@ -77,7 +78,7 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
 
   @Test
   public void doesNotCreateSuggestionsIfEstimatedCoresUsedIsEmpty()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     when(dataManager.getDatum(EstimatedJobsFlagValue.class))
         .thenReturn(new EstimatedJobsFlagValue(4, true));
     when(dataManager.getDatum(RemoteExecutionUsed.class))
@@ -100,7 +101,7 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
 
   @Test
   public void doesNotCreateSuggestionsIfJobsFlagValueIsLikelyNotSet()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     when(dataManager.getDatum(EstimatedJobsFlagValue.class))
         .thenReturn(new EstimatedJobsFlagValue(4, false));
     when(dataManager.getDatum(RemoteExecutionUsed.class))
@@ -115,7 +116,7 @@ public class JobsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
 
   @Test
   public void createsSuggestionsIfJobsFlagValueIsLikelySetAndLocal()
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     when(dataManager.getDatum(EstimatedJobsFlagValue.class))
         .thenReturn(new EstimatedJobsFlagValue(4, true));
     when(dataManager.getDatum(RemoteExecutionUsed.class))

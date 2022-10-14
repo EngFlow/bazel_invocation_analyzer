@@ -28,6 +28,7 @@ import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.util.stream.IntStream;
@@ -47,7 +48,8 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void shouldReturnEmptyOnEmptyProfile()
-      throws DuplicateProviderException, MissingInputException, InvalidProfileException {
+      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+          NullDatumException {
     useEstimatedCoresUsed(4);
     useProfile(metaData(), trace(thread(0, 0, BazelProfileConstants.THREAD_MAIN)));
 
@@ -56,7 +58,8 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void shouldReturnEmptyOnEmptyEstimatedCoresUsed()
-      throws DuplicateProviderException, MissingInputException, InvalidProfileException {
+      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+          NullDatumException {
     useEstimatedCoresUsed(null);
     useProfile(
         metaData(),
@@ -74,7 +77,8 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void shouldCaptureBottleneckRunningSingleAction()
-      throws DuplicateProviderException, MissingInputException, InvalidProfileException {
+      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+          NullDatumException {
     useEstimatedCoresUsed(4);
     useProfile(
         metaData(),
@@ -126,7 +130,8 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void shouldNotCaptureBottleneckWhenRunningMaxActionCount()
-      throws DuplicateProviderException, MissingInputException, InvalidProfileException {
+      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+          NullDatumException {
     useEstimatedCoresUsed(4);
     useProfile(
         metaData(),
@@ -156,7 +161,7 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
   }
 
   private void useEstimatedCoresUsed(Integer count)
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     when(dataManager.getDatum(EstimatedCoresUsed.class))
         .thenReturn(
             count == null ? new EstimatedCoresUsed("empty") : new EstimatedCoresUsed(count, 0));

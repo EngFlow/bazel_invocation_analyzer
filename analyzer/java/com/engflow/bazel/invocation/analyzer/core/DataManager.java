@@ -47,7 +47,7 @@ public class DataManager {
    *     data.
    */
   public <DatumType extends Datum> DatumType getDatum(Class<DatumType> clazz)
-      throws MissingInputException, InvalidProfileException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     var entry = suppliers.get(clazz);
     if (entry == null) {
       throw new MissingInputException(clazz);
@@ -55,7 +55,7 @@ public class DataManager {
 
     Object datum = entry.supplier.supply();
     if (datum == null) {
-      throw new MissingInputException(clazz);
+      throw new NullDatumException(clazz);
     }
     if (!clazz.equals(datum.getClass())) {
       throw new IllegalStateException(

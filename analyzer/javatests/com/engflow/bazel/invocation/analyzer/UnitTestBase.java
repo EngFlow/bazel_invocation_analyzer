@@ -21,6 +21,7 @@ import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import org.junit.Before;
 
 public abstract class UnitTestBase extends ProfileTestBase {
@@ -34,7 +35,7 @@ public abstract class UnitTestBase extends ProfileTestBase {
 
   @Override
   protected void registerBazelProfile(BazelProfile bazelProfile)
-      throws InvalidProfileException, MissingInputException {
+      throws InvalidProfileException, MissingInputException, NullDatumException {
     when(dataManager.getDatum(BazelProfile.class)).thenReturn(bazelProfile);
   }
 }
