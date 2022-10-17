@@ -131,23 +131,10 @@ public class ConsoleOutput {
       System.out.println();
       System.out.print(failures);
     }
-    ;
 
     List<Suggestion> suggestions =
         suggestionOutputs.stream()
             .flatMap(suggestionOutput -> suggestionOutput.getSuggestionList().stream())
-            .sorted(
-                (a, b) -> {
-                  double improvementA =
-                      a.hasPotentialImprovement()
-                          ? a.getPotentialImprovement().getDurationReductionPercentage()
-                          : 0;
-                  double improvementB =
-                      b.hasPotentialImprovement()
-                          ? b.getPotentialImprovement().getDurationReductionPercentage()
-                          : 0;
-                  return Double.compare(improvementB, improvementA);
-                })
             .collect(Collectors.toList());
     String formattedSuggestions = formatSuggestions(suggestions);
     if (!Strings.isNullOrEmpty(formattedSuggestions)) {
@@ -229,41 +216,57 @@ public class ConsoleOutput {
   @VisibleForTesting
   String formatSuggestions(List<Suggestion> suggestions) {
     StringBuilder sb = new StringBuilder();
-    for (Suggestion suggestion : suggestions) {
-      if (Strings.isNullOrEmpty(suggestion.getRecommendation())) {
-        continue;
-      }
-      sb.append(NEWLINE);
-      sb.append(NEWLINE);
-      addSection(
-          sb,
-          String.format("%s: \"%s\"", HEADING_SUGGESTION, suggestion.getTitle()),
-          suggestion.getRecommendation(),
-          ConsoleOutputStyle.TEXT_GREEN);
-      if (suggestion.hasPotentialImprovement()) {
-        PotentialImprovement improvement = suggestion.getPotentialImprovement();
-        List<String> improvementMessages = new ArrayList();
-        double durationReductionPercentage = improvement.getDurationReductionPercentage();
-        String durationMsg =
-            SuggestionProviderUtil.invocationDurationReductionMsg(durationReductionPercentage);
-        if (!Strings.isNullOrEmpty(durationMsg)) {
-          improvementMessages.add(durationMsg);
-          improvementMessages.add(
-              visualizeDurationReductionPercentage(durationReductionPercentage));
-        }
-        String message = improvement.getMessage();
-        if (!Strings.isNullOrEmpty(message)) {
-          improvementMessages.add(message);
-        }
-        addSection(sb, HEADING_POTENTIAL_IMPROVEMENT, String.join(NEWLINE, improvementMessages));
-      }
-      addSection(sb, HEADING_RATIONALE, suggestion.getRationaleList());
-      List<String> formattedCaveats =
-          suggestion.getCaveatList().stream()
-              .map(caveat -> formatCaveat(caveat))
-              .collect(Collectors.toList());
-      addSection(sb, HEADING_CAVEATS, formattedCaveats, ConsoleOutputStyle.TEXT_YELLOW);
-    }
+    suggestions.stream()
+        .sorted(
+            (a, b) -> {
+              double improvementA =
+                  a.hasPotentialImprovement()
+                      ? a.getPotentialImprovement().getDurationReductionPercentage()
+                      : 0;
+              double improvementB =
+                  b.hasPotentialImprovement()
+                      ? b.getPotentialImprovement().getDurationReductionPercentage()
+                      : 0;
+              return Double.compare(improvementB, improvementA);
+            })
+        .forEach(
+            suggestion -> {
+              if (Strings.isNullOrEmpty(suggestion.getRecommendation())) {
+                return;
+              }
+              sb.append(NEWLINE);
+              sb.append(NEWLINE);
+              addSection(
+                  sb,
+                  String.format("%s: \"%s\"", HEADING_SUGGESTION, suggestion.getTitle()),
+                  suggestion.getRecommendation(),
+                  ConsoleOutputStyle.TEXT_GREEN);
+              if (suggestion.hasPotentialImprovement()) {
+                PotentialImprovement improvement = suggestion.getPotentialImprovement();
+                List<String> improvementMessages = new ArrayList();
+                double durationReductionPercentage = improvement.getDurationReductionPercentage();
+                String durationMsg =
+                    SuggestionProviderUtil.invocationDurationReductionMsg(
+                        durationReductionPercentage);
+                if (!Strings.isNullOrEmpty(durationMsg)) {
+                  improvementMessages.add(durationMsg);
+                  improvementMessages.add(
+                      visualizeDurationReductionPercentage(durationReductionPercentage));
+                }
+                String message = improvement.getMessage();
+                if (!Strings.isNullOrEmpty(message)) {
+                  improvementMessages.add(message);
+                }
+                addSection(
+                    sb, HEADING_POTENTIAL_IMPROVEMENT, String.join(NEWLINE, improvementMessages));
+              }
+              addSection(sb, HEADING_RATIONALE, suggestion.getRationaleList());
+              List<String> formattedCaveats =
+                  suggestion.getCaveatList().stream()
+                      .map(caveat -> formatCaveat(caveat))
+                      .collect(Collectors.toList());
+              addSection(sb, HEADING_CAVEATS, formattedCaveats, ConsoleOutputStyle.TEXT_YELLOW);
+            });
     return sb.toString();
   }
 
@@ -287,9 +290,6 @@ public class ConsoleOutput {
       return "";
     }
     StringBuilder sb = new StringBuilder();
-    for (SuggestionOutput.Failure failure : failures) {
-      sb.append(NEWLINE);
-    }
     addSection(
         sb,
         HEADING_FAILURES,

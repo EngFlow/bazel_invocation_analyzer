@@ -72,6 +72,55 @@ public class ConsoleOutputTest {
   }
 
   @Test
+  public void formatSuggestionsShouldOrderSuggestions() {
+    String none = "no performance improvement";
+    double lowest = .1;
+    double middle = .2;
+    double highest = .3;
+    ConsoleOutput consoleOutput = new ConsoleOutput(false, false);
+    List<Suggestion> suggestions =
+        List.of(
+            Suggestion.newBuilder()
+                .setCategory(SuggestionCategory.OTHER)
+                .setTitle(String.valueOf(middle))
+                .setRecommendation(String.valueOf(middle))
+                .setPotentialImprovement(
+                    PotentialImprovement.newBuilder().setDurationReductionPercentage(middle))
+                .build(),
+            Suggestion.newBuilder()
+                .setCategory(SuggestionCategory.OTHER)
+                .setTitle(String.valueOf(lowest))
+                .setRecommendation(String.valueOf(lowest))
+                .setPotentialImprovement(
+                    PotentialImprovement.newBuilder().setDurationReductionPercentage(lowest))
+                .build(),
+            Suggestion.newBuilder()
+                .setCategory(SuggestionCategory.OTHER)
+                .setTitle(none)
+                .setRecommendation(none)
+                .build(),
+            Suggestion.newBuilder()
+                .setCategory(SuggestionCategory.OTHER)
+                .setTitle(String.valueOf(highest))
+                .setRecommendation(String.valueOf(highest))
+                .setPotentialImprovement(
+                    PotentialImprovement.newBuilder().setDurationReductionPercentage(highest))
+                .build());
+    String formattedOutput = consoleOutput.formatSuggestions(suggestions);
+    int indexNone = formattedOutput.indexOf(none);
+    int indexLowest = formattedOutput.indexOf(String.valueOf(lowest));
+    int indexMiddle = formattedOutput.indexOf(String.valueOf(middle));
+    int indexHighest = formattedOutput.indexOf(String.valueOf(highest));
+    assertThat(indexHighest).isAtLeast(0);
+    assertThat(indexMiddle).isAtLeast(0);
+    assertThat(indexLowest).isAtLeast(0);
+    assertThat(indexNone).isAtLeast(0);
+    assertThat(indexHighest).isLessThan(indexMiddle);
+    assertThat(indexMiddle).isLessThan(indexLowest);
+    assertThat(indexLowest).isLessThan(indexNone);
+  }
+
+  @Test
   public void formatFailuresShouldIncludeExceptionMessage() {
     ConsoleOutput consoleOutput = new ConsoleOutput(false, false);
     Exception e = new Exception(EXCEPTION_MESSAGE);
