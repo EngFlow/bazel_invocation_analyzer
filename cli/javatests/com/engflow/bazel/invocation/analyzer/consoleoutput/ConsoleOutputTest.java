@@ -47,25 +47,21 @@ public class ConsoleOutputTest {
   private static final String TITLE = "This is a title";
 
   @Test
-  public void formatAnalysisOutputShouldIncludeAnalysisOutputData() {
+  public void formatSuggestionsShouldIncludeSuggestionData() {
     ConsoleOutput consoleOutput = new ConsoleOutput(false, false);
-    Suggestion suggestion =
-        Suggestion.newBuilder()
-            .setCategory(SuggestionCategory.OTHER)
-            .setTitle(TITLE)
-            .setRecommendation(RECOMMENDATION)
-            .addRationale(RATIONALE_1)
-            .addRationale(RATIONALE_2)
-            .setPotentialImprovement(PotentialImprovement.newBuilder().setMessage(IMPROVEMENT))
-            .addCaveat(CAVEAT)
-            .addCaveat(CAVEAT_SUGGESTING_VERBOSE_MODE)
-            .build();
-    SuggestionOutput analysisOutput =
-        SuggestionOutput.newBuilder()
-            .setAnalyzerClassname("Test")
-            .addSuggestion(suggestion)
-            .build();
-    String formattedOutput = consoleOutput.formatAnalysisOutput(analysisOutput);
+    List<Suggestion> suggestions =
+        List.of(
+            Suggestion.newBuilder()
+                .setCategory(SuggestionCategory.OTHER)
+                .setTitle(TITLE)
+                .setRecommendation(RECOMMENDATION)
+                .addRationale(RATIONALE_1)
+                .addRationale(RATIONALE_2)
+                .setPotentialImprovement(PotentialImprovement.newBuilder().setMessage(IMPROVEMENT))
+                .addCaveat(CAVEAT)
+                .addCaveat(CAVEAT_SUGGESTING_VERBOSE_MODE)
+                .build());
+    String formattedOutput = consoleOutput.formatSuggestions(suggestions);
     assertThat(formattedOutput).contains(TITLE);
     assertThat(formattedOutput).contains(RECOMMENDATION);
     assertThat(formattedOutput).contains(RATIONALE_1);
@@ -76,19 +72,24 @@ public class ConsoleOutputTest {
   }
 
   @Test
-  public void formatAnalysisOutputShouldIncludeAnalysisOutputExceptionMessage() {
+  public void formatFailuresShouldIncludeExceptionMessage() {
     ConsoleOutput consoleOutput = new ConsoleOutput(false, false);
     Exception e = new Exception(EXCEPTION_MESSAGE);
-    SuggestionOutput analysisOutput =
-        SuggestionOutput.newBuilder()
-            .setAnalyzerClassname("Test")
-            .setFailure(
-                SuggestionOutput.Failure.newBuilder()
-                    .setMessage(e.getMessage())
-                    .setStackTrace(Throwables.getStackTraceAsString(e)))
-            .build();
-    String formattedOutput = consoleOutput.formatAnalysisOutput(analysisOutput);
+    var failures =
+        List.of(
+            SuggestionOutput.Failure.newBuilder()
+                .setMessage(e.getMessage())
+                .setStackTrace(Throwables.getStackTraceAsString(e))
+                .build());
+    String formattedOutput = consoleOutput.formatFailures(failures);
     assertThat(formattedOutput).contains(EXCEPTION_MESSAGE);
+  }
+
+  @Test
+  public void formatSuggestionOutputCaveatsShouldIncludeCaveatMessage() {
+    ConsoleOutput consoleOutput = new ConsoleOutput(false, false);
+    String formattedOutput = consoleOutput.formatSuggestionOutputCaveats(List.of(CAVEAT));
+    assertThat(formattedOutput).contains(CAVEAT.getMessage());
   }
 
   @Test

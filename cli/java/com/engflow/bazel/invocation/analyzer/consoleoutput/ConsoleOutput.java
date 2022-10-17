@@ -36,17 +36,20 @@ public class ConsoleOutput {
 
   private static final String CONSOLE_FORMAT_DELIMITER = ";";
   private static final String CONSOLE_FORMAT_STRING = "\u001B[%sm%s\u001B[0m";
-  private static final String DATA_HEADER = "Data from analysis:";
+  private static final String DATA_HEADER = "Data from analysis";
   private static final String ERROR = "An error occurred while trying to analyze your profile.";
   private static final String HEADING_CAVEATS = "Caveats";
+  private static final String HEADING_FAILURES = "Failures";
   private static final String HEADING_POTENTIAL_IMPROVEMENT = "Potential improvement";
   private static final String HEADING_RATIONALE = "Rationale";
   private static final String HEADING_SUGGESTION = "Suggestion";
+  private static final String HEADING_SUGGESTION_OUTPUT_CAVEATS = "Analysis caveats";
+  private static final String LIST_ITEM_PREFIX = "- ";
   private static final String NEWLINE = "\n";
   private static final String NO_SUGGESTIONS =
       "The tool did not produce any suggestions for this profile. Try again with a different"
           + " profile or use a later version of this tool.";
-  private static final String NOTE = "Note:";
+  private static final String NOTE = "Note";
   private static final String SUGGEST_VERBOSE_MODE =
       "Try running this tool with --verbose to get more data.";
   private static final String TITLE = "Bazel Invocation Analyzer by EngFlow";
@@ -102,29 +105,55 @@ public class ConsoleOutput {
   }
 
   public void outputAnalysisInput(String inputDescription) {
-    System.out.printf("Analyzing %s", inputDescription);
-    System.out.println();
+    System.out.println(
+        format(String.format("Analyzing %s", inputDescription), ConsoleOutputStyle.TEXT_UNDERLINE));
   }
 
-  public void outputSuggestions(Stream<SuggestionOutput> suggestions) {
-    boolean anyOutput =
-        suggestions
-            .map(
-                (suggestion) -> {
-                  String formattedSuggestion = formatAnalysisOutput(suggestion);
-                  if (!formattedSuggestion.isEmpty()) {
-                    System.out.print(formattedSuggestion);
-                    return true;
-                  } else {
-                    return false;
-                  }
-                })
-            .reduce(Boolean::logicalOr)
-            .orElse(false);
+  public void outputSuggestions(List<SuggestionOutput> suggestionOutputs) {
+    String topLevelCaveats =
+        formatSuggestionOutputCaveats(
+            suggestionOutputs.stream()
+                .flatMap(suggestionOutput -> suggestionOutput.getCaveatList().stream())
+                .collect(Collectors.toList()));
+    if (!Strings.isNullOrEmpty(topLevelCaveats)) {
+      System.out.println();
+      System.out.print(topLevelCaveats);
+    }
+    ;
 
-    System.out.println();
-    if (!anyOutput) {
-      System.out.println(format(NO_SUGGESTIONS, ConsoleOutputStyle.TEXT_YELLOW));
+    String failures =
+        formatFailures(
+            suggestionOutputs.stream()
+                .filter(suggestionOutput -> suggestionOutput.hasFailure())
+                .map(suggestionOutput -> suggestionOutput.getFailure())
+                .collect(Collectors.toList()));
+    if (!Strings.isNullOrEmpty(failures)) {
+      System.out.println();
+      System.out.print(failures);
+    }
+    ;
+
+    List<Suggestion> suggestions =
+        suggestionOutputs.stream()
+            .flatMap(suggestionOutput -> suggestionOutput.getSuggestionList().stream())
+            .sorted(
+                (a, b) -> {
+                  double improvementA =
+                      a.hasPotentialImprovement()
+                          ? a.getPotentialImprovement().getDurationReductionPercentage()
+                          : 0;
+                  double improvementB =
+                      b.hasPotentialImprovement()
+                          ? b.getPotentialImprovement().getDurationReductionPercentage()
+                          : 0;
+                  return Double.compare(improvementB, improvementA);
+                })
+            .collect(Collectors.toList());
+    String formattedSuggestions = formatSuggestions(suggestions);
+    if (!Strings.isNullOrEmpty(formattedSuggestions)) {
+      System.out.println(formattedSuggestions);
+    } else {
+      outputNote(NO_SUGGESTIONS);
     }
   }
 
@@ -198,23 +227,13 @@ public class ConsoleOutput {
   }
 
   @VisibleForTesting
-  String formatAnalysisOutput(SuggestionOutput suggestionOutput) {
+  String formatSuggestions(List<Suggestion> suggestions) {
     StringBuilder sb = new StringBuilder();
-
-    if (suggestionOutput.hasFailure()) {
-      SuggestionOutput.Failure failure = suggestionOutput.getFailure();
-      sb.append(failure.getMessage());
-      sb.append(NEWLINE);
-      if (verbose) {
-        sb.append(failure.getStackTrace());
-      }
-      return format(sb.toString(), ConsoleOutputStyle.TEXT_RED);
-    }
-
-    for (Suggestion suggestion : suggestionOutput.getSuggestionList()) {
+    for (Suggestion suggestion : suggestions) {
       if (Strings.isNullOrEmpty(suggestion.getRecommendation())) {
         continue;
       }
+      sb.append(NEWLINE);
       sb.append(NEWLINE);
       addSection(
           sb,
@@ -245,16 +264,49 @@ public class ConsoleOutput {
               .collect(Collectors.toList());
       addSection(sb, HEADING_CAVEATS, formattedCaveats, ConsoleOutputStyle.TEXT_YELLOW);
     }
+    return sb.toString();
+  }
 
-    if (!suggestionOutput.getCaveatList().isEmpty()) {
-      List<String> formattedCaveats =
-          suggestionOutput.getCaveatList().stream()
-              .map(caveat -> formatCaveat(caveat))
-              .collect(Collectors.toList());
-      sb.append(NEWLINE);
-      addSection(sb, HEADING_CAVEATS, formattedCaveats, ConsoleOutputStyle.TEXT_YELLOW);
+  @VisibleForTesting
+  String formatSuggestionOutputCaveats(List<Caveat> caveats) {
+    if (caveats.isEmpty()) {
+      return "";
     }
+    StringBuilder sb = new StringBuilder();
+    addSection(
+        sb,
+        HEADING_SUGGESTION_OUTPUT_CAVEATS,
+        caveats.stream().map(caveat -> formatCaveat(caveat)).collect(Collectors.toList()),
+        ConsoleOutputStyle.TEXT_YELLOW);
+    return sb.toString();
+  }
 
+  @VisibleForTesting
+  String formatFailures(List<SuggestionOutput.Failure> failures) {
+    if (failures.isEmpty()) {
+      return "";
+    }
+    StringBuilder sb = new StringBuilder();
+    for (SuggestionOutput.Failure failure : failures) {
+      sb.append(NEWLINE);
+    }
+    addSection(
+        sb,
+        HEADING_FAILURES,
+        failures.stream()
+            .map(
+                failure -> {
+                  StringBuilder failureSb = new StringBuilder();
+                  failureSb.append(failure.getMessage());
+                  failureSb.append(NEWLINE);
+                  if (verbose) {
+                    failureSb.append(failure.getStackTrace());
+                    failureSb.append(NEWLINE);
+                  }
+                  return failureSb.toString();
+                })
+            .collect(Collectors.toList()),
+        ConsoleOutputStyle.TEXT_RED);
     return sb.toString();
   }
 
@@ -277,11 +329,14 @@ public class ConsoleOutput {
     StringBuilder sb = new StringBuilder();
     boolean hasCustomMessage = !Strings.isNullOrEmpty(caveat.getMessage());
     if (hasCustomMessage) {
+      sb.append(LIST_ITEM_PREFIX);
       sb.append(caveat.getMessage());
     }
     if (caveat.getSuggestVerboseMode()) {
       if (hasCustomMessage) {
         sb.append(" ");
+      } else {
+        sb.append(LIST_ITEM_PREFIX);
       }
       sb.append(SUGGEST_VERBOSE_MODE);
     }
