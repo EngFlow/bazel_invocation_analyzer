@@ -14,9 +14,9 @@ java_test(
         ":types",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/core",
         "//third_party/guava",
+        "//third_party/jsr305",
         "//third_party/junit",
         "//third_party/truth",
-        "@jsr305//jar",
     ],
 )
 

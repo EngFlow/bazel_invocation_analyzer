@@ -30,7 +30,7 @@ java_library(
     deps = [
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/core",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/time",
-        "@guava//jar",
-        "@jsr305//jar",
+        "//third_party/guava",
+        "//third_party/jsr305",
     ],
 )
