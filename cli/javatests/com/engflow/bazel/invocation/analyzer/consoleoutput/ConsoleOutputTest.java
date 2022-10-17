@@ -47,25 +47,21 @@ public class ConsoleOutputTest {
   private static final String TITLE = "This is a title";
 
   @Test
-  public void formatAnalysisOutputShouldIncludeAnalysisOutputData() {
+  public void formatSuggestionsShouldIncludeSuggestionData() {
     ConsoleOutput consoleOutput = new ConsoleOutput(false, false);
-    Suggestion suggestion =
-        Suggestion.newBuilder()
-            .setCategory(SuggestionCategory.OTHER)
-            .setTitle(TITLE)
-            .setRecommendation(RECOMMENDATION)
-            .addRationale(RATIONALE_1)
-            .addRationale(RATIONALE_2)
-            .setPotentialImprovement(PotentialImprovement.newBuilder().setMessage(IMPROVEMENT))
-            .addCaveat(CAVEAT)
-            .addCaveat(CAVEAT_SUGGESTING_VERBOSE_MODE)
-            .build();
-    SuggestionOutput analysisOutput =
-        SuggestionOutput.newBuilder()
-            .setAnalyzerClassname("Test")
-            .addSuggestion(suggestion)
-            .build();
-    String formattedOutput = consoleOutput.formatAnalysisOutput(analysisOutput);
+    List<Suggestion> suggestions =
+        List.of(
+            Suggestion.newBuilder()
+                .setCategory(SuggestionCategory.OTHER)
+                .setTitle(TITLE)
+                .setRecommendation(RECOMMENDATION)
+                .addRationale(RATIONALE_1)
+                .addRationale(RATIONALE_2)
+                .setPotentialImprovement(PotentialImprovement.newBuilder().setMessage(IMPROVEMENT))
+                .addCaveat(CAVEAT)
+                .addCaveat(CAVEAT_SUGGESTING_VERBOSE_MODE)
+                .build());
+    String formattedOutput = consoleOutput.formatSuggestions(suggestions);
     assertThat(formattedOutput).contains(TITLE);
     assertThat(formattedOutput).contains(RECOMMENDATION);
     assertThat(formattedOutput).contains(RATIONALE_1);
@@ -76,19 +72,73 @@ public class ConsoleOutputTest {
   }
 
   @Test
-  public void formatAnalysisOutputShouldIncludeAnalysisOutputExceptionMessage() {
+  public void formatSuggestionsShouldOrderSuggestions() {
+    String none = "no performance improvement";
+    double lowest = .1;
+    double middle = .2;
+    double highest = .3;
+    ConsoleOutput consoleOutput = new ConsoleOutput(false, false);
+    List<Suggestion> suggestions =
+        List.of(
+            Suggestion.newBuilder()
+                .setCategory(SuggestionCategory.OTHER)
+                .setTitle(String.valueOf(middle))
+                .setRecommendation(String.valueOf(middle))
+                .setPotentialImprovement(
+                    PotentialImprovement.newBuilder().setDurationReductionPercentage(middle))
+                .build(),
+            Suggestion.newBuilder()
+                .setCategory(SuggestionCategory.OTHER)
+                .setTitle(String.valueOf(lowest))
+                .setRecommendation(String.valueOf(lowest))
+                .setPotentialImprovement(
+                    PotentialImprovement.newBuilder().setDurationReductionPercentage(lowest))
+                .build(),
+            Suggestion.newBuilder()
+                .setCategory(SuggestionCategory.OTHER)
+                .setTitle(none)
+                .setRecommendation(none)
+                .build(),
+            Suggestion.newBuilder()
+                .setCategory(SuggestionCategory.OTHER)
+                .setTitle(String.valueOf(highest))
+                .setRecommendation(String.valueOf(highest))
+                .setPotentialImprovement(
+                    PotentialImprovement.newBuilder().setDurationReductionPercentage(highest))
+                .build());
+    String formattedOutput = consoleOutput.formatSuggestions(suggestions);
+    int indexNone = formattedOutput.indexOf(none);
+    int indexLowest = formattedOutput.indexOf(String.valueOf(lowest));
+    int indexMiddle = formattedOutput.indexOf(String.valueOf(middle));
+    int indexHighest = formattedOutput.indexOf(String.valueOf(highest));
+    assertThat(indexHighest).isAtLeast(0);
+    assertThat(indexMiddle).isAtLeast(0);
+    assertThat(indexLowest).isAtLeast(0);
+    assertThat(indexNone).isAtLeast(0);
+    assertThat(indexHighest).isLessThan(indexMiddle);
+    assertThat(indexMiddle).isLessThan(indexLowest);
+    assertThat(indexLowest).isLessThan(indexNone);
+  }
+
+  @Test
+  public void formatFailuresShouldIncludeExceptionMessage() {
     ConsoleOutput consoleOutput = new ConsoleOutput(false, false);
     Exception e = new Exception(EXCEPTION_MESSAGE);
-    SuggestionOutput analysisOutput =
-        SuggestionOutput.newBuilder()
-            .setAnalyzerClassname("Test")
-            .setFailure(
-                SuggestionOutput.Failure.newBuilder()
-                    .setMessage(e.getMessage())
-                    .setStackTrace(Throwables.getStackTraceAsString(e)))
-            .build();
-    String formattedOutput = consoleOutput.formatAnalysisOutput(analysisOutput);
+    var failures =
+        List.of(
+            SuggestionOutput.Failure.newBuilder()
+                .setMessage(e.getMessage())
+                .setStackTrace(Throwables.getStackTraceAsString(e))
+                .build());
+    String formattedOutput = consoleOutput.formatFailures(failures);
     assertThat(formattedOutput).contains(EXCEPTION_MESSAGE);
+  }
+
+  @Test
+  public void formatSuggestionOutputCaveatsShouldIncludeCaveatMessage() {
+    ConsoleOutput consoleOutput = new ConsoleOutput(false, false);
+    String formattedOutput = consoleOutput.formatSuggestionOutputCaveats(List.of(CAVEAT));
+    assertThat(formattedOutput).contains(CAVEAT.getMessage());
   }
 
   @Test

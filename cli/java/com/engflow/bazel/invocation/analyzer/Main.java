@@ -29,6 +29,7 @@ import java.nio.file.FileSystems;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class Main {
   private static final String BUILD_WORKING_DIRECTORY = "BUILD_WORKING_DIRECTORY";
@@ -110,7 +111,7 @@ public class Main {
         var suggestionStream =
             suggestionProviders.stream().map((a) -> a.getSuggestions(dataManager));
         if (modes.contains(Mode.SUGGESTIONS)) {
-          consoleOutput.outputSuggestions(suggestionStream);
+          consoleOutput.outputSuggestions(suggestionStream.collect(Collectors.toList()));
         } else {
           // USED_DATA was requested; just cycle through them to allow the DataManager to record
           // which data was used
