@@ -20,11 +20,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.time.Duration;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /** The total duration of the invocation */
 public class TotalDuration implements Datum {
   private final Optional<Duration> totalDuration;
-  private final String emptyReason;
+  @Nullable private final String emptyReason;
 
   public TotalDuration(String emptyReason) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(emptyReason));
