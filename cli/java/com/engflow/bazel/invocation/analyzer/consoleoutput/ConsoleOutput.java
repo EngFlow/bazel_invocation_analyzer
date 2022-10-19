@@ -200,14 +200,14 @@ public class ConsoleOutput {
 
   private String formatDatum(Class<? extends Datum> clazz, Datum datum) {
     var description = datum.getDescription();
-    var summary = datum.getSummary();
-    if (!Strings.isNullOrEmpty(summary)) {
+    var output = datum.isEmpty() && verbose ? datum.getEmptyReason() : datum.getSummary();
+    if (!Strings.isNullOrEmpty(output)) {
       return String.format(
           "%s: %s%s%s%s",
           format(getClassName(clazz), ConsoleOutputStyle.TEXT_GREEN),
           format(description, ConsoleOutputStyle.TEXT_DIM),
           NEWLINE,
-          summary,
+          output,
           NEWLINE);
     }
     return "";

@@ -140,7 +140,7 @@ public class TestDatum {
 
     @Override
     public String getSummary() {
-      return String.format("My string is %s", myString);
+      return isEmpty() ? null : String.format("My string is %s", myString);
     }
   }
 }
