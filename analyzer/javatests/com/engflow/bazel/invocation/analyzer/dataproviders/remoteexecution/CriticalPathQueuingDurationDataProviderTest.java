@@ -16,6 +16,7 @@ package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.concat;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
@@ -50,6 +51,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,
@@ -101,6 +103,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,
@@ -154,6 +157,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,
@@ -204,6 +208,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,
@@ -250,6 +255,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,
@@ -290,7 +296,8 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
 
   @Test
   public void shouldReturnZeroQueuingDurationWhenCriticalPathIsEmpty() throws Exception {
-    useProfile(metaData(), trace(thread(0, 0, BazelProfileConstants.THREAD_CRITICAL_PATH)));
+    useProfile(
+        metaData(), trace(mainThread(), thread(0, 0, BazelProfileConstants.THREAD_CRITICAL_PATH)));
 
     assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().get())
         .isEqualTo(Duration.ZERO);
@@ -298,7 +305,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
 
   @Test
   public void shouldBeEmptyWhenCriticalPathIsMissing() throws Exception {
-    useProfile(metaData(), trace());
+    useProfile(metaData(), trace(mainThread()));
 
     assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().isEmpty())
         .isTrue();

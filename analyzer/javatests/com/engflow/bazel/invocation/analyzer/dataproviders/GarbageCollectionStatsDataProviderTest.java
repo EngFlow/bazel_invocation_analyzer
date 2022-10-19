@@ -16,6 +16,7 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.concat;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
@@ -47,6 +48,7 @@ public class GarbageCollectionStatsDataProviderTest extends DataProviderUnitTest
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,
@@ -73,6 +75,7 @@ public class GarbageCollectionStatsDataProviderTest extends DataProviderUnitTest
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,

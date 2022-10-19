@@ -15,6 +15,7 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
@@ -43,6 +44,7 @@ public class RemoteExecutionUsedDataProviderTest extends DataProviderUnitTestBas
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,
@@ -61,6 +63,7 @@ public class RemoteExecutionUsedDataProviderTest extends DataProviderUnitTestBas
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,
@@ -79,6 +82,7 @@ public class RemoteExecutionUsedDataProviderTest extends DataProviderUnitTestBas
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,
@@ -94,7 +98,7 @@ public class RemoteExecutionUsedDataProviderTest extends DataProviderUnitTestBas
 
   @Test
   public void shouldReturnRemoteExecutionNotUsedForEmptyProfile() throws Exception {
-    useProfile(metaData(), trace());
+    useProfile(metaData(), trace(mainThread()));
 
     assertThat(provider.getRemoteExecutionUsed().isRemoteExecutionUsed()).isFalse();
   }
@@ -105,6 +109,7 @@ public class RemoteExecutionUsedDataProviderTest extends DataProviderUnitTestBas
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,

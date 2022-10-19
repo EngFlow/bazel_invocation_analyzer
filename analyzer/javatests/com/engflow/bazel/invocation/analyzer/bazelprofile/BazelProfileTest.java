@@ -15,23 +15,56 @@
 package com.engflow.bazel.invocation.analyzer.bazelprofile;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import com.engflow.bazel.invocation.analyzer.UnitTestBase;
+import com.engflow.bazel.invocation.analyzer.WriteBazelProfile;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
+import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.junit.Test;
 
 public class BazelProfileTest extends UnitTestBase {
+  @Test
+  public void shouldRejectWhenOtherDataIsMissing() {
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> BazelProfile.createFromInputStream(WriteBazelProfile.toInputStream(trace())));
+    assertThat(exception.getMessage()).contains(TraceEventFormatConstants.SECTION_OTHER_DATA);
+  }
+
+  @Test
+  public void shouldRejectWhenTraceEventsIsMissing() {
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> BazelProfile.createFromInputStream(WriteBazelProfile.toInputStream(trace())));
+    assertThat(exception.getMessage()).contains(TraceEventFormatConstants.SECTION_TRACE_EVENTS);
+  }
+
+  @Test
+  public void shouldRejectWhenMainThreadIsMissing() {
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                BazelProfile.createFromInputStream(
+                    WriteBazelProfile.toInputStream(metaData(), trace())));
+    assertThat(exception.getMessage()).contains(BazelProfileConstants.THREAD_MAIN);
+  }
+
   @Test
   public void shouldParseGzippedJsonBazelProfile() {
     String profilePath = RUNFILES.rlocation(ROOT + "tiny.json.gz");
@@ -107,6 +140,7 @@ public class BazelProfileTest extends UnitTestBase {
         useProfile(
             metaData(),
             trace(
+                mainThread(),
                 thread(
                     1,
                     0,
