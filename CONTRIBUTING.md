@@ -21,7 +21,7 @@ We welcome contributions from the community.
           [`SuggestionProviderBase`][5]
       Note that not all `DataProvider`s and `SuggestionProvider`s are necessarily upstreamed.
     - Renaming, removing and renumbering [protocol buffer][6] fields and methods, as well as adding
-      required fields and methods, or adding required fields.
+      required fields and methods.
 
 # Submitting a PR
 ## Prerequisites
