@@ -27,6 +27,7 @@ import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.TestDatum.CharDatum;
 import com.engflow.bazel.invocation.analyzer.core.TestDatum.DoubleDatum;
 import com.engflow.bazel.invocation.analyzer.core.TestDatum.IntegerDatum;
+import com.engflow.bazel.invocation.analyzer.core.TestDatum.StringDatum;
 import com.google.common.base.Throwables;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -208,6 +209,7 @@ public class ConsoleOutputTest {
     var myDouble = new DoubleDatum(1.23);
     var myInt = new IntegerDatum(5);
     var myChar = new CharDatum('L');
+    var myEmptyString = new StringDatum(null);
 
     var data =
         new HashMap<Class<? extends DataProvider>, Map<Class<? extends Datum>, Datum>>() {
@@ -218,6 +220,7 @@ public class ConsoleOutputTest {
                   {
                     put(IntegerDatum.class, myInt);
                     put(DoubleDatum.class, myDouble);
+                    put(StringDatum.class, myEmptyString);
                   }
                 });
             put(
@@ -242,6 +245,9 @@ public class ConsoleOutputTest {
     assertThat(result).contains(CharDatum.class.getSimpleName());
     assertThat(result).contains(myChar.getDescription());
     assertThat(result).contains(myChar.getSummary());
+    assertThat(result).contains(myChar.getSummary());
+    assertThat(myEmptyString.getSummary()).isNull();
+    assertThat(result).doesNotContain(myEmptyString.getDescription());
     assertThat(result).doesNotContain(TestDataProvider.class.getSimpleName());
     assertThat(result).doesNotContain(TestDataProvider2.class.getSimpleName());
   }
@@ -251,6 +257,7 @@ public class ConsoleOutputTest {
     var myDouble = new DoubleDatum(1.23);
     var myInt = new IntegerDatum(5);
     var myChar = new CharDatum('L');
+    var myEmptyString = new StringDatum(null);
 
     var data =
         new HashMap<Class<? extends DataProvider>, Map<Class<? extends Datum>, Datum>>() {
@@ -261,6 +268,7 @@ public class ConsoleOutputTest {
                   {
                     put(IntegerDatum.class, myInt);
                     put(DoubleDatum.class, myDouble);
+                    put(StringDatum.class, myEmptyString);
                   }
                 });
             put(
@@ -282,6 +290,10 @@ public class ConsoleOutputTest {
     assertThat(result).contains(DoubleDatum.class.getSimpleName());
     assertThat(result).contains(myDouble.getDescription());
     assertThat(result).contains(myDouble.getSummary());
+    assertThat(result).contains(StringDatum.class.getSimpleName());
+    assertThat(result).contains(myEmptyString.getDescription());
+    assertThat(myEmptyString.getEmptyReason()).isNotEmpty();
+    assertThat(result).contains(myEmptyString.getEmptyReason());
     assertThat(result).contains(CharDatum.class.getSimpleName());
     assertThat(result).contains(myChar.getDescription());
     assertThat(result).contains(myChar.getSummary());
