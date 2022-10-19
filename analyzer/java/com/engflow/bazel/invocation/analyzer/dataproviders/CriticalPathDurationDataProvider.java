@@ -15,6 +15,7 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.ProfileThread;
 import com.engflow.bazel.invocation.analyzer.core.DataProvider;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplier;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
@@ -30,10 +31,14 @@ import java.util.List;
  * of the durations of all actions that are part of the critical path is calculated.
  */
 public class CriticalPathDurationDataProvider extends DataProvider {
-  public static final String EMPTY_REASON =
+  public static final String EMPTY_REASON_CRITICAL_PATH_MISSING =
       "The Bazel profile does not include a critical path, which is required for determining its"
           + " duration. Try analyzing a profile that processes actions, for example a build or"
           + " test.";
+  public static final String EMPTY_REASON_CRITICAL_PATH_EMPTY =
+      "The Bazel profile's critical path includes no events, which suggests that the Bazel"
+          + " invocation did not process any actions. Try analyzing a profile that processes"
+          + " actions, for example a build or test.";
 
   @Override
   public List<DatumSupplierSpecification<?>> getSuppliers() {
@@ -47,10 +52,14 @@ public class CriticalPathDurationDataProvider extends DataProvider {
       throws InvalidProfileException, MissingInputException, NullDatumException {
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
     if (bazelProfile.getCriticalPath().isEmpty()) {
-      return new CriticalPathDuration(EMPTY_REASON);
+      return new CriticalPathDuration(EMPTY_REASON_CRITICAL_PATH_MISSING);
+    }
+    ProfileThread criticalPath = bazelProfile.getCriticalPath().get();
+    if (criticalPath.getCompleteEvents().isEmpty()) {
+      return new CriticalPathDuration(EMPTY_REASON_CRITICAL_PATH_EMPTY);
     }
     Duration duration =
-        bazelProfile.getCriticalPath().get().getCompleteEvents().stream()
+        criticalPath.getCompleteEvents().stream()
             .map((event) -> event.duration)
             .reduce(Duration.ZERO, Duration::plus);
     return new CriticalPathDuration(duration);

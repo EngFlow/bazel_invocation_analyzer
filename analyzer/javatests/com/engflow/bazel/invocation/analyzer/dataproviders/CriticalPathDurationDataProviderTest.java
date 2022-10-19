@@ -63,9 +63,16 @@ public class CriticalPathDurationDataProviderTest extends DataProviderUnitTestBa
   }
 
   @Test
-  public void shouldBeEmptyWhenCriticalPathIsMissing() throws Exception {
+  public void shouldBeEmptyWhenCriticalPathIsEmpty() throws Exception {
     useProfile(metaData(), trace(mainThread()));
 
+    assertThat(provider.getCriticalPathDuration().getCriticalPathDuration().isEmpty()).isTrue();
+  }
+
+  @Test
+  public void shouldBeEmptyWhenCriticalPathHasNoEvents() throws Exception {
+    useProfile(
+        metaData(), trace(mainThread(), thread(0, 0, BazelProfileConstants.THREAD_CRITICAL_PATH)));
     assertThat(provider.getCriticalPathDuration().getCriticalPathDuration().isEmpty()).isTrue();
   }
 }
