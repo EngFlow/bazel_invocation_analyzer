@@ -98,12 +98,15 @@ public class BazelProfile implements Datum {
         .forEach(
             element -> {
               JsonObject object = element.getAsJsonObject();
-              if (!object.has(TraceEventFormatConstants.EVENT_PROCESS_ID)
-                  || !object.has(TraceEventFormatConstants.EVENT_THREAD_ID)) {
+              int pid;
+              int tid;
+              try {
+                pid = object.get(TraceEventFormatConstants.EVENT_PROCESS_ID).getAsInt();
+                tid = object.get(TraceEventFormatConstants.EVENT_THREAD_ID).getAsInt();
+              } catch (Exception e) {
+                // Skip events that do not have a valid pid or tid.
                 return;
               }
-              int pid = object.get(TraceEventFormatConstants.EVENT_PROCESS_ID).getAsInt();
-              int tid = object.get(TraceEventFormatConstants.EVENT_THREAD_ID).getAsInt();
               ThreadId threadId = new ThreadId(pid, tid);
               ProfileThread profileThread =
                   threads.compute(
