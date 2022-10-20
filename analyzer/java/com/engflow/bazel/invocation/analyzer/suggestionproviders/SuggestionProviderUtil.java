@@ -51,6 +51,7 @@ public class SuggestionProviderUtil {
         new JobsSuggestionProvider(),
         new NegligiblePhaseSuggestionProvider(),
         new QueuingSuggestionProvider(),
+        new IncompleteProfileSuggestionProvider(),
         // Consciously put this suggestion last, as it's not about the invocation itself,
         // but guidance on how to potentially get a better analysis using this tool.
         new MergedEventsSuggestionProvider());
