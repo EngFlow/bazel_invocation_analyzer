@@ -18,6 +18,7 @@ import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.Property.p
 import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.Files.newOutputStream;
 
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatConstants;
@@ -80,6 +81,17 @@ public class WriteBazelProfile {
       throw new RuntimeException(e);
     }
     return file;
+  }
+
+  /**
+   * Create a new main thread for the {@link #trace(TraceEvent...)}.
+   *
+   * @param events a series of events that belong to the thread
+   * @return an instance of {@link TraceEvent} to be serialized to json.
+   */
+  @CheckReturnValue
+  public static TraceEvent mainThread(ThreadEvent... events) {
+    return thread(-1, 0, BazelProfileConstants.THREAD_MAIN, events);
   }
 
   /**

@@ -15,6 +15,7 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
@@ -45,6 +46,7 @@ public class CriticalPathDurationDataProviderTest extends DataProviderUnitTestBa
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,
@@ -62,7 +64,7 @@ public class CriticalPathDurationDataProviderTest extends DataProviderUnitTestBa
 
   @Test
   public void shouldBeEmptyWhenCriticalPathIsMissing() throws Exception {
-    useProfile(metaData(), trace());
+    useProfile(metaData(), trace(mainThread()));
 
     assertThat(provider.getCriticalPathDuration().getCriticalPathDuration().isEmpty()).isTrue();
   }

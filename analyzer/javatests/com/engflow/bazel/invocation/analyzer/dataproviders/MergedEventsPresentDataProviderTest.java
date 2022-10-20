@@ -15,6 +15,7 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
@@ -40,6 +41,7 @@ public class MergedEventsPresentDataProviderTest extends DataProviderUnitTestBas
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 20,
                 0,
@@ -59,6 +61,7 @@ public class MergedEventsPresentDataProviderTest extends DataProviderUnitTestBas
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 20,
                 0,

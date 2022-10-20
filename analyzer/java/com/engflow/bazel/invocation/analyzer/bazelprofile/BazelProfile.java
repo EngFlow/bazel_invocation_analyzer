@@ -78,6 +78,14 @@ public class BazelProfile implements Datum {
   private final Map<ThreadId, ProfileThread> threads = new HashMap<>();
 
   private BazelProfile(JsonObject profile) {
+    if (!profile.has(TraceEventFormatConstants.SECTION_OTHER_DATA)
+        || !profile.has(TraceEventFormatConstants.SECTION_TRACE_EVENTS)) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Invalid profile, JSON file missing \"%s\" and/or \"%s\"",
+              TraceEventFormatConstants.SECTION_OTHER_DATA,
+              TraceEventFormatConstants.SECTION_TRACE_EVENTS));
+    }
     profile
         .get(TraceEventFormatConstants.SECTION_OTHER_DATA)
         .getAsJsonObject()
@@ -90,8 +98,15 @@ public class BazelProfile implements Datum {
         .forEach(
             element -> {
               JsonObject object = element.getAsJsonObject();
-              int pid = object.get(TraceEventFormatConstants.EVENT_PROCESS_ID).getAsInt();
-              int tid = object.get(TraceEventFormatConstants.EVENT_THREAD_ID).getAsInt();
+              int pid;
+              int tid;
+              try {
+                pid = object.get(TraceEventFormatConstants.EVENT_PROCESS_ID).getAsInt();
+                tid = object.get(TraceEventFormatConstants.EVENT_THREAD_ID).getAsInt();
+              } catch (Exception e) {
+                // Skip events that do not have a valid pid or tid.
+                return;
+              }
               ThreadId threadId = new ThreadId(pid, tid);
               ProfileThread profileThread =
                   threads.compute(
@@ -105,6 +120,13 @@ public class BazelProfile implements Datum {
               // TODO: Use success response to take action on errant events.
               profileThread.addEvent(object);
             });
+    if (!threads.values().stream()
+        .anyMatch(t -> BazelProfileConstants.THREAD_MAIN.equals(t.getName()))) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Invalid Bazel profile, JSON file missing \"%s\".",
+              BazelProfileConstants.THREAD_MAIN));
+    }
   }
 
   public ImmutableMap<String, String> getOtherData() {

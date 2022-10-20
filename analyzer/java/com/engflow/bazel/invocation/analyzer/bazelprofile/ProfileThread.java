@@ -182,7 +182,7 @@ public class ProfileThread {
       }
 
       return true;
-    } catch (IllegalArgumentException ex) {
+    } catch (Exception ex) {
       return false;
     }
   }

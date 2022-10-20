@@ -15,6 +15,7 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
@@ -49,6 +50,7 @@ public class TotalQueuingDurationDataProviderTest extends DataProviderUnitTestBa
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             thread(
                 0,
                 0,
@@ -69,7 +71,7 @@ public class TotalQueuingDurationDataProviderTest extends DataProviderUnitTestBa
 
   @Test
   public void shouldReturnZeroQueuingDuration() throws Exception {
-    useProfile(metaData(), trace());
+    useProfile(metaData(), trace(mainThread()));
 
     TotalQueuingDuration queuing = provider.getTotalQueuingDuration();
     verify(dataManager).registerProvider(provider);

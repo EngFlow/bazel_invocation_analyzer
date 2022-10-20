@@ -15,6 +15,7 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
@@ -57,6 +58,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             skyFrameThread(0, start, Duration.ZERO),
             skyFrameThread(1, end, Duration.ZERO),
             skyFrameThread(2, within, Duration.ZERO),
@@ -84,6 +86,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             skyFrameThread(maxIndexInRelevantPhase - 1, start, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase - 2, within, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase, end, Duration.ZERO),
@@ -111,6 +114,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             skyFrameThread(maxIndexInRelevantPhase, within1, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
 
@@ -136,6 +140,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             skyFrameThread(maxIndexInRelevantPhase, within1, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
 
@@ -161,6 +166,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             skyFrameThread(maxIndexInRelevantPhase, within1, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
 
@@ -182,6 +188,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             skyFrameThread(0, start, Duration.ZERO),
             skyFrameThread(1, start, Duration.ZERO),
             skyFrameThread(2, start, Duration.ZERO),
@@ -206,6 +213,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             skyFrameThread(0, outsideRangeAfter, Duration.ZERO),
             skyFrameThread(1, start, Duration.ZERO),
             skyFrameThread(2, start, Duration.ZERO),
@@ -233,6 +241,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     useProfile(
         metaData(),
         trace(
+            mainThread(),
             skyFrameThread(0, outsideRangeBefore, Duration.ZERO),
             skyFrameThread(1, within2, Duration.ZERO),
             skyFrameThread(2, outsideRangeAfter, Duration.ZERO),
