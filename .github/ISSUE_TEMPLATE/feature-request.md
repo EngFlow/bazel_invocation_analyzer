@@ -33,3 +33,10 @@ Alternatively, email data to <bazel-invocation-analyzer-dev@engflow.com> while r
 created issue, or opt to send the feature request entirely by email.
 
 For example, you may want to include example files, reference other issues, etc.
+
+Ideally, do not attach files directly. Bazel profiles can include sensitive data, such as exposing
+which dependencies your project includes.
+
+Instead, upload files to the cloud storage provider of your choice and grant appropriate access.
+This allows you to adjust who can access them now and in the future. For example, you may want to
+remove access to the files once the issue has been resolved.

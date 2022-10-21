@@ -55,7 +55,14 @@ example output
 
 ### File(s) scanned
 
-Optionally attach the file (e.g. Bazel profile).
+Optionally provide file(s) that demonstrate the bug when running the tool.
+
+Ideally, do not attach files directly. Bazel profiles can include sensitive data, such as exposing
+which dependencies your project includes.
+
+Instead, upload files to the cloud storage provider of your choice and grant appropriate access.
+This allows you to adjust who can access them now and in the future. For example, you may want to
+remove access to the files once the issue has been resolved.
 
 ### Further details
 
