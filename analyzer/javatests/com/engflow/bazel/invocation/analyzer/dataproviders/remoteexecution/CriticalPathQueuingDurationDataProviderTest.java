@@ -23,6 +23,7 @@ import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.engflow.bazel.invocation.analyzer.WriteBazelProfile;
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.DataProviderUnitTestBase;
@@ -146,6 +147,67 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
             .reduce(Duration.ZERO, Duration::plus);
     assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().get())
         .isEqualTo(totalQueueing);
+  }
+
+  @Test
+  public void shouldReturnClosestQueuingDurationWhenMultipleEventsMatch() throws Exception {
+    String evaluatorThreadActionName = "a generic action name that is seen more often";
+    String criticalPathThreadActionName = String.format("action '%s'", evaluatorThreadActionName);
+    Duration expectedQueuingDuration = TimeUtil.getDurationForMicros(7_000);
+    useProfile(
+        metaData(),
+        trace(
+            mainThread(),
+            thread(
+                0,
+                0,
+                BazelProfileConstants.THREAD_CRITICAL_PATH,
+                complete(
+                    criticalPathThreadActionName,
+                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                    Timestamp.ofMicros(200),
+                    TimeUtil.getDurationForMicros(10_000))),
+            thread(
+                1,
+                1,
+                "other thread",
+                concat(
+                    new WriteBazelProfile.ThreadEvent[] {
+                      complete(
+                          evaluatorThreadActionName,
+                          BazelProfileConstants.CAT_ACTION_PROCESSING,
+                          Timestamp.ofMicros(200),
+                          TimeUtil.getDurationForMicros(12_000))
+                    },
+                    new WriteBazelProfile.ThreadEvent[] {
+                      complete(
+                          "queue",
+                          BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
+                          Timestamp.ofMicros(200),
+                          TimeUtil.getDurationForMicros(8_000))
+                    })),
+            thread(
+                2,
+                1,
+                "preferred thread",
+                concat(
+                    new WriteBazelProfile.ThreadEvent[] {
+                      complete(
+                          evaluatorThreadActionName,
+                          BazelProfileConstants.CAT_ACTION_PROCESSING,
+                          Timestamp.ofMicros(200),
+                          TimeUtil.getDurationForMicros(9_000))
+                    },
+                    new WriteBazelProfile.ThreadEvent[] {
+                      complete(
+                          "queue",
+                          BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME,
+                          Timestamp.ofMicros(200),
+                          expectedQueuingDuration)
+                    }))));
+
+    assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().get())
+        .isEqualTo(expectedQueuingDuration);
   }
 
   @Test

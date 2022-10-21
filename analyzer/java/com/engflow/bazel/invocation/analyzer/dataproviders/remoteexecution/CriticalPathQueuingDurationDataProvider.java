@@ -97,8 +97,32 @@ public class CriticalPathQueuingDurationDataProvider extends DataProvider {
                                     || criticalPathEvent.end.almostEquals(event.end)
                                     || criticalPathEvent.end.compareTo(event.end) > 0))
                     // We expect to find just one event, but this may not be true for more
-                    // generic action names. The additional boundary check on end time
-                    // decreases the risk of false positives.
+                    // generic action names. Sort all thus far matching events to find the best
+                    // match.
+                    .sorted(
+                        (a, b) -> {
+                          boolean aWithinBounds =
+                              criticalPathEvent.end.almostEquals(a.end)
+                                  || criticalPathEvent.end.compareTo(a.end) > 0;
+                          boolean bWithinBounds =
+                              criticalPathEvent.end.almostEquals(b.end)
+                                  || criticalPathEvent.end.compareTo(b.end) > 0;
+                          if (aWithinBounds && bWithinBounds) {
+                            // Both events within bounds, prefer the longer one.
+                            return b.duration.compareTo(a.duration);
+                          }
+                          // If one of the events is within the bounds, prefer it.
+                          if (aWithinBounds) {
+                            return -1;
+                          }
+                          if (bWithinBounds) {
+                            return 1;
+                          }
+                          // Neither event within bounds, prefer the one that extends the bounds
+                          // least.
+                          return a.end.compareTo(b.end);
+                        })
+                    .limit(1)
                     .forEach(
                         e -> {
                           // As we could not check the end boundary above, adjust the duration here,
