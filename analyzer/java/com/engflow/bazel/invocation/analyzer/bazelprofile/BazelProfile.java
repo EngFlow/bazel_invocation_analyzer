@@ -190,7 +190,7 @@ public class BazelProfile implements Datum {
 
   @Override
   public String getDescription() {
-    return "The JSON profile written by Bazel.";
+    return "The profile written by Bazel.";
   }
 
   @Override
