@@ -305,6 +305,7 @@ public class ConsoleOutput {
                   }
                   return failureSb.toString();
                 })
+            .distinct()
             .collect(Collectors.toList()),
         ConsoleOutputStyle.TEXT_RED);
     return sb.toString();
