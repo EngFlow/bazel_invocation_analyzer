@@ -21,6 +21,7 @@ import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatConstants;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
@@ -40,6 +41,10 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipException;
 
 public class BazelProfile implements Datum {
+  // Best effort to get somewhat good alignment when outputting a list of thread names.
+  private static final int THREAD_NAME_MIN_OUTPUT_LENGTH =
+      "\"skyframe-evaluator-cpu-heavy-12345\"".length();
+
   public static BazelProfile createFromPath(String path) throws IllegalArgumentException {
     File bazelProfileFile = new File(path);
 
@@ -185,12 +190,44 @@ public class BazelProfile implements Datum {
 
   @Override
   public String getDescription() {
-    return "The Bazel profile.";
+    return "The JSON profile written by Bazel.";
   }
 
   @Override
   public String getSummary() {
     StringBuilder sb = new StringBuilder();
+    sb.append("Threads:\n");
+    getThreads()
+        .map(
+            (thread) -> {
+              StringBuilder threadSb = new StringBuilder();
+              threadSb.append(
+                  Strings.padEnd(
+                      String.format("\"%s\"", thread.getName()),
+                      THREAD_NAME_MIN_OUTPUT_LENGTH,
+                      ' '));
+              if (!thread.getCompleteEvents().isEmpty()) {
+                threadSb.append("\tCompleteEvents: ");
+                threadSb.append(thread.getCompleteEvents().size());
+              }
+              if (!thread.getCounts().isEmpty()) {
+                threadSb.append("\tCounts: ");
+                threadSb.append(thread.getCounts().size());
+              }
+              if (!thread.getInstants().isEmpty()) {
+                threadSb.append("\tInstants: ");
+                threadSb.append(thread.getInstants().size());
+              }
+              if (!thread.getExtraEvents().isEmpty()) {
+                threadSb.append("\tExtra: ");
+                threadSb.append(thread.getExtraEvents().size());
+              }
+              threadSb.append("\n");
+              return threadSb.toString();
+            })
+        .sorted()
+        .forEach(s -> sb.append(s));
+    sb.append("\n");
     Optional<ProfileThread> criticalPath = getCriticalPath();
     if (criticalPath.isPresent() && !criticalPath.get().getCompleteEvents().isEmpty()) {
       String durationHeading = "Duration";
@@ -202,7 +239,7 @@ public class BazelProfile implements Datum {
               .intValue();
       int durationWidth = Math.max(maxFormattedDurationLength, durationHeading.length());
       String format = "%" + durationWidth + "s\t%s";
-      sb.append("CriticalPath:\n");
+      sb.append("Critical Path:\n");
       sb.append(String.format(format, durationHeading, "Description"));
       String entryFormat = "\n" + format;
       criticalPath.get().getCompleteEvents().stream()
