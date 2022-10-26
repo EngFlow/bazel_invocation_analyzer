@@ -105,7 +105,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void shouldNotReturnEstimatedCoresAvailableEvaluatePhaseMarkerMissing() throws Exception {
+  public void shouldReturnEstimatedCoresAvailableEvaluatePhaseMarkerMissing() throws Exception {
     int maxIndexInRelevantPhase = 3;
     Timestamp start = Timestamp.ofMicros(20_000);
     Timestamp within1 = Timestamp.ofMicros(22_000);
@@ -130,8 +130,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void shouldNotReturnEstimatedCoresAvailableDependenciesPhaseMarkerMissing()
-      throws Exception {
+  public void shouldReturnEstimatedCoresAvailableDependenciesPhaseMarkerMissing() throws Exception {
     int maxIndexInRelevantPhase = 3;
     Timestamp start = Timestamp.ofMicros(20_000);
     Timestamp within1 = Timestamp.ofMicros(22_000);
@@ -174,6 +173,26 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
         BazelPhaseDescriptions.newBuilder()
             .add(BazelProfilePhase.INIT, new BazelPhaseDescription(start, within1))
             .add(BazelProfilePhase.EXECUTE, new BazelPhaseDescription(within2, end))
+            .build();
+
+    when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
+
+    assertThat(provider.getEstimatedCoresAvailable().getEstimatedCores().isEmpty()).isTrue();
+  }
+
+  @Test
+  public void shouldReturnEmptyEstimatedCoresAvailableWhenMissingEvents() throws Exception {
+    Timestamp start = Timestamp.ofMicros(20_000);
+    Timestamp within1 = Timestamp.ofMicros(22_000);
+    Timestamp within2 = Timestamp.ofMicros(28_000);
+    Timestamp end = Timestamp.ofMicros(30_000);
+    Timestamp outsideRange = Timestamp.ofMicros(30_001);
+    useProfile(metaData(), trace(mainThread(), skyFrameThread(3, outsideRange, Duration.ZERO)));
+
+    BazelPhaseDescriptions bazelPhaseDescriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.EVALUATE, new BazelPhaseDescription(start, within1))
+            .add(BazelProfilePhase.DEPENDENCIES, new BazelPhaseDescription(within2, end))
             .build();
 
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
@@ -227,6 +246,28 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
 
     EstimatedCoresUsed estimatedCores = provider.getEstimatedCoresUsed();
     assertThat(estimatedCores.getEstimatedCores().get()).isEqualTo(2);
+  }
+
+  @Test
+  public void shouldReturnEmptyEstimatedCoresUsedWhenMissingEvents() throws Exception {
+    Timestamp outsideRangeBefore = Timestamp.ofMicros(19_999);
+    Timestamp start = Timestamp.ofMicros(20_000);
+    Timestamp end = Timestamp.ofMicros(30_000);
+    Timestamp outsideRangeAfter = Timestamp.ofMicros(30_001);
+    useProfile(
+        metaData(),
+        trace(
+            mainThread(),
+            skyFrameThread(1, outsideRangeBefore, Duration.ZERO),
+            skyFrameThread(2, outsideRangeAfter, Duration.ZERO)));
+    BazelPhaseDescriptions bazelPhaseDescriptions =
+        BazelPhaseDescriptions.newBuilder()
+            .add(BazelProfilePhase.EXECUTE, new BazelPhaseDescription(start, end))
+            .build();
+
+    when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenReturn(bazelPhaseDescriptions);
+
+    assertThat(provider.getEstimatedCoresUsed().isEmpty()).isTrue();
   }
 
   @Test
