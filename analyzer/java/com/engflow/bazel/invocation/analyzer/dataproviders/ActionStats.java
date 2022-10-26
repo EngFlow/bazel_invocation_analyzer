@@ -73,7 +73,9 @@ public class ActionStats implements Datum {
     var duration =
         bottlenecks.get().stream().map(b -> b.getDuration()).reduce(Duration.ZERO, Duration::plus);
     return String.format(
-        "%d bottlenecks found for a total duration of %s.",
-        bottlenecks.get().size(), DurationUtil.formatDuration(duration));
+        "%d %s found for a total duration of %s.",
+        bottlenecks.get().size(),
+        bottlenecks.get().size() == 1 ? "bottleneck" : "bottlenecks",
+        DurationUtil.formatDuration(duration));
   }
 }
