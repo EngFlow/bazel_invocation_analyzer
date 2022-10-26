@@ -41,14 +41,23 @@ import java.util.regex.Pattern;
  *     No differentiation is made between physical and virtual cores.
  */
 public class EstimatedCoresDataProvider extends DataProvider {
-  public static final String ESTIMATED_CORES_USED_EMPTY_REASON =
+  public static final String ESTIMATED_CORES_USED_EMPTY_REASON_EXEC_MISSING =
       "The Bazel profile does not include an execution phase, which is required for estimating the"
           + " number of cores used. Try analyzing a profile that processes actions, for example a"
           + " build or test.";
-  public static final String ESTIMATED_CORES_AVAILABLE_EMPTY_REASON =
+  public static final String ESTIMATED_CORES_USED_EMPTY_REASON_EXEC_EVENTS_MISSING =
+      "The Bazel profile does not include any threads with events in the execution phase, which is"
+          + " required for estimating the number of cores used. Try analyzing a profile that"
+          + " processes actions, for example a build or test.";
+  public static final String ESTIMATED_CORES_AVAILABLE_EMPTY_REASON_EVAL_DEP_MISSING =
       "The Bazel profile does not includes phases for evaluating target patterns or loading and"
           + " analyzing dependencies, which is required for estimating the number of cores used."
           + " Try analyzing a profile that processes actions, for example a build or test.";
+  public static final String ESTIMATED_CORES_AVAILABLE_EMPTY_REASON_EVAL_DEP_EVENTS_MISSING =
+      "The Bazel profile does not include any threads with events in the phases for evaluating"
+          + " target patterns or loading and analyzing dependencies, which is required for"
+          + " estimating the number of cores used. Try analyzing a profile that processes actions,"
+          + " for example a build or test.";
   public static final String ESTIMATED_JOBS_FLAG_VALUE_EMPTY_REASON_EVAL_DEP_MISSING =
       "The Bazel profile does not includes phases for evaluating target patterns or loading and"
           + " analyzing dependencies, which is required for estimating the value of the Bazel flag"
@@ -57,6 +66,10 @@ public class EstimatedCoresDataProvider extends DataProvider {
       "The Bazel profile does not include an execution phase, which is required for estimating the"
           + " value of the Bazel flag --jobs. Try analyzing a profile that processes actions, for"
           + " example a build or test.";
+  public static final String ESTIMATED_JOBS_FLAG_VALUE_EMPTY_REASON_EVENTS_MISSING =
+      "The Bazel profile does not include events in the phases required for estimating the value"
+          + " of the Bazel flag --jobs. Try analyzing a profile that processes actions, for example"
+          + " a build or test.";
 
   private static final Pattern SKYFRAME_EVALUATOR_REGEX =
       Pattern.compile("skyframe-evaluator[^\\d]*(\\d*)");
@@ -83,11 +96,15 @@ public class EstimatedCoresDataProvider extends DataProvider {
       throws InvalidProfileException, MissingInputException, NullDatumException {
     determineEstimatedCoresAvailable();
     determineEstimatedCoresUsed();
-    if (executionPhaseSkyframeEvaluatorsMaxValue == null) {
+    if (executionPhaseSkyframeEvaluators == null) {
       return new EstimatedJobsFlagValue(ESTIMATED_JOBS_FLAG_VALUE_EMPTY_REASON_EXEC_MISSING);
     }
-    if (evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue == null) {
+    if (evaluateAndDependenciesPhaseSkyframeEvaluators == null) {
       return new EstimatedJobsFlagValue(ESTIMATED_JOBS_FLAG_VALUE_EMPTY_REASON_EVAL_DEP_MISSING);
+    }
+    if (executionPhaseSkyframeEvaluators == null
+        || evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue == null) {
+      return new EstimatedJobsFlagValue(ESTIMATED_JOBS_FLAG_VALUE_EMPTY_REASON_EVENTS_MISSING);
     }
     return new EstimatedJobsFlagValue(
         executionPhaseSkyframeEvaluatorsMaxValue + 1,
@@ -99,10 +116,14 @@ public class EstimatedCoresDataProvider extends DataProvider {
   EstimatedCoresAvailable getEstimatedCoresAvailable()
       throws InvalidProfileException, MissingInputException, NullDatumException {
     determineEstimatedCoresAvailable();
-    if (evaluateAndDependenciesPhaseSkyframeEvaluators == null
-        || evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue == null) {
-      // The Bazel profile does not include the required data.
-      return new EstimatedCoresAvailable(ESTIMATED_CORES_AVAILABLE_EMPTY_REASON);
+    if (evaluateAndDependenciesPhaseSkyframeEvaluators == null) {
+      // The Bazel profile does not include the required phase(s).
+      return new EstimatedCoresAvailable(ESTIMATED_CORES_AVAILABLE_EMPTY_REASON_EVAL_DEP_MISSING);
+    }
+    if (evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue == null) {
+      // The Bazel profile does not include events in the targeted phase(s).
+      return new EstimatedCoresAvailable(
+          ESTIMATED_CORES_AVAILABLE_EMPTY_REASON_EVAL_DEP_EVENTS_MISSING);
     }
     return new EstimatedCoresAvailable(
         evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue + 1,
@@ -115,10 +136,13 @@ public class EstimatedCoresDataProvider extends DataProvider {
   EstimatedCoresUsed getEstimatedCoresUsed()
       throws InvalidProfileException, MissingInputException, NullDatumException {
     determineEstimatedCoresUsed();
-    if (executionPhaseSkyframeEvaluators == null
-        || executionPhaseSkyframeEvaluatorsMaxValue == null) {
-      // The Bazel profile does not include the required data.
-      return new EstimatedCoresUsed(ESTIMATED_CORES_USED_EMPTY_REASON);
+    if (executionPhaseSkyframeEvaluators == null) {
+      // The Bazel profile does not include the required phase.
+      return new EstimatedCoresUsed(ESTIMATED_CORES_USED_EMPTY_REASON_EXEC_MISSING);
+    }
+    if (executionPhaseSkyframeEvaluatorsMaxValue == null) {
+      // The Bazel profile does not include events in the targeted phase.
+      return new EstimatedCoresUsed(ESTIMATED_CORES_USED_EMPTY_REASON_EXEC_EVENTS_MISSING);
     }
     return new EstimatedCoresUsed(
         executionPhaseSkyframeEvaluators.size(),
@@ -160,7 +184,9 @@ public class EstimatedCoresDataProvider extends DataProvider {
       evaluateAndDependenciesPhaseSkyframeEvaluators =
           getSkyframeEvaluators(bazelProfile, start.get().getStart(), end.get().getEnd());
       evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue =
-          evaluateAndDependenciesPhaseSkyframeEvaluators.stream().max(Integer::compareTo).get();
+          evaluateAndDependenciesPhaseSkyframeEvaluators.stream()
+              .max(Integer::compareTo)
+              .orElse(null);
     }
   }
 
@@ -180,7 +206,7 @@ public class EstimatedCoresDataProvider extends DataProvider {
       executionPhaseSkyframeEvaluators =
           getSkyframeEvaluators(bazelProfile, execution.get().getStart(), execution.get().getEnd());
       executionPhaseSkyframeEvaluatorsMaxValue =
-          executionPhaseSkyframeEvaluators.stream().max(Integer::compareTo).get();
+          executionPhaseSkyframeEvaluators.stream().max(Integer::compareTo).orElse(null);
     }
   }
 
@@ -208,12 +234,6 @@ public class EstimatedCoresDataProvider extends DataProvider {
             })
         .mapToInt(x -> Integer.valueOf(x))
         .forEach(x -> result.add(x));
-    if (result.isEmpty()) {
-      throw new InvalidProfileException(
-          String.format(
-              "Could not find any skyframe evaluators in the time range %d μs to %d μs.",
-              start.getMicros(), end.getMicros()));
-    }
     return result;
   }
 }
