@@ -31,6 +31,7 @@ public class BazelProfileConstants {
   public static final String CAT_GARBAGE_COLLECTION = "gc notification";
   public static final String CAT_GENERAL_INFORMATION = "general information";
   public static final String CAT_REMOTE_ACTION_CACHE_CHECK = "remote action cache check";
+  public static final String CAT_REMOTE_ACTION_EXECUTION = "remote action execution";
   public static final String CAT_REMOTE_EXECUTION_PROCESS_WALL_TIME =
       "Remote execution process wall time";
   public static final String CAT_REMOTE_EXECUTION_QUEUING_TIME = "Remote execution queuing time";
@@ -44,6 +45,7 @@ public class BazelProfileConstants {
   // CompleteEvent names
   public static final String COMPLETE_MAJOR_GARBAGE_COLLECTION = "major GC";
   public static final String COMPLETE_MINOR_GARBAGE_COLLECTION = "minor GC";
+  public static final String COMPLETE_EXECUTE_REMOTELY = "execute remotely";
 
   // InstantEvent names
   public static final String INSTANT_FINISHING = "Finishing";
