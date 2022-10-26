@@ -81,7 +81,7 @@ public class QueuingSuggestionProvider extends SuggestionProviderBase {
           }
           Duration totalDuration = totalDurationDatum.getTotalDuration().get();
           double invocationDurationReductionPercentage =
-              100 * queuingDuration.toMillis() / (double) totalDuration.toMillis();
+              DurationUtil.getPercentageOf(queuingDuration, totalDuration);
           potentialImprovement =
               SuggestionProviderUtil.createPotentialImprovement(
                   String.format(
@@ -90,9 +90,8 @@ public class QueuingSuggestionProvider extends SuggestionProviderBase {
                           + " reduced by %.2f%%, from %s to %s.",
                       DurationUtil.formatDuration(queuingDuration),
                       100
-                          * (1
-                              - criticalPathDuration.minus(queuingDuration).toMillis()
-                                  / (double) criticalPathDuration.toMillis()),
+                          - DurationUtil.getPercentageOf(
+                              criticalPathDuration.minus(queuingDuration), criticalPathDuration),
                       DurationUtil.formatDuration(criticalPathDuration),
                       DurationUtil.formatDuration(criticalPathDuration.minus(queuingDuration))),
                   invocationDurationReductionPercentage);

@@ -49,7 +49,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
         .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
 
     final var bottleneckSuggestionProvider =
-        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0, 1.);
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 0, 1.);
     final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
     assertThat(suggestions.getSuggestionList()).isEmpty();
     assertThat(suggestions.hasFailure()).isFalse();
@@ -69,7 +69,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
         .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
 
     final var bottleneckSuggestionProvider =
-        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0, 1.);
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 0, 1.);
     final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
     assertThat(suggestions.getSuggestionList()).isEmpty();
     assertThat(suggestions.hasFailure()).isFalse();
@@ -87,7 +87,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
     when(dataManager.getDatum(TotalDuration.class)).thenReturn(new TotalDuration("empty"));
 
     final var bottleneckSuggestionProvider =
-        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0, 1.);
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 0, 1.);
     final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
     assertThat(suggestions.getSuggestionList()).isEmpty();
     assertThat(suggestions.hasFailure()).isFalse();
@@ -106,7 +106,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
     when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of()));
 
     final var bottleneckSuggestionProvider =
-        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0, 1.);
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 0, 1.);
     final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
     assertThat(suggestions.getSuggestionList()).isEmpty();
     assertThat(suggestions.hasFailure()).isFalse();
@@ -129,7 +129,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
     when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of(bottleneck)));
 
     final var bottleneckSuggestionProvider =
-        new BottleneckSuggestionProvider(1, 1, minDuration, .0, 1.);
+        new BottleneckSuggestionProvider(1, 1, minDuration, 0, 1.);
     final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
     assertThat(suggestions.getSuggestionList()).isEmpty();
     assertThat(suggestions.hasFailure()).isFalse();
@@ -151,7 +151,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
     when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of(bottleneck)));
 
     final var bottleneckSuggestionProvider =
-        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0, 1.);
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 0, 1.);
     final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
     assertThat(suggestions.getSuggestionList()).hasSize(1);
     assertThat(suggestions.hasFailure()).isFalse();
@@ -174,7 +174,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
     when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of(bottleneck)));
 
     final var bottleneckSuggestionProvider =
-        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0, 1.);
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 0, 1.);
     final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
     assertThat(suggestions.getSuggestionList()).hasSize(1);
     assertThat(suggestions.getSuggestion(0).getId())
@@ -199,7 +199,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
     when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of(bottleneck)));
 
     final var bottleneckSuggestionProvider =
-        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0, 1.);
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 0, 1.);
     final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
     assertThat(suggestions.getSuggestionList()).hasSize(1);
     assertThat(suggestions.getSuggestion(0).getId())
@@ -223,7 +223,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
     when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of(bottleneck)));
 
     final var bottleneckSuggestionProvider =
-        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 1., 1.);
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 100, 1.);
     final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
     assertThat(suggestions.getSuggestionList()).isEmpty();
     assertThat(suggestions.hasFailure()).isFalse();
@@ -249,7 +249,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
 
     final var bottleneckSuggestionProvider =
         new BottleneckSuggestionProvider(
-            1, 1, Duration.ZERO, 1., actionCountSample / (double) (coresUsed + 1));
+            1, 1, Duration.ZERO, 100, actionCountSample / (double) (coresUsed + 1));
     final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
     assertThat(suggestions.getSuggestionList()).isEmpty();
     assertThat(suggestions.hasFailure()).isFalse();
@@ -276,7 +276,7 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
         .thenReturn(new ActionStats(List.of(minorBottleneck, majorBottleneck)));
 
     final var bottleneckSuggestionProvider =
-        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, .0, 1.);
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 0, 1.);
     final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
     assertThat(suggestions.getSuggestionCount()).isEqualTo(1);
     assertThat(suggestions.getSuggestion(0).getRationaleCount()).isEqualTo(1);

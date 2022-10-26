@@ -40,4 +40,18 @@ public class DurationUtil {
       return String.format("%dms", duration.toMillis());
     }
   }
+
+  /**
+   * Returns the percentage of one duration relative to another duration.
+   *
+   * @param partial The duration to return the percentage of related to base
+   * @param base The duration to base the percentage on
+   * @return the percentage of partial relative to base
+   */
+  public static double getPercentageOf(Duration partial, Duration base) {
+    if (base.isZero()) {
+      throw new IllegalArgumentException("Duration base must not be zero.");
+    }
+    return 100.0 * partial.toNanos() / base.toNanos();
+  }
 }

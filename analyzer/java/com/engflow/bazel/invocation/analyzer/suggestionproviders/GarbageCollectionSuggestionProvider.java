@@ -59,9 +59,8 @@ public class GarbageCollectionSuggestionProvider extends SuggestionProviderBase 
         }
         Duration totalDuration = totalDurationDatum.getTotalDuration().get();
         double percentOfTotal =
-            100.0
-                * gcStats.getMajorGarbageCollectionDuration().toMillis()
-                / totalDuration.toMillis();
+            DurationUtil.getPercentageOf(
+                gcStats.getMajorGarbageCollectionDuration(), totalDuration);
         if (percentOfTotal >= MAJOR_GC_MIN_PERCENTAGE) {
           Duration optimalDuration =
               totalDuration.minus(gcStats.getMajorGarbageCollectionDuration());
