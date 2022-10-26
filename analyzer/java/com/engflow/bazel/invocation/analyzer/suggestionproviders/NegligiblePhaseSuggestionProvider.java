@@ -90,7 +90,7 @@ public class NegligiblePhaseSuggestionProvider extends SuggestionProviderBase {
           continue;
         }
         Duration phaseDuration = optionalPhaseDescription.get().getDuration();
-        double percentOfTotal = phaseDuration.toMillis() / (double) totalDuration.toMillis() * 100;
+        double percentOfTotal = DurationUtil.getPercentageOf(phaseDuration, totalDuration);
         if (percentOfTotal > PCT_THRESHOLD) {
           String title = "Unusual Phase Duration";
           String recommendation =

@@ -15,13 +15,14 @@
 package com.engflow.bazel.invocation.analyzer.time;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import java.time.Duration;
 import org.junit.Test;
 
 public class DurationUtilTest {
   @Test
-  public void formatHours() throws Exception {
+  public void formatHours() {
     assertThat(DurationUtil.formatDuration(Duration.ofHours(1))).isEqualTo("1h 0m 0s");
     assertThat(DurationUtil.formatDuration(Duration.ofHours(1).plus(Duration.ofSeconds(2))))
         .isEqualTo("1h 0m 2s");
@@ -29,7 +30,7 @@ public class DurationUtilTest {
   }
 
   @Test
-  public void formatMinutes() throws Exception {
+  public void formatMinutes() {
     assertThat(DurationUtil.formatDuration(Duration.ofMinutes(1))).isEqualTo("1m 0s");
     assertThat(DurationUtil.formatDuration(Duration.ofMinutes(1).plus(Duration.ofSeconds(2))))
         .isEqualTo("1m 2s");
@@ -37,16 +38,52 @@ public class DurationUtilTest {
   }
 
   @Test
-  public void formatSeconds() throws Exception {
+  public void formatSeconds() {
     assertThat(DurationUtil.formatDuration(Duration.ofSeconds(10).plus(Duration.ofMillis(10))))
         .isEqualTo("10s");
     assertThat(DurationUtil.formatDuration(Duration.ofSeconds(59))).isEqualTo("59s");
   }
 
   @Test
-  public void formatMilliseconds() throws Exception {
+  public void formatMilliseconds() {
     assertThat(DurationUtil.formatDuration(Duration.ofSeconds(1))).isEqualTo("1000ms");
     assertThat(DurationUtil.formatDuration(Duration.ofSeconds(9).plus(Duration.ofMillis(42))))
         .isEqualTo("9042ms");
+  }
+
+  @Test
+  public void getPercentageOfZeroBase() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> DurationUtil.getPercentageOf(Duration.ofSeconds(1), Duration.ZERO));
+  }
+
+  @Test
+  public void getPercentageOfZeroFraction() {
+    assertThat(DurationUtil.getPercentageOf(Duration.ZERO, Duration.ofSeconds(4))).isEqualTo(0);
+  }
+
+  @Test
+  public void getPercentageOfFraction() {
+    assertThat(DurationUtil.getPercentageOf(Duration.ofSeconds(1), Duration.ofSeconds(4)))
+        .isEqualTo(25);
+  }
+
+  @Test
+  public void getPercentageOfMultiple() {
+    assertThat(DurationUtil.getPercentageOf(Duration.ofSeconds(4), Duration.ofSeconds(2)))
+        .isEqualTo(200);
+  }
+
+  @Test
+  public void getPercentageOfYears() {
+    assertThat(DurationUtil.getPercentageOf(Duration.ofDays(4 * 365), Duration.ofDays(5 * 365)))
+        .isEqualTo(80);
+  }
+
+  @Test
+  public void getPercentageOfNanos() {
+    assertThat(DurationUtil.getPercentageOf(Duration.ofNanos(200), Duration.ofNanos(5000)))
+        .isEqualTo(4);
   }
 }

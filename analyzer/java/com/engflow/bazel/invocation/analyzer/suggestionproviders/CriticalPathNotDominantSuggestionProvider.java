@@ -53,7 +53,7 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
   private static final String SUGGESTION_ID_INCREASE_NUMBER_OF_CORES = "IncreaseNumberOfCores";
   private static final String SUGGESTION_ID_INCREASE_VALUE_OF_JOBS_FLAG = "IncreaseValueOfJobsFlag";
 
-  private static final double MAX_CRITICAL_PATH_FACTOR = 0.75;
+  private static final double MAX_CRITICAL_PATH_PERCENTAGE = 75;
   private static final Duration MIN_DURATION_FOR_EVALUATION = Duration.ofSeconds(5);
 
   @Override
@@ -102,9 +102,9 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
             ANALYZER_CLASSNAME, null, List.of(caveat));
       }
 
-      double criticalPathFactor =
-          criticalPathDuration.toMillis() / (double) executionDuration.toMillis();
-      if (criticalPathFactor > MAX_CRITICAL_PATH_FACTOR) {
+      double criticalPathPercentage =
+          DurationUtil.getPercentageOf(criticalPathDuration, executionDuration);
+      if (criticalPathPercentage > MAX_CRITICAL_PATH_PERCENTAGE) {
         // Critical path is dominant, do not provide any suggestions.
         return SuggestionProviderUtil.createSuggestionOutput(ANALYZER_CLASSNAME, null, null);
       }
@@ -119,7 +119,7 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
       Duration totalDuration = totalDurationDatum.getTotalDuration().get();
       Duration minimumDuration = totalDuration.minus(executionDuration).plus(criticalPathDuration);
       double durationReductionPercent =
-          100 * (1 - minimumDuration.toMillis() / (double) totalDuration.toMillis());
+          100 - DurationUtil.getPercentageOf(minimumDuration, totalDuration);
 
       EstimatedCoresUsed estimatedCoresUsedDatum = dataManager.getDatum(EstimatedCoresUsed.class);
       if (estimatedCoresUsedDatum.isEmpty()) {
@@ -153,7 +153,7 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
                   + " could be.",
               DurationUtil.formatDuration(criticalPathDuration),
               DurationUtil.formatDuration(executionDuration),
-              criticalPathFactor * 100);
+              criticalPathPercentage);
 
       boolean remoteExecutionUsed =
           dataManager.getDatum(RemoteExecutionUsed.class).isRemoteExecutionUsed();

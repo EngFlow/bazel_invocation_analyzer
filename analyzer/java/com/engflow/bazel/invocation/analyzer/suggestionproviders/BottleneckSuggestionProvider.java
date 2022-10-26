@@ -50,20 +50,20 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
   static final String SUGGESTION_ID_AVOID_BOTTLENECKS_DUE_TO_QUEUING =
       "AvoidBottlenecksDueToQueuing";
 
-  private static final double SIGNIFICANT_QUEUING_RATIO = .2;
+  private static final double SIGNIFICANT_QUEUING_PERCENTAGE = 20;
 
   private final Duration minDuration;
   private final int maxSuggestions;
   private final int maxActionsPerBottleneck;
-  private final double minImprovementRatio;
+  private final double minImprovementPercentage;
   private final double maxActionCountRatio;
 
   /**
    * @param maxSuggestions the maximum number of bottlenecks suggested by this provider
    * @param maxActionsPerBottleneck the maximum number of actions listed per bottleneck suggestion
    * @param minDuration the minimum duration of a bottleneck for it to be suggested
-   * @param minImprovementRatio the minimum improvement you'd get out of fixing a bottleneck for it
-   *     to be suggested, where the improvement is the 1 -
+   * @param minImprovementPercentage the minimum improvement you'd get out of fixing a bottleneck
+   *     for it to be suggested, where the improvement is 100 -
    *     (theoretical_wall_duration_without_bottleneck / wall_duration_with_bottleneck)
    * @param maxActionCountRatio the maximum ratio for (bottleneck action count / cores used in
    *     invocation) for a bottleneck to be suggested
@@ -73,12 +73,12 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
       int maxSuggestions,
       int maxActionsPerBottleneck,
       Duration minDuration,
-      double minImprovementRatio,
+      double minImprovementPercentage,
       double maxActionCountRatio) {
     this.maxSuggestions = maxSuggestions;
     this.maxActionsPerBottleneck = maxActionsPerBottleneck;
     this.minDuration = minDuration;
-    this.minImprovementRatio = minImprovementRatio;
+    this.minImprovementPercentage = minImprovementPercentage;
     this.maxActionCountRatio = maxActionCountRatio;
   }
 
@@ -118,10 +118,12 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
                   bottleneck ->
                       BottleneckStats.fromBottleneckAndCoresAndWallDuration(
                           bottleneck, coresUsed, totalDuration))
-              .filter(bottleneckStats -> bottleneckStats.improvement >= minImprovementRatio)
+              .filter(
+                  bottleneckStats ->
+                      bottleneckStats.improvementPercentage >= minImprovementPercentage)
               .sorted(
                   Comparator.<BottleneckStats>comparingDouble(
-                          bottleneckStats -> bottleneckStats.improvement)
+                          bottleneckStats -> bottleneckStats.improvementPercentage)
                       .reversed())
               .limit(maxSuggestions)
               .map(bottleneckStats -> generateSuggestion(bottleneckStats, totalDuration))
@@ -187,16 +189,16 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
     }
 
     Duration maxQueuingDuration = bottleneck.bottleneck.getMaxQueuingDuration();
-    double ratio =
-        maxQueuingDuration.toMillis() / (double) bottleneck.bottleneck.getDuration().toMillis();
+    double percentage =
+        DurationUtil.getPercentageOf(maxQueuingDuration, bottleneck.bottleneck.getDuration());
     String bottleneckQueuingData =
         String.format(
             Locale.US,
             "This bottleneck includes queuing for up to %s, which is %.2f%% of the bottleneck's"
                 + " duration.",
             DurationUtil.formatDuration(maxQueuingDuration),
-            100 * ratio);
-    if (ratio > SIGNIFICANT_QUEUING_RATIO) {
+            percentage);
+    if (percentage > SIGNIFICANT_QUEUING_PERCENTAGE) {
       recommendation.append(
           "\n"
               + "The bottleneck includes significant queuing.\n"
@@ -213,7 +215,7 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
           rationale,
           caveats);
     } else {
-      if (ratio > 0) {
+      if (percentage > 0) {
         caveats.add(SuggestionProviderUtil.createCaveat(bottleneckQueuingData, false));
       }
       recommendation.append("\nTry breaking them down into smaller actions.");
@@ -254,33 +256,33 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
 
   private PotentialImprovement potentialImprovement(
       BottleneckStats bottleneck, Duration totalDuration) {
-    double percentage = 100 * bottleneck.improvement;
     String message =
         String.format(
             "The initial build time was %s and could be reduced to %s.",
             formatDuration(totalDuration), formatDuration(bottleneck.optimalWallDuration));
-    return SuggestionProviderUtil.createPotentialImprovement(message, percentage);
+    return SuggestionProviderUtil.createPotentialImprovement(
+        message, bottleneck.improvementPercentage);
   }
 
   public static BottleneckSuggestionProvider createDefault() {
-    return new BottleneckSuggestionProvider(5, 5, Duration.ofSeconds(5), .05, .9);
+    return new BottleneckSuggestionProvider(5, 5, Duration.ofSeconds(5), 5, .9);
   }
 
   public static BottleneckSuggestionProvider createVerbose() {
     return new BottleneckSuggestionProvider(
-        Integer.MAX_VALUE, Integer.MAX_VALUE, Duration.ZERO, .0, .0);
+        Integer.MAX_VALUE, Integer.MAX_VALUE, Duration.ZERO, 0, .0);
   }
 
   private static class BottleneckStats {
     private final Bottleneck bottleneck;
     private final Duration optimalWallDuration;
-    private final double improvement;
+    private final double improvementPercentage;
 
     private BottleneckStats(
-        Bottleneck bottleneck, Duration optimalWallDuration, double improvement) {
+        Bottleneck bottleneck, Duration optimalWallDuration, double improvementPercentage) {
       this.bottleneck = bottleneck;
       this.optimalWallDuration = optimalWallDuration;
-      this.improvement = improvement;
+      this.improvementPercentage = improvementPercentage;
     }
 
     private static BottleneckStats fromBottleneckAndCoresAndWallDuration(
@@ -293,7 +295,7 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
       final var optimalWallDuration =
           totalDuration.minus(bottleneck.getDuration()).plus(optimalBottleneckDuration);
       final var improvement =
-          1 - optimalWallDuration.toMillis() / (double) totalDuration.toMillis();
+          100 - DurationUtil.getPercentageOf(optimalWallDuration, totalDuration);
       return new BottleneckStats(bottleneck, optimalWallDuration, improvement);
     }
   }
