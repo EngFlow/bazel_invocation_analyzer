@@ -63,7 +63,7 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
    * @param maxActionsPerBottleneck the maximum number of actions listed per bottleneck suggestion
    * @param minDuration the minimum duration of a bottleneck for it to be suggested
    * @param minImprovementPercentage the minimum improvement you'd get out of fixing a bottleneck
-   *     for it to be suggested, where the improvement is the 100 -
+   *     for it to be suggested, where the improvement is 100 -
    *     (theoretical_wall_duration_without_bottleneck / wall_duration_with_bottleneck)
    * @param maxActionCountRatio the maximum ratio for (bottleneck action count / cores used in
    *     invocation) for a bottleneck to be suggested

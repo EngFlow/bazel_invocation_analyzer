@@ -18,7 +18,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import org.junit.Test;
 
 public class DurationUtilTest {
@@ -83,10 +82,8 @@ public class DurationUtilTest {
   }
 
   @Test
-  public void getPercentageOfMicros() {
-    assertThat(
-            DurationUtil.getPercentageOf(
-                Duration.of(200, ChronoUnit.MICROS), Duration.of(5000, ChronoUnit.MICROS)))
+  public void getPercentageOfNanos() {
+    assertThat(DurationUtil.getPercentageOf(Duration.ofNanos(200), Duration.ofNanos(5000)))
         .isEqualTo(4);
   }
 }
