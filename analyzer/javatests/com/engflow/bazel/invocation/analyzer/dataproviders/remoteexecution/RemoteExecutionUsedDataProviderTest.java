@@ -40,7 +40,7 @@ public class RemoteExecutionUsedDataProviderTest extends DataProviderUnitTestBas
   }
 
   @Test
-  public void shouldReturnRemoteExecutionUsedOnRemoteExecutionProcessWallTime() throws Exception {
+  public void shouldReturnRemoteExecutionUsedOnRemoteActionExecution() throws Exception {
     useProfile(
         metaData(),
         trace(
@@ -50,8 +50,8 @@ public class RemoteExecutionUsedDataProviderTest extends DataProviderUnitTestBas
                 0,
                 "foo",
                 complete(
-                    "bar",
-                    BazelProfileConstants.CAT_REMOTE_EXECUTION_PROCESS_WALL_TIME,
+                    BazelProfileConstants.COMPLETE_EXECUTE_REMOTELY,
+                    BazelProfileConstants.CAT_REMOTE_ACTION_EXECUTION,
                     Timestamp.ofMicros(123),
                     Duration.ZERO))));
 
@@ -94,6 +94,25 @@ public class RemoteExecutionUsedDataProviderTest extends DataProviderUnitTestBas
                     Duration.ZERO))));
 
     assertThat(provider.getRemoteExecutionUsed().isRemoteExecutionUsed()).isTrue();
+  }
+
+  @Test
+  public void shouldReturnRemoteExecutionNotUsedOnRemoteExecutionProcessingTime() throws Exception {
+    useProfile(
+        metaData(),
+        trace(
+            mainThread(),
+            thread(
+                0,
+                0,
+                "foo",
+                complete(
+                    "bar",
+                    BazelProfileConstants.CAT_REMOTE_EXECUTION_PROCESS_WALL_TIME,
+                    Timestamp.ofMicros(123),
+                    Duration.ZERO))));
+
+    assertThat(provider.getRemoteExecutionUsed().isRemoteExecutionUsed()).isFalse();
   }
 
   @Test

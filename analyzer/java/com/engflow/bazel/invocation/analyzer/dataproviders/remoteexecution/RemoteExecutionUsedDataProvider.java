@@ -49,9 +49,9 @@ public class RemoteExecutionUsedDataProvider extends DataProvider {
             .anyMatch(
                 (event) ->
                     BazelProfileConstants.CAT_REMOTE_EXECUTION_SETUP.equals(event.category)
-                        || BazelProfileConstants.CAT_REMOTE_EXECUTION_PROCESS_WALL_TIME.equals(
-                            event.category)
                         || BazelProfileConstants.CAT_REMOTE_EXECUTION_QUEUING_TIME.equals(
-                            event.category)));
+                            event.category)
+                        || BazelProfileConstants.CAT_REMOTE_ACTION_EXECUTION.equals(event.category)
+                            && BazelProfileConstants.COMPLETE_EXECUTE_REMOTELY.equals(event.name)));
   }
 }
