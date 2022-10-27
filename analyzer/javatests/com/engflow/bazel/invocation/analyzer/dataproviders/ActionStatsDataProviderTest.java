@@ -129,6 +129,66 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
+  public void shouldCaptureBottleneckRunningSingleActionOldName()
+      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+          NullDatumException {
+    useEstimatedCoresUsed(4);
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                0,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                concat(
+                    sequence(
+                        Stream.of(0, 80, 160, 240),
+                        ts ->
+                            complete(
+                                "An action",
+                                BazelProfileConstants.CAT_ACTION_PROCESSING,
+                                Timestamp.ofMicros(ts),
+                                TimeUtil.getDurationForMicros(80))),
+                    sequence(
+                        IntStream.rangeClosed(0, 100).boxed(),
+                        ts ->
+                            count(
+                                BazelProfileConstants.COUNTER_ACTION_COUNT_OLD, ts, "action", "4")),
+                    sequence(
+                        IntStream.rangeClosed(100, 200).boxed(),
+                        ts ->
+                            count(
+                                BazelProfileConstants.COUNTER_ACTION_COUNT_OLD, ts, "action", "1")),
+                    sequence(
+                        IntStream.rangeClosed(200, 300).boxed(),
+                        ts ->
+                            count(
+                                BazelProfileConstants.COUNTER_ACTION_COUNT_OLD,
+                                ts,
+                                "action",
+                                "4"))))));
+
+    final var actionStats = provider.getActionStats();
+
+    assertThat(actionStats.getBottlenecks().get()).hasSize(1);
+    final var bottleneck = actionStats.getBottlenecks().get().get(0);
+    assertThat(bottleneck.getStart().getMicros()).isEqualTo(100);
+    assertThat(bottleneck.getEnd().getMicros()).isEqualTo(200);
+    assertThat(bottleneck.getAvgActionCount()).isWithin(.0001).of(1);
+    assertThat(bottleneck.getPartialEvents()).hasSize(2);
+    final var firstAction = bottleneck.getPartialEvents().get(0);
+    assertThat(firstAction.completeEvent.start.getMicros()).isEqualTo(80);
+    assertThat(firstAction.croppedStart).isEqualTo(bottleneck.getStart());
+    assertThat(TimeUtil.getMicros(firstAction.completeEvent.duration)).isEqualTo(80);
+    assertThat(TimeUtil.getMicros(firstAction.croppedDuration)).isEqualTo(60);
+    final var secondAction = bottleneck.getPartialEvents().get(1);
+    assertThat(secondAction.completeEvent.start.getMicros()).isEqualTo(160);
+    assertThat(secondAction.croppedEnd).isEqualTo(bottleneck.getEnd());
+    assertThat(TimeUtil.getMicros(secondAction.completeEvent.duration)).isEqualTo(80);
+    assertThat(TimeUtil.getMicros(secondAction.croppedDuration)).isEqualTo(40);
+  }
+
+  @Test
   public void shouldNotCaptureBottleneckWhenRunningMaxActionCount()
       throws DuplicateProviderException, InvalidProfileException, MissingInputException,
           NullDatumException {

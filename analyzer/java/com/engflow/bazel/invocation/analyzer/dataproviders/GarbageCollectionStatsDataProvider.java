@@ -42,7 +42,7 @@ public class GarbageCollectionStatsDataProvider extends DataProvider {
       Duration majorGarbageCollection =
           bazelProfile
               .getThreads()
-              .filter(t -> BazelProfileConstants.THREAD_GARBAGE_COLLECTOR.equals(t.getName()))
+              .filter(BazelProfileConstants::isGarbageCollectorThread)
               .flatMap(profileThread -> profileThread.getCompleteEvents().stream())
               .filter(
                   event ->
@@ -52,11 +52,7 @@ public class GarbageCollectionStatsDataProvider extends DataProvider {
               .reduce(Duration.ZERO, Duration::plus);
       return new GarbageCollectionStats(majorGarbageCollection);
     } catch (Exception e) {
-      throw new InvalidProfileException(
-          String.format(
-              "Unable to find thread named \"%s\".",
-              BazelProfileConstants.THREAD_GARBAGE_COLLECTOR),
-          e);
+      throw new InvalidProfileException("Unable to find garbage collector thread.", e);
     }
   }
 }

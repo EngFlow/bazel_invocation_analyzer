@@ -19,6 +19,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+  BazelProfileConstantsTest.class,
   BazelProfileTest.class,
 })
 public class BazelProfileTestSuite {}

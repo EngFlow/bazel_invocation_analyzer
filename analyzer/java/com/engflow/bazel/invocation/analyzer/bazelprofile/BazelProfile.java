@@ -125,8 +125,7 @@ public class BazelProfile implements Datum {
               // TODO: Use success response to take action on errant events.
               profileThread.addEvent(object);
             });
-    if (!threads.values().stream()
-        .anyMatch(t -> BazelProfileConstants.THREAD_MAIN.equals(t.getName()))) {
+    if (!threads.values().stream().anyMatch(BazelProfileConstants::isMainThread)) {
       throw new IllegalArgumentException(
           String.format(
               "Invalid Bazel profile, JSON file missing \"%s\".",
@@ -149,10 +148,7 @@ public class BazelProfile implements Datum {
   }
 
   public ProfileThread getMainThread() {
-    return threads.values().stream()
-        .filter(t -> BazelProfileConstants.THREAD_MAIN.equals(t.getName()))
-        .findAny()
-        .get();
+    return threads.values().stream().filter(BazelProfileConstants::isMainThread).findAny().get();
   }
 
   /**

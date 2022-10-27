@@ -55,6 +55,13 @@ public class ActionStatsDataProvider extends DataProvider {
     var actionCounts =
         bazelProfile.getMainThread().getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT);
     if (actionCounts == null) {
+      actionCounts =
+          bazelProfile
+              .getMainThread()
+              .getCounts()
+              .get(BazelProfileConstants.COUNTER_ACTION_COUNT_OLD);
+    }
+    if (actionCounts == null) {
       return new ActionStats(EMPTY_REASON_ACTION_COUNT);
     }
 
