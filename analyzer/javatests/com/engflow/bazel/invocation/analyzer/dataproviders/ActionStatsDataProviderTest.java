@@ -17,6 +17,7 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.concat;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.count;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
@@ -51,7 +52,7 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
       throws DuplicateProviderException, InvalidProfileException, MissingInputException,
           NullDatumException {
     useEstimatedCoresUsed(4);
-    useProfile(metaData(), trace(thread(0, 0, BazelProfileConstants.THREAD_MAIN)));
+    useProfile(metaData(), trace(mainThread()));
 
     assertThat(provider.getActionStats().getBottlenecks().isEmpty()).isTrue();
   }
