@@ -125,12 +125,17 @@ public class BazelProfile implements Datum {
               // TODO: Use success response to take action on errant events.
               profileThread.addEvent(object);
             });
-    if (!threads.values().stream().anyMatch(BazelProfileConstants::isMainThread)) {
+    if (!containsMainThread()) {
       throw new IllegalArgumentException(
           String.format(
               "Invalid Bazel profile, JSON file missing \"%s\".",
               BazelProfileConstants.THREAD_MAIN));
     }
+  }
+
+  /* This method is final, as it is called from the constructor and must not be overridden. */
+  private final boolean containsMainThread() {
+    return threads.values().stream().anyMatch(BazelProfileConstants::isMainThread);
   }
 
   public ImmutableMap<String, String> getOtherData() {
