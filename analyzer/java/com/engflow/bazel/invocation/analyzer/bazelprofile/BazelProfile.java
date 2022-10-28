@@ -21,6 +21,7 @@ import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatConstants;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -135,7 +136,45 @@ public class BazelProfile implements Datum {
 
   /* This method is final, as it is called from the constructor and must not be overridden. */
   private final boolean containsMainThread() {
-    return threads.values().stream().anyMatch(BazelProfileConstants::isMainThread);
+    return threads.values().stream().anyMatch(BazelProfile::isMainThread);
+  }
+
+  /**
+   * Returns whether the passed-in thread looks like the main thread, both for newer and older
+   * versions of Bazel. See
+   * https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c for when
+   * the naming of the main thread was changed.
+   *
+   * @param thread the thread to check
+   * @return whether the thread looks like it is the main thread
+   */
+  @VisibleForTesting
+  static boolean isMainThread(ProfileThread thread) {
+    String name = thread.getName();
+    if (Strings.isNullOrEmpty(name)) {
+      return false;
+    }
+    return name.equals(BazelProfileConstants.THREAD_MAIN)
+        || name.startsWith(BazelProfileConstants.THREAD_MAIN_OLD_PREFIX);
+  }
+
+  /**
+   * Returns whether the passed-in thread looks like the garbage collection, both for newer and
+   * older versions of Bazel. See
+   * https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c for when
+   * the naming of the garbage collection thread was changed.
+   *
+   * @param thread the thread to check
+   * @return whether the thread looks like it is the garbage collection thread
+   */
+  @VisibleForTesting
+  static boolean isGarbageCollectorThread(ProfileThread thread) {
+    String name = thread.getName();
+    if (Strings.isNullOrEmpty(name)) {
+      return false;
+    }
+    return name.equals(BazelProfileConstants.THREAD_GARBAGE_COLLECTOR)
+        || name.equals(BazelProfileConstants.THREAD_GARBAGE_COLLECTOR_OLD);
   }
 
   public ImmutableMap<String, String> getOtherData() {
@@ -153,7 +192,11 @@ public class BazelProfile implements Datum {
   }
 
   public ProfileThread getMainThread() {
-    return threads.values().stream().filter(BazelProfileConstants::isMainThread).findAny().get();
+    return threads.values().stream().filter(BazelProfile::isMainThread).findAny().get();
+  }
+
+  public Optional<ProfileThread> getGarbageCollectorThread() {
+    return threads.values().stream().filter(BazelProfile::isGarbageCollectorThread).findAny();
   }
 
   /**

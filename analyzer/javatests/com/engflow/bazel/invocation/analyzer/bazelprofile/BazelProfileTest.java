@@ -156,4 +156,61 @@ public class BazelProfileTest extends UnitTestBase {
 
     assertThat(profile.getCriticalPath().get()).isEqualTo(want);
   }
+
+  @Test
+  public void isMainThreadShouldReturnFalseOnUnnamedProfileThread() {
+    ProfileThread thread = new ProfileThread(new ThreadId(0, 0));
+    assertThat(BazelProfile.isMainThread(thread)).isFalse();
+  }
+
+  @Test
+  public void isMainThreadShouldReturnFalseOnOtherProfileThread() {
+    ProfileThread thread =
+        new ProfileThread(
+            new ThreadId(0, 0), "skyframe-evaluator-1", null, null, null, null, null, null);
+    assertThat(BazelProfile.isMainThread(thread)).isFalse();
+  }
+
+  @Test
+  public void isMainThreadShouldReturnTrueOnNewName() {
+    ProfileThread thread =
+        new ProfileThread(new ThreadId(0, 0), "Main Thread", null, null, null, null, null, null);
+    assertThat(BazelProfile.isMainThread(thread)).isTrue();
+  }
+
+  @Test
+  public void isMainThreadShouldReturnTrueOnOldName() {
+    ProfileThread thread =
+        new ProfileThread(new ThreadId(0, 0), "grpc-command-3", null, null, null, null, null, null);
+    assertThat(BazelProfile.isMainThread(thread)).isTrue();
+  }
+
+  @Test
+  public void isGarbageCollectorThreadShouldReturnFalseOnUnnamedProfileThread() {
+    ProfileThread thread = new ProfileThread(new ThreadId(0, 0));
+    assertThat(BazelProfile.isGarbageCollectorThread(thread)).isFalse();
+  }
+
+  @Test
+  public void isGarbageCollectorShouldReturnFalseOnOtherProfileThread() {
+    ProfileThread thread =
+        new ProfileThread(
+            new ThreadId(0, 0), "skyframe-evaluator-1", null, null, null, null, null, null);
+    assertThat(BazelProfile.isGarbageCollectorThread(thread)).isFalse();
+  }
+
+  @Test
+  public void isGarbageCollectorShouldReturnTrueOnNewName() {
+    ProfileThread thread =
+        new ProfileThread(
+            new ThreadId(0, 0), "Garbage Collector", null, null, null, null, null, null);
+    assertThat(BazelProfile.isGarbageCollectorThread(thread)).isTrue();
+  }
+
+  @Test
+  public void isGarbageCollectorShouldReturnTrueOnOldName() {
+    ProfileThread thread =
+        new ProfileThread(new ThreadId(0, 0), "Service Thread", null, null, null, null, null, null);
+    assertThat(BazelProfile.isGarbageCollectorThread(thread)).isTrue();
+  }
 }

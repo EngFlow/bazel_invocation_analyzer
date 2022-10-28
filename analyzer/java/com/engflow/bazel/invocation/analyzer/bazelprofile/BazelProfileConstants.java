@@ -15,54 +15,17 @@
 package com.engflow.bazel.invocation.analyzer.bazelprofile;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 
 /** Constants that are specific to Bazel profiles. */
 public class BazelProfileConstants {
   // Thread names: event.name == METADATA_THREAD_NAME && event.args.name == constant below
   public static final String THREAD_CRITICAL_PATH = "Critical Path";
-
   @VisibleForTesting public static final String THREAD_GARBAGE_COLLECTOR = "Garbage Collector";
   // See https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c
-  private static final String THREAD_GARBAGE_COLLECTOR_OLD = "Service Thread";
-  /**
-   * Returns whether the passed-in thread looks like the garbage collection, both for newer and
-   * older versions of Bazel. See
-   * https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c for when
-   * the naming of the garbage collection thread was changed.
-   *
-   * @param thread the thread to check
-   * @return whether the thread looks like it is the garbage collection thread
-   */
-  public static boolean isGarbageCollectorThread(ProfileThread thread) {
-    String name = thread.getName();
-    if (Strings.isNullOrEmpty(name)) {
-      return false;
-    }
-    return name.equals(BazelProfileConstants.THREAD_GARBAGE_COLLECTOR)
-        || name.equals(BazelProfileConstants.THREAD_GARBAGE_COLLECTOR_OLD);
-  }
-
+  static final String THREAD_GARBAGE_COLLECTOR_OLD = "Service Thread";
   @VisibleForTesting public static final String THREAD_MAIN = "Main Thread";
   // See https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c
-  private static final String THREAD_MAIN_OLD_PREFIX = "grpc-command";
-  /**
-   * Returns whether the passed-in thread looks like the main thread, both for newer and older
-   * versions of Bazel. See
-   * https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c for when
-   * the naming of the main thread was changed.
-   *
-   * @param thread the thread to check
-   * @return whether the thread looks like it is the main thread
-   */
-  public static boolean isMainThread(ProfileThread thread) {
-    String name = thread.getName();
-    if (Strings.isNullOrEmpty(name)) {
-      return false;
-    }
-    return name.equals(BazelProfileConstants.THREAD_MAIN)
-        || name.startsWith(BazelProfileConstants.THREAD_MAIN_OLD_PREFIX);
-  }
+  static final String THREAD_MAIN_OLD_PREFIX = "grpc-command";
 
   // CounterEvent names
   public static final String COUNTER_ACTION_COUNT = "action count";
