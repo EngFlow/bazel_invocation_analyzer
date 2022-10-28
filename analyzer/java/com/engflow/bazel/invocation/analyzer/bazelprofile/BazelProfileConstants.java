@@ -29,10 +29,11 @@ public class BazelProfileConstants {
   static final String THREAD_MAIN_OLD_PREFIX = "grpc-command";
 
   // CounterEvent names
-  public static final String COUNTER_ACTION_COUNT = "action count";
+  // These constants should not be used outside this package.
+  @VisibleForTesting public static final String COUNTER_ACTION_COUNT = "action count";
   // See
   // https://github.com/bazelbuild/bazel/commit/ec2eda1b56a5197ee2d019f58d89a68b17974b13#diff-f8db96cce91c612e82faa11be7a835199fd31777cf6bf7ce39a069e140a199b2
-  public static final String COUNTER_ACTION_COUNT_OLD = "action counters";
+  static final String COUNTER_ACTION_COUNT_OLD = "action counters";
 
   // Category names
   public static final String CAT_ACTION_PROCESSING = "action processing";

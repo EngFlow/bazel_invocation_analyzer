@@ -20,6 +20,7 @@ import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
+import com.engflow.bazel.invocation.analyzer.traceeventformat.CounterEvent;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -197,6 +198,15 @@ public class BazelProfile implements Datum {
 
   public Optional<ProfileThread> getGarbageCollectorThread() {
     return threads.values().stream().filter(BazelProfile::isGarbageCollectorThread).findAny();
+  }
+
+  public Optional<ImmutableList<CounterEvent>> getActionCounts() {
+    var actionCounts = getMainThread().getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT);
+    if (actionCounts == null) {
+      actionCounts =
+          getMainThread().getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT_OLD);
+    }
+    return Optional.ofNullable(actionCounts);
   }
 
   /**

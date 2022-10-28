@@ -52,18 +52,11 @@ public class ActionStatsDataProvider extends DataProvider {
   public ActionStats getActionStats()
       throws InvalidProfileException, MissingInputException, NullDatumException {
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
-    var actionCounts =
-        bazelProfile.getMainThread().getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT);
-    if (actionCounts == null) {
-      actionCounts =
-          bazelProfile
-              .getMainThread()
-              .getCounts()
-              .get(BazelProfileConstants.COUNTER_ACTION_COUNT_OLD);
-    }
-    if (actionCounts == null) {
+    var optionalActionCounts = bazelProfile.getActionCounts();
+    if (optionalActionCounts.isEmpty()) {
       return new ActionStats(EMPTY_REASON_ACTION_COUNT);
     }
+    var actionCounts = optionalActionCounts.get();
 
     Optional<Integer> optionalEstimatedCoresUsed =
         getDataManager().getDatum(EstimatedCoresUsed.class).getEstimatedCores();
