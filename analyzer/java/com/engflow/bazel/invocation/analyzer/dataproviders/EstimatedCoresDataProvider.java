@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 /**
  * A {@link DataProvider} that estimates different values around the number of cores available and
@@ -75,9 +76,9 @@ public class EstimatedCoresDataProvider extends DataProvider {
       Pattern.compile("skyframe-evaluator[^\\d]*(\\d*)");
 
   private Set<Integer> executionPhaseSkyframeEvaluators;
-  private Integer executionPhaseSkyframeEvaluatorsMaxValue;
+  @Nullable private Integer executionPhaseSkyframeEvaluatorsMaxValue;
   private Set<Integer> evaluateAndDependenciesPhaseSkyframeEvaluators;
-  private Integer evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue;
+  @Nullable private Integer evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue;
 
   @Override
   public List<DatumSupplierSpecification<?>> getSuppliers() {
