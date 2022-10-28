@@ -15,6 +15,8 @@
 package com.engflow.bazel.invocation.analyzer.bazelprofile;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.concat;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.count;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
@@ -26,6 +28,10 @@ import static org.junit.Assert.assertThrows;
 import com.engflow.bazel.invocation.analyzer.UnitTestBase;
 import com.engflow.bazel.invocation.analyzer.WriteBazelProfile;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
+import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
+import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
+import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
@@ -33,6 +39,8 @@ import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatCo
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.junit.Test;
 
 public class BazelProfileTest extends UnitTestBase {
@@ -155,5 +163,200 @@ public class BazelProfileTest extends UnitTestBase {
                                 TimeUtil.getDurationForMicros(10))))));
 
     assertThat(profile.getCriticalPath().get()).isEqualTo(want);
+  }
+
+  @Test
+  public void getActionCountsNew()
+      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+          NullDatumException {
+    var profile =
+        useProfile(
+            metaData(),
+            trace(
+                thread(
+                    0,
+                    0,
+                    BazelProfileConstants.THREAD_MAIN,
+                    concat(
+                        sequence(
+                            Stream.of(0, 80, 160, 240),
+                            ts ->
+                                complete(
+                                    "An action",
+                                    BazelProfileConstants.CAT_ACTION_PROCESSING,
+                                    Timestamp.ofMicros(ts),
+                                    TimeUtil.getDurationForMicros(80))),
+                        sequence(
+                            IntStream.rangeClosed(0, 100).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "4")),
+                        sequence(
+                            IntStream.rangeClosed(101, 200).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "1")),
+                        sequence(
+                            IntStream.rangeClosed(201, 300).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT,
+                                    ts,
+                                    "action",
+                                    "4"))))));
+
+    assertThat(profile.getActionCounts().isPresent()).isTrue();
+    assertThat(profile.getActionCounts().get().size()).isEqualTo(301);
+  }
+
+  @Test
+  public void getActionCountsOld()
+      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+          NullDatumException {
+    var profile =
+        useProfile(
+            metaData(),
+            trace(
+                thread(
+                    0,
+                    0,
+                    BazelProfileConstants.THREAD_MAIN,
+                    concat(
+                        sequence(
+                            Stream.of(0, 80, 160, 240),
+                            ts ->
+                                complete(
+                                    "An action",
+                                    BazelProfileConstants.CAT_ACTION_PROCESSING,
+                                    Timestamp.ofMicros(ts),
+                                    TimeUtil.getDurationForMicros(80))),
+                        sequence(
+                            IntStream.rangeClosed(0, 100).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_OLD,
+                                    ts,
+                                    "action",
+                                    "4")),
+                        sequence(
+                            IntStream.rangeClosed(101, 200).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_OLD,
+                                    ts,
+                                    "action",
+                                    "1")),
+                        sequence(
+                            IntStream.rangeClosed(201, 300).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_OLD,
+                                    ts,
+                                    "action",
+                                    "4"))))));
+
+    assertThat(profile.getActionCounts().isPresent()).isTrue();
+    assertThat(profile.getActionCounts().get().size()).isEqualTo(301);
+  }
+
+  @Test
+  public void getActionCountsMixedUsesNew()
+      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+          NullDatumException {
+    var profile =
+        useProfile(
+            metaData(),
+            trace(
+                thread(
+                    0,
+                    0,
+                    BazelProfileConstants.THREAD_MAIN,
+                    concat(
+                        sequence(
+                            Stream.of(0, 80, 160, 240),
+                            ts ->
+                                complete(
+                                    "An action",
+                                    BazelProfileConstants.CAT_ACTION_PROCESSING,
+                                    Timestamp.ofMicros(ts),
+                                    TimeUtil.getDurationForMicros(80))),
+                        sequence(
+                            IntStream.rangeClosed(0, 100).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "4")),
+                        sequence(
+                            IntStream.rangeClosed(101, 200).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "1")),
+                        sequence(
+                            IntStream.rangeClosed(201, 300).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_OLD,
+                                    ts,
+                                    "action",
+                                    "4"))))));
+
+    assertThat(profile.getActionCounts().isPresent()).isTrue();
+    assertThat(profile.getActionCounts().get().size()).isEqualTo(201);
+  }
+
+  @Test
+  public void isMainThreadShouldReturnFalseOnUnnamedProfileThread() {
+    ProfileThread thread = new ProfileThread(new ThreadId(0, 0));
+    assertThat(BazelProfile.isMainThread(thread)).isFalse();
+  }
+
+  @Test
+  public void isMainThreadShouldReturnFalseOnOtherProfileThread() {
+    ProfileThread thread =
+        new ProfileThread(
+            new ThreadId(0, 0), "skyframe-evaluator-1", null, null, null, null, null, null);
+    assertThat(BazelProfile.isMainThread(thread)).isFalse();
+  }
+
+  @Test
+  public void isMainThreadShouldReturnTrueOnNewName() {
+    ProfileThread thread =
+        new ProfileThread(new ThreadId(0, 0), "Main Thread", null, null, null, null, null, null);
+    assertThat(BazelProfile.isMainThread(thread)).isTrue();
+  }
+
+  @Test
+  public void isMainThreadShouldReturnTrueOnOldName() {
+    ProfileThread thread =
+        new ProfileThread(new ThreadId(0, 0), "grpc-command-3", null, null, null, null, null, null);
+    assertThat(BazelProfile.isMainThread(thread)).isTrue();
+  }
+
+  @Test
+  public void isGarbageCollectorThreadShouldReturnFalseOnUnnamedProfileThread() {
+    ProfileThread thread = new ProfileThread(new ThreadId(0, 0));
+    assertThat(BazelProfile.isGarbageCollectorThread(thread)).isFalse();
+  }
+
+  @Test
+  public void isGarbageCollectorShouldReturnFalseOnOtherProfileThread() {
+    ProfileThread thread =
+        new ProfileThread(
+            new ThreadId(0, 0), "skyframe-evaluator-1", null, null, null, null, null, null);
+    assertThat(BazelProfile.isGarbageCollectorThread(thread)).isFalse();
+  }
+
+  @Test
+  public void isGarbageCollectorShouldReturnTrueOnNewName() {
+    ProfileThread thread =
+        new ProfileThread(
+            new ThreadId(0, 0), "Garbage Collector", null, null, null, null, null, null);
+    assertThat(BazelProfile.isGarbageCollectorThread(thread)).isTrue();
+  }
+
+  @Test
+  public void isGarbageCollectorShouldReturnTrueOnOldName() {
+    ProfileThread thread =
+        new ProfileThread(new ThreadId(0, 0), "Service Thread", null, null, null, null, null, null);
+    assertThat(BazelProfile.isGarbageCollectorThread(thread)).isTrue();
   }
 }

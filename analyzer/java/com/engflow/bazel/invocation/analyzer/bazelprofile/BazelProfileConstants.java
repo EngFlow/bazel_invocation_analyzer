@@ -14,15 +14,26 @@
 
 package com.engflow.bazel.invocation.analyzer.bazelprofile;
 
+import com.google.common.annotations.VisibleForTesting;
+
 /** Constants that are specific to Bazel profiles. */
 public class BazelProfileConstants {
   // Thread names: event.name == METADATA_THREAD_NAME && event.args.name == constant below
-  public static final String THREAD_CRITICAL_PATH = "Critical Path";
-  public static final String THREAD_GARBAGE_COLLECTOR = "Garbage Collector";
-  public static final String THREAD_MAIN = "Main Thread";
+  // These constants should not be used outside this package.
+  @VisibleForTesting public static final String THREAD_CRITICAL_PATH = "Critical Path";
+  @VisibleForTesting public static final String THREAD_GARBAGE_COLLECTOR = "Garbage Collector";
+  // See https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c
+  static final String THREAD_GARBAGE_COLLECTOR_OLD = "Service Thread";
+  @VisibleForTesting public static final String THREAD_MAIN = "Main Thread";
+  // See https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c
+  static final String THREAD_MAIN_OLD_PREFIX = "grpc-command";
 
   // CounterEvent names
-  public static final String COUNTER_ACTION_COUNT = "action count";
+  // These constants should not be used outside this package.
+  @VisibleForTesting public static final String COUNTER_ACTION_COUNT = "action count";
+  // See
+  // https://github.com/bazelbuild/bazel/commit/ec2eda1b56a5197ee2d019f58d89a68b17974b13#diff-f8db96cce91c612e82faa11be7a835199fd31777cf6bf7ce39a069e140a199b2
+  static final String COUNTER_ACTION_COUNT_OLD = "action counters";
 
   // Category names
   public static final String CAT_ACTION_PROCESSING = "action processing";

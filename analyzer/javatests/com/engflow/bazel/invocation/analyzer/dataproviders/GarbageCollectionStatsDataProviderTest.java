@@ -22,9 +22,11 @@ import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
+import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
@@ -93,5 +95,12 @@ public class GarbageCollectionStatsDataProviderTest extends DataProviderUnitTest
     GarbageCollectionStats gcStats = provider.getGarbageCollectionStats();
     assertThat(gcStats.hasMajorGarbageCollection()).isFalse();
     assertThat(gcStats.getMajorGarbageCollectionDuration()).isEqualTo(Duration.ZERO);
+  }
+
+  @Test
+  public void shouldThrowWhenNoMajorGarbageCollectorThreadIsPresent() throws Exception {
+    useProfile(metaData(), trace(mainThread()));
+
+    assertThrows(InvalidProfileException.class, () -> provider.getGarbageCollectionStats());
   }
 }

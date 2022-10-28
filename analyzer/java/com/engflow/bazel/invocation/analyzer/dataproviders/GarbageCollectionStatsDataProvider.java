@@ -18,6 +18,7 @@ import static com.engflow.bazel.invocation.analyzer.core.DatumSupplier.memoized;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.ProfileThread;
 import com.engflow.bazel.invocation.analyzer.core.DataProvider;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
@@ -25,6 +26,7 @@ import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 /** A {@link DataProvider} that supplies data on Bazel's garbage collection. */
 public class GarbageCollectionStatsDataProvider extends DataProvider {
@@ -38,25 +40,18 @@ public class GarbageCollectionStatsDataProvider extends DataProvider {
   public GarbageCollectionStats getGarbageCollectionStats()
       throws InvalidProfileException, MissingInputException, NullDatumException {
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
-    try {
-      Duration majorGarbageCollection =
-          bazelProfile
-              .getThreads()
-              .filter(t -> BazelProfileConstants.THREAD_GARBAGE_COLLECTOR.equals(t.getName()))
-              .flatMap(profileThread -> profileThread.getCompleteEvents().stream())
-              .filter(
-                  event ->
-                      BazelProfileConstants.COMPLETE_MAJOR_GARBAGE_COLLECTION.equals(event.name)
-                          && BazelProfileConstants.CAT_GARBAGE_COLLECTION.equals(event.category))
-              .map(event -> event.duration)
-              .reduce(Duration.ZERO, Duration::plus);
-      return new GarbageCollectionStats(majorGarbageCollection);
-    } catch (Exception e) {
-      throw new InvalidProfileException(
-          String.format(
-              "Unable to find thread named \"%s\".",
-              BazelProfileConstants.THREAD_GARBAGE_COLLECTOR),
-          e);
+    Optional<ProfileThread> garbageCollectorThread = bazelProfile.getGarbageCollectorThread();
+    if (garbageCollectorThread.isEmpty()) {
+      throw new InvalidProfileException("Unable to find garbage collector thread.");
     }
+    Duration majorGarbageCollection =
+        garbageCollectorThread.get().getCompleteEvents().stream()
+            .filter(
+                event ->
+                    BazelProfileConstants.COMPLETE_MAJOR_GARBAGE_COLLECTION.equals(event.name)
+                        && BazelProfileConstants.CAT_GARBAGE_COLLECTION.equals(event.category))
+            .map(event -> event.duration)
+            .reduce(Duration.ZERO, Duration::plus);
+    return new GarbageCollectionStats(majorGarbageCollection);
   }
 }
