@@ -19,7 +19,8 @@ import com.google.common.annotations.VisibleForTesting;
 /** Constants that are specific to Bazel profiles. */
 public class BazelProfileConstants {
   // Thread names: event.name == METADATA_THREAD_NAME && event.args.name == constant below
-  public static final String THREAD_CRITICAL_PATH = "Critical Path";
+  // These constants should not be used outside this package.
+  @VisibleForTesting public static final String THREAD_CRITICAL_PATH = "Critical Path";
   @VisibleForTesting public static final String THREAD_GARBAGE_COLLECTOR = "Garbage Collector";
   // See https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c
   static final String THREAD_GARBAGE_COLLECTOR_OLD = "Service Thread";
