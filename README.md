@@ -1,6 +1,14 @@
 # Bazel Invocation Analyzer
 
 The Bazel Invocation Analyzer is a library and terminal tool developed by EngFlow. It analyzes an invocation's Bazel profile and provides suggestions on how to speed up that invocation.
+
+## Contact
+
+You can get in touch with us
+
+- by sending an email to <bazel-invocation-analyzer-dev@engflow.com>
+- by [creating an issue on GitHub](https://github.com/EngFlow/bazel_invocation_analyzer/issues)
+
 ## Dependencies
 
 [Bazel](https://bazel.build/) version 4.0+
@@ -17,7 +25,11 @@ Pass in the path of a Bazel profile on your filesystem as the first argument. Us
 bazel run //cli -- /path/to/bazel_profile.json.gz
 ```
 
+## Contributing
+
+We welcome contributions from the community. Read our [guide to contributing](https://github.com/EngFlow/bazel_invocation_analyzer/blob/main/CONTRIBUTING.md) for details.
+
 ## References
 
-- [Generating a Bazel profile](https://bazel.build/rules/performance#performance-profiling)
-- [Interpreting a Bazel profile](https://bazel.build/rules/performance#profile-information)
+- [Generating a Bazel profile](https://docs.engflow.com/docs/re/faq.html)
+- [Interpreting a Bazel profile](https://bazel.build/rules/performance#performance-profiling)
