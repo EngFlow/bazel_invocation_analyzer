@@ -166,7 +166,7 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
                     + "An optimal speedup is expected by increasing the value to %d or"
                     + " more.\n"
                     + "Also see"
-                    + " https://bazel.build/reference/command-line-reference.html"
+                    + " https://bazel.build/reference/command-line-reference"
                     + "#flag--jobs",
                 optimalCores);
         String rationaleEstimatedCoresUsed =

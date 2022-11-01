@@ -83,7 +83,7 @@ public class JobsSuggestionProvider extends SuggestionProviderBase {
             "For local builds, setting the Bazel flag --jobs to a number is not"
                 + " recommended. Instead, omit this flag or set the value to \"auto\".\n"
                 + "Also see"
-                + " https://bazel.build/reference/command-line-reference.html"
+                + " https://bazel.build/reference/command-line-reference"
                 + "#flag--jobs";
         String rationaleGeneralInfo =
             "The value of --jobs determines how many concurrent jobs Bazel should run in"
