@@ -39,11 +39,22 @@ import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatCo
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.Test;
 
 public class BazelProfileTest extends UnitTestBase {
+  @Test
+  public void shouldRejectWhenInvalidJson() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            BazelProfile.createFromInputStream(
+                new ByteArrayInputStream("abc".getBytes(StandardCharsets.UTF_8))));
+  }
+
   @Test
   public void shouldRejectWhenOtherDataIsMissing() {
     IllegalArgumentException exception =
@@ -60,6 +71,28 @@ public class BazelProfileTest extends UnitTestBase {
             IllegalArgumentException.class,
             () -> BazelProfile.createFromInputStream(WriteBazelProfile.toInputStream(trace())));
     assertThat(exception.getMessage()).contains(TraceEventFormatConstants.SECTION_TRACE_EVENTS);
+  }
+
+  @Test
+  public void shouldRejectWhenOtherDataIsNotAJsonObject() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            BazelProfile.createFromInputStream(
+                new ByteArrayInputStream(
+                    "{\"otherData\":\"invalid\",\"traceEvents\":[]}"
+                        .getBytes(StandardCharsets.UTF_8))));
+  }
+
+  @Test
+  public void shouldRejectWhenTraceEventsIsNotAJsonObject() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            BazelProfile.createFromInputStream(
+                new ByteArrayInputStream(
+                    "{\"otherData\":{},\"traceEvents\":\"invalid\"}"
+                        .getBytes(StandardCharsets.UTF_8))));
   }
 
   @Test
