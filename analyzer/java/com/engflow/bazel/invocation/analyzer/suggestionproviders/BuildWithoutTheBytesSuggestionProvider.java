@@ -44,7 +44,7 @@ public class BuildWithoutTheBytesSuggestionProvider extends SuggestionProviderBa
         String recommendation =
             "Consider setting the Bazel flag --remote_download_minimal to minimize the data"
                 + " downloaded while using remote execution.\nAlso see"
-                + " https://docs.bazel.build/versions/main/command-line-reference.html"
+                + " https://bazel.build/reference/command-line-reference.html"
                 + "#flag--remote_download_minimal";
         String rationale = "This profile includes events that indicate remote execution was used.";
         // TODO: Can we deduce from the profile whether this flag was already set?
