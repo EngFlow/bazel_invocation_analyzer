@@ -89,6 +89,6 @@ You need to have:
 [5]: /blob/main/analyzer/java/com/engflow/bazel/invocation/analyzer/suggestionproviders/SuggestionProviderBase.java
 [6]: /blob/main/proto/bazel_invocation_analyzer.proto
 [7]: https://github.com/bazelbuild/bazelisk
-[8]: https://gitready.com/advanced/2009/02/10/squashing-commits-with-rebase.html
+[8]: https://gitready.com/advanced/2009/02/10/squashing-commits-with-rebase
 [9]: https://git-scm.com/docs/git-push#Documentation/git-push.txt--f
 [10]: https://docs.github.com/en/pull-requests/committing-changes-to-your-project/creating-and-editing-commits/creating-a-commit-with-multiple-authors
