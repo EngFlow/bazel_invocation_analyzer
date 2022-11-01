@@ -76,8 +76,12 @@ public class BazelProfile implements Datum {
 
   public static BazelProfile createFromInputStream(InputStream inputStream)
       throws IllegalArgumentException {
-    JsonObject bazelProfile =
-        JsonParser.parseReader(new InputStreamReader(inputStream)).getAsJsonObject();
+    JsonObject bazelProfile;
+    try {
+      bazelProfile = JsonParser.parseReader(new InputStreamReader(inputStream)).getAsJsonObject();
+    } catch (IllegalStateException e) {
+      throw new IllegalArgumentException("Could not parse Bazel profile.", e);
+    }
     return new BazelProfile(bazelProfile);
   }
 
@@ -93,40 +97,45 @@ public class BazelProfile implements Datum {
               TraceEventFormatConstants.SECTION_OTHER_DATA,
               TraceEventFormatConstants.SECTION_TRACE_EVENTS));
     }
-    profile
-        .get(TraceEventFormatConstants.SECTION_OTHER_DATA)
-        .getAsJsonObject()
-        .entrySet()
-        .forEach(entry -> otherData.put(entry.getKey(), entry.getValue().getAsString()));
+    try {
+      profile
+          .get(TraceEventFormatConstants.SECTION_OTHER_DATA)
+          .getAsJsonObject()
+          .entrySet()
+          .forEach(entry -> otherData.put(entry.getKey(), entry.getValue().getAsString()));
 
-    profile
-        .get(TraceEventFormatConstants.SECTION_TRACE_EVENTS)
-        .getAsJsonArray()
-        .forEach(
-            element -> {
-              JsonObject object = element.getAsJsonObject();
-              int pid;
-              int tid;
-              try {
-                pid = object.get(TraceEventFormatConstants.EVENT_PROCESS_ID).getAsInt();
-                tid = object.get(TraceEventFormatConstants.EVENT_THREAD_ID).getAsInt();
-              } catch (Exception e) {
-                // Skip events that do not have a valid pid or tid.
-                return;
-              }
-              ThreadId threadId = new ThreadId(pid, tid);
-              ProfileThread profileThread =
-                  threads.compute(
-                      threadId,
-                      (key, t) -> {
-                        if (t == null) {
-                          t = new ProfileThread(threadId);
-                        }
-                        return t;
-                      });
-              // TODO: Use success response to take action on errant events.
-              profileThread.addEvent(object);
-            });
+      profile
+          .get(TraceEventFormatConstants.SECTION_TRACE_EVENTS)
+          .getAsJsonArray()
+          .forEach(
+              element -> {
+                JsonObject object = element.getAsJsonObject();
+                int pid;
+                int tid;
+                try {
+                  pid = object.get(TraceEventFormatConstants.EVENT_PROCESS_ID).getAsInt();
+                  tid = object.get(TraceEventFormatConstants.EVENT_THREAD_ID).getAsInt();
+                } catch (Exception e) {
+                  // Skip events that do not have a valid pid or tid.
+                  return;
+                }
+                ThreadId threadId = new ThreadId(pid, tid);
+                ProfileThread profileThread =
+                    threads.compute(
+                        threadId,
+                        (key, t) -> {
+                          if (t == null) {
+                            t = new ProfileThread(threadId);
+                          }
+                          return t;
+                        });
+                // TODO: Use success response to take action on errant events.
+                profileThread.addEvent(object);
+              });
+    } catch (IllegalStateException e) {
+      throw new IllegalArgumentException("Could not parse Bazel profile.", e);
+    }
+
     if (!containsMainThread()) {
       throw new IllegalArgumentException(
           String.format(
