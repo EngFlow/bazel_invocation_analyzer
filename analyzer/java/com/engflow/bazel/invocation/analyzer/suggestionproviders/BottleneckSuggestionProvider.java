@@ -190,7 +190,9 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
 
     Duration maxQueuingDuration = bottleneck.bottleneck.getMaxQueuingDuration();
     double percentage =
-        DurationUtil.getPercentageOf(maxQueuingDuration, bottleneck.bottleneck.getDuration());
+        bottleneck.bottleneck.getDuration().isZero()
+            ? 0
+            : DurationUtil.getPercentageOf(maxQueuingDuration, bottleneck.bottleneck.getDuration());
     String bottleneckQueuingData =
         String.format(
             Locale.US,
@@ -270,7 +272,7 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
 
   public static BottleneckSuggestionProvider createVerbose() {
     return new BottleneckSuggestionProvider(
-        Integer.MAX_VALUE, Integer.MAX_VALUE, Duration.ZERO, 0, .0);
+        Integer.MAX_VALUE, Integer.MAX_VALUE, Duration.ZERO, .01, 1);
   }
 
   private static class BottleneckStats {
@@ -295,7 +297,9 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
       final var optimalWallDuration =
           totalDuration.minus(bottleneck.getDuration()).plus(optimalBottleneckDuration);
       final var improvement =
-          100 - DurationUtil.getPercentageOf(optimalWallDuration, totalDuration);
+          totalDuration.isZero()
+              ? 0
+              : 100 - DurationUtil.getPercentageOf(optimalWallDuration, totalDuration);
       return new BottleneckStats(bottleneck, optimalWallDuration, improvement);
     }
   }
