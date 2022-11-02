@@ -144,8 +144,11 @@ public class BazelProfile implements Datum {
     }
   }
 
-  /* This method is final, as it is called from the constructor and must not be overridden. */
-  private final boolean containsMainThread() {
+  /**
+   * This method is called from the constructor. Either it needs to stay private or it must be
+   * declared final, so that it cannot be overridden.
+   */
+  private boolean containsMainThread() {
     return threads.values().stream().anyMatch(BazelProfile::isMainThread);
   }
 
