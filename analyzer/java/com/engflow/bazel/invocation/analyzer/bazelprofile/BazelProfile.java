@@ -38,14 +38,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipException;
 
 public class BazelProfile implements Datum {
   // Best effort to get somewhat good alignment when outputting a list of thread names.
-  private static final int THREAD_NAME_MIN_OUTPUT_LENGTH =
-      "\"skyframe-evaluator-cpu-heavy-12345\"".length();
+  private static final int THREAD_NAME_MIN_OUTPUT_LENGTH = "\"Garbage Collector\"".length() + 1;
 
   public static BazelProfile createFromPath(String path) throws IllegalArgumentException {
     File bazelProfileFile = new File(path);
@@ -190,6 +190,16 @@ public class BazelProfile implements Datum {
         || name.equals(BazelProfileConstants.THREAD_GARBAGE_COLLECTOR_OLD);
   }
 
+  /**
+   * Returns whether the passed-in thread looks like the critical path thread.
+   *
+   * @param thread the thread to check
+   * @return whether the thread looks like it is the critical path thread
+   */
+  private static boolean isCriticalPathThread(ProfileThread thread) {
+    return BazelProfileConstants.THREAD_CRITICAL_PATH.equals(thread.getName());
+  }
+
   public ImmutableMap<String, String> getOtherData() {
     return ImmutableMap.copyOf(otherData);
   }
@@ -199,9 +209,7 @@ public class BazelProfile implements Datum {
   }
 
   public Optional<ProfileThread> getCriticalPath() {
-    return threads.values().stream()
-        .filter(t -> BazelProfileConstants.THREAD_CRITICAL_PATH.equals(t.getName()))
-        .findAny();
+    return threads.values().stream().filter(BazelProfile::isCriticalPathThread).findAny();
   }
 
   public ProfileThread getMainThread() {
@@ -259,46 +267,95 @@ public class BazelProfile implements Datum {
     return "The profile written by Bazel.";
   }
 
+  private void appendThreadSummary(StringBuilder sb, ProfileThread profileThread) {
+    appendThreadSummary(
+        sb,
+        String.format("\"%s\"", profileThread.getName()),
+        profileThread.getCompleteEvents().size(),
+        profileThread.getCounts().size(),
+        profileThread.getInstants().size(),
+        profileThread.getExtraEvents().size());
+  }
+
+  private void appendThreadSummary(
+      StringBuilder sb,
+      String threadName,
+      long completeEvents,
+      long counts,
+      long instants,
+      long extraEvents) {
+    sb.append(Strings.padEnd(threadName, THREAD_NAME_MIN_OUTPUT_LENGTH, ' '));
+    if (completeEvents > 0) {
+      sb.append("\tCompleteEvents: ");
+      sb.append(completeEvents);
+    }
+    if (counts > 0) {
+      sb.append("\tCounts: ");
+      sb.append(counts);
+    }
+    if (instants > 0) {
+      sb.append("\tInstants: ");
+      sb.append(instants);
+    }
+    if (extraEvents > 0) {
+      sb.append("\tExtra: ");
+      sb.append(extraEvents);
+    }
+    sb.append("\n");
+  }
+
   @Override
   public String getSummary() {
     StringBuilder sb = new StringBuilder();
     sb.append("Threads:\n");
+    appendThreadSummary(sb, getMainThread());
+    Optional<ProfileThread> optionalCriticalPath = getCriticalPath();
+    if (optionalCriticalPath.isPresent()) {
+      appendThreadSummary(sb, optionalCriticalPath.get());
+    }
+    Optional<ProfileThread> optionalGarbageCollector = getGarbageCollectorThread();
+    if (optionalGarbageCollector.isPresent()) {
+      appendThreadSummary(sb, optionalGarbageCollector.get());
+    }
+    AtomicLong completeEvents = new AtomicLong();
+    AtomicLong counts = new AtomicLong();
+    AtomicLong instants = new AtomicLong();
+    AtomicLong extraEvents = new AtomicLong();
     getThreads()
-        .map(
+        .filter(
+            thread ->
+                !isGarbageCollectorThread(thread)
+                    && !isMainThread(thread)
+                    && !isCriticalPathThread(thread))
+        .forEach(
             (thread) -> {
-              StringBuilder threadSb = new StringBuilder();
-              threadSb.append(
-                  Strings.padEnd(
-                      String.format("\"%s\"", thread.getName()),
-                      THREAD_NAME_MIN_OUTPUT_LENGTH,
-                      ' '));
               if (!thread.getCompleteEvents().isEmpty()) {
-                threadSb.append("\tCompleteEvents: ");
-                threadSb.append(thread.getCompleteEvents().size());
+                completeEvents.getAndAdd(thread.getCompleteEvents().size());
               }
               if (!thread.getCounts().isEmpty()) {
-                threadSb.append("\tCounts: ");
-                threadSb.append(thread.getCounts().size());
+                counts.getAndAdd(thread.getCounts().size());
               }
               if (!thread.getInstants().isEmpty()) {
-                threadSb.append("\tInstants: ");
-                threadSb.append(thread.getInstants().size());
+                instants.getAndAdd(thread.getInstants().size());
               }
               if (!thread.getExtraEvents().isEmpty()) {
-                threadSb.append("\tExtra: ");
-                threadSb.append(thread.getExtraEvents().size());
+                extraEvents.getAndAdd(thread.getExtraEvents().size());
               }
-              threadSb.append("\n");
-              return threadSb.toString();
-            })
-        .sorted()
-        .forEach(s -> sb.append(s));
+            });
+    appendThreadSummary(
+        sb,
+        "Other (aggregated)",
+        completeEvents.get(),
+        counts.get(),
+        instants.get(),
+        extraEvents.get());
     sb.append("\n");
-    Optional<ProfileThread> criticalPath = getCriticalPath();
-    if (criticalPath.isPresent() && !criticalPath.get().getCompleteEvents().isEmpty()) {
+
+    if (optionalCriticalPath.isPresent()
+        && !optionalCriticalPath.get().getCompleteEvents().isEmpty()) {
       String durationHeading = "Duration";
       Integer maxFormattedDurationLength =
-          criticalPath.get().getCompleteEvents().stream()
+          optionalCriticalPath.get().getCompleteEvents().stream()
               .map(event -> DurationUtil.formatDuration(event.duration).length())
               .max(Integer::compareTo)
               .orElse(0)
@@ -308,7 +365,7 @@ public class BazelProfile implements Datum {
       sb.append("Critical Path:\n");
       sb.append(String.format(format, durationHeading, "Description"));
       String entryFormat = "\n" + format;
-      criticalPath.get().getCompleteEvents().stream()
+      optionalCriticalPath.get().getCompleteEvents().stream()
           .forEach(
               event -> {
                 sb.append(
