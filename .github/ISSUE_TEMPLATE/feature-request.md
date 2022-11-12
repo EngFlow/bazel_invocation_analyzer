@@ -29,7 +29,7 @@ If proposing different solutions, present each one separately.
 Supplemental data helps evaluate and implement feature requests more quickly and reliably.
 
 Provide as many details as you feel comfortable sharing publicly.
-Alternatively, email data to <bazel-invocation-analyzer-dev@engflow.com> while referencing the
+Alternatively, email data to <analyzer@engflow.com> while referencing the
 created issue, or opt to send the feature request entirely by email.
 
 For example, you may want to include example files, reference other issues, etc.

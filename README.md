@@ -6,7 +6,7 @@ The Bazel Invocation Analyzer is a library and terminal tool developed by EngFlo
 
 You can get in touch with us
 
-- by sending an email to <bazel-invocation-analyzer-dev@engflow.com>
+- by sending an email to <analyzer@engflow.com>
 - by [creating an issue on GitHub](https://github.com/EngFlow/bazel_invocation_analyzer/issues)
 
 ## Dependencies

@@ -2,7 +2,7 @@ We welcome contributions from the community.
 
 # Communication
 - Before starting to work on a new feature, reach out to us via GitHub or email
-    <bazel-invocation-analyzer-dev@engflow.com>.
+    <analyzer@engflow.com>.
 - If no [issue](/bazel_invocation_analyzer/issues) exists for a new feature yet, crease an issue.
   Assign yourself to signal that you are actively working on the feature.
 - Small patches and bug fixes do not require prior communication.
