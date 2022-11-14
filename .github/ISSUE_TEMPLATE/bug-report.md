@@ -31,7 +31,7 @@ A clear and concise description of what the behavior should be.
 Supplemental data helps debug issues more quickly and reliably.
 
 Provide as many details as you feel comfortable sharing publicly.
-Alternatively, email data to <bazel-invocation-analyzer-dev@engflow.com> while referencing the
+Alternatively, email data to <analyzer@engflow.com> while referencing the
 created issue, or opt to send the bug report entirely by email.
 
 ### Environment

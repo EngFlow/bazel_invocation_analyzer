@@ -63,7 +63,7 @@ public class ConsoleOutput {
   private static final String TAB = "\t";
   private static final String FEEDBACK_OPEN_NEW_ISSUE =
       "https://github.com/EngFlow/bazel_invocation_analyzer/issues";
-  private static final String FEEDBACK_EMAIL_ADDRESS = "bazel-invocation-analyzer-dev@engflow.com";
+  private static final String FEEDBACK_EMAIL_ADDRESS = "analyzer@engflow.com";
 
   private final boolean disableFormatting;
   private final boolean verbose;
