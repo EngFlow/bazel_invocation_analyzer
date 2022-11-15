@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 721 271"><path fill="#bebebe" stroke="#000" d="M0 0h120v60H0z"/><path fill="#dfdfdf" stroke="#000" d="M10 10h120v60H10z"/><path fill="#fff" stroke="#000" d="M20 20h120v60H20z"/><path fill="#bebebe" stroke="#000" d="M200 0h120v60H200z"/><path fill="#dfdfdf" stroke="#000" d="M210 10h120v60H210z"/><path fill="#fff" stroke="#000" d="M220 20h120v60H220z"/><path fill="#bebebe" stroke="#000" d="M380 0h120v60H380z"/><path fill="#dfdfdf" stroke="#000" d="M390 10h120v60H390z"/><path fill="#fff" stroke="#000" d="M400 20h120v60H400z"/><path fill="#bebebe" stroke="#000" d="M580 0h120v60H580z"/><path fill="#dfdfdf" stroke="#000" d="M590 10h120v60H590z"/><path fill="#fff" stroke="#000" d="M600 20h120v60H600z"/><path d="M150 42h20V30l20 20-20 20V58h-20v-8zm138.8 68.04v19.92H300L280 150l-20-20.04h11.2v-19.92H260L280 90l20 20.04z" fill="none" stroke="#53dceb" stroke-width="3" stroke-miterlimit="10"/><path fill="#fff" stroke="#000" d="M250 160h250v110H250z"/><path fill="#9e9e9e" stroke="#000" d="M260 200h80v30h-80z"/><path fill="#bebebe" stroke="#000" d="M270 210h80v30h-80z"/><path fill="#dfdfdf" stroke="#000" d="M280 220h80v30h-80z"/><path fill="#9e9e9e" stroke="#000" d="M385 200h80v30h-80z"/><path fill="#bebebe" stroke="#000" d="M395 210h80v30h-80z"/><path fill="#dfdfdf" stroke="#000" d="M405 220h80v30h-80z"/><path d="M452 150v-35h-12l20-20 20 20h-12v35h-8zm78-108h20V30l20 20-20 20V58h-20v-8z" fill="none" stroke="#53dceb" stroke-width="3" stroke-miterlimit="10"/><text y="46.460846" x="80.233955" style="line-height:1.25;-inkscape-font-specification:Poppins;text-align:center" xml:space="preserve" font-weight="400" font-size="13.3333" font-family="Poppins" word-spacing="0" text-anchor="middle">
+<tspan y="46.460846" x="80.233955">external
+</tspan>
+<tspan y="63.127472" x="80.233955">inputs
+</tspan>
+</text><text y="46.460846" x="279.67365" style="line-height:1.25;-inkscape-font-specification:Poppins;text-align:center" xml:space="preserve" font-weight="400" font-size="13.3333" font-family="Poppins" word-spacing="0" text-anchor="middle">
+<tspan y="46.460846" x="279.67365">Data
+</tspan>
+<tspan y="63.565796" x="279.67365">Provider
+</tspan>
+</text><text x="460.10416" y="46.460846" style="line-height:1.25;-inkscape-font-specification:Poppins;text-align:center" xml:space="preserve" font-weight="400" font-size="13.3333" font-family="Poppins" word-spacing="0" text-anchor="middle">
+<tspan x="460.10416" y="46.460846">Suggestion
+</tspan>
+<tspan x="460.10416" y="63.565796">Provider
+</tspan>
+</text><text x="660.10419" y="53.273327" style="line-height:1.25;-inkscape-font-specification:Poppins;text-align:center" xml:space="preserve" font-weight="400" font-size="13.3333" font-family="Poppins" word-spacing="0" text-anchor="middle">
+<tspan x="660.10419" y="53.273327">Suggestion
+</tspan>
+</text><text x="444.96198" y="239.58665" style="line-height:1.25;-inkscape-font-specification:Poppins;text-align:center" xml:space="preserve" font-weight="400" font-size="13.3333" font-family="Poppins" word-spacing="0" text-anchor="middle">
+<tspan x="444.96198" y="239.58665">Datum
+</tspan>
+</text><text x="374.67365" y="183.7933" style="line-height:1.25;-inkscape-font-specification:Poppins;text-align:center" xml:space="preserve" font-weight="400" font-size="13.3333" font-family="Poppins" word-spacing="0" text-anchor="middle">
+<tspan x="374.67365" y="183.7933">Data Manager
+</tspan>
+</text><text y="239.58665" x="319.96198" style="line-height:1.25;-inkscape-font-specification:Poppins;text-align:center" xml:space="preserve" font-weight="400" font-size="13.3333" font-family="Poppins" word-spacing="0" text-anchor="middle">
+<tspan y="239.58665" x="319.96198">Datum
+</tspan>
+</text></svg>
