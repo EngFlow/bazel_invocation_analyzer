@@ -9,6 +9,10 @@ You can get in touch with us
 - by sending an email to <analyzer@engflow.com>
 - by [creating an issue on GitHub](https://github.com/EngFlow/bazel_invocation_analyzer/issues)
 
+## Documentation
+
+You can also view this tool's documentation on <https://docs.engflow.com/docs/bia.html>.
+
 ## Dependencies
 
 [Bazel](https://bazel.build/) version 4.0+
@@ -24,6 +28,13 @@ Pass in the path of a Bazel profile on your filesystem as the first argument. Us
 ```bash
 bazel run //cli -- /path/to/bazel_profile.json.gz
 ```
+
+## Integrations
+The Bazel Invocation Analyzer can be integrated into other environments.
+
+### Public Web UIs
+
+On <https://analyzer.engflow.com> you can upload a Bazel profile to receive a rendered version of the library's output.
 
 ## Contributing
 
