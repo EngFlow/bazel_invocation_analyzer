@@ -176,7 +176,15 @@ public static List<SuggestionProvider> getAllSuggestionProviders(boolean verbose
 }
 ```
 
+## Result
+
 We now have a working [Suggestion Provider](./library-architecture.md#suggestion-provider) utilizing the data from our [Data Provider](./library-architecture.md#data-provider)!
+
+Running the profile analyzer on a Bazel profile with major garbage collection events will produce output similar to:
+
+![Output of the new Suggestion Provider](https://github.com/EngFlow/bazel_invocation_analyzer/blob/main/docs/assets/gc-suggestion-output.png?raw=true)
+
+Output of the new Suggestion Provider
 
 ## Questions
 
