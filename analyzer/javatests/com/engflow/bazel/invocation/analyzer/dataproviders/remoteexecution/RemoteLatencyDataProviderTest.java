@@ -41,7 +41,8 @@ public class RemoteLatencyDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void shouldReturnRemoteLatencyWhenCacheCheck() throws Exception {
-    var checkRoundTripTimeMillis = 123456;
+    var expectedLatencyMillis = 123456;
+    var checkRoundTripTimeMillis = expectedLatencyMillis * 2;
     useProfile(
         metaData(),
         trace(
@@ -60,12 +61,13 @@ public class RemoteLatencyDataProviderTest extends DataProviderUnitTestBase {
     assertThat(latency.isEmpty()).isFalse();
     assertThat(latency.getRemoteLatency().isEmpty()).isFalse();
     assertThat(latency.getRemoteLatency().get())
-        .isEqualTo(Duration.ofMillis(checkRoundTripTimeMillis / 2));
+        .isEqualTo(Duration.ofMillis(expectedLatencyMillis));
   }
 
   @Test
   public void shouldReturnRemoteLatencyWhenRemoteExecution() throws Exception {
-    var executionRoundTripTimeMillis = 543210;
+    var expectedLatencyMillis = 543210;
+    var executionRoundTripTimeMillis = expectedLatencyMillis * 2;
     useProfile(
         metaData(),
         trace(
@@ -84,15 +86,26 @@ public class RemoteLatencyDataProviderTest extends DataProviderUnitTestBase {
     assertThat(latency.isEmpty()).isFalse();
     assertThat(latency.getRemoteLatency().isEmpty()).isFalse();
     assertThat(latency.getRemoteLatency().get())
-        .isEqualTo(Duration.ofMillis(executionRoundTripTimeMillis / 2));
+        .isEqualTo(Duration.ofMillis(expectedLatencyMillis));
   }
 
   @Test
   public void shouldReturnMinimum() throws Exception {
-    var checkRoundTripTimeMillis1 = 543210;
-    var checkRoundTripTimeMillis2 = 123450;
-    var executionRoundTripTimeMillis1 = 369120;
-    var executionRoundTripTimeMillis2 = 246810;
+    var latencyCheckMillis1 = 543210;
+    var latencyCheckMillis2 = 123450;
+    var latencyExecutionMillis1 = 369120;
+    var latencyExecutionMillis2 = 246810;
+
+    var checkRoundTripTimeMillis1 = latencyCheckMillis1 * 2;
+    var checkRoundTripTimeMillis2 = latencyCheckMillis2 * 2;
+    var executionRoundTripTimeMillis1 = latencyExecutionMillis1 * 2;
+    var executionRoundTripTimeMillis2 = latencyExecutionMillis2 * 2;
+
+    var expectedLatency =
+        Math.min(
+            latencyCheckMillis1,
+            Math.min(
+                latencyCheckMillis2, Math.min(latencyExecutionMillis1, latencyExecutionMillis2)));
     useProfile(
         metaData(),
         trace(
@@ -129,8 +142,7 @@ public class RemoteLatencyDataProviderTest extends DataProviderUnitTestBase {
     var latency = provider.getRemoteLatency();
     assertThat(latency.isEmpty()).isFalse();
     assertThat(latency.getRemoteLatency().isEmpty()).isFalse();
-    assertThat(latency.getRemoteLatency().get())
-        .isEqualTo(Duration.ofMillis(checkRoundTripTimeMillis2 / 2));
+    assertThat(latency.getRemoteLatency().get()).isEqualTo(Duration.ofMillis(expectedLatency));
   }
 
   @Test
