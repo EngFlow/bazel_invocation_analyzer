@@ -27,5 +27,7 @@ import org.junit.runners.Suite;
   EstimatedCoresDataProviderTest.class,
   GarbageCollectionStatsDataProviderTest.class,
   MergedEventsPresentDataProviderTest.class,
+  LocalActionsDataProviderTest.class,
+  RemoteCacheMetricsDataProviderTest.class
 })
 public class DataProvidersTestSuite {}

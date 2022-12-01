@@ -43,6 +43,7 @@ public class BazelProfileConstants {
   public static final String CAT_GENERAL_INFORMATION = "general information";
   public static final String CAT_REMOTE_ACTION_CACHE_CHECK = "remote action cache check";
   public static final String CAT_REMOTE_ACTION_EXECUTION = "remote action execution";
+  public static final String CAT_REMOTE_OUTPUT_DOWNLOAD = "remote output download";
   public static final String CAT_REMOTE_EXECUTION_PROCESS_WALL_TIME =
       "Remote execution process wall time";
   public static final String CAT_REMOTE_EXECUTION_QUEUING_TIME = "Remote execution queuing time";
