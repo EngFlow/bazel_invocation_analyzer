@@ -31,6 +31,10 @@ import java.util.Optional;
  * A {@link DataProvider} that supplies an upper bound for the latency between the Bazel client and
  * the remote execution/caching service. It does this estimation by taking half the minimum
  * round-trip-time across all "remote action cache check" and "remote action execution" actions.
+ *
+ * <p>Cache checks should always be faster than remote action execution, as the remote action will
+ * most likely have a significant amount of time in addition to latency. Checking remote action is a
+ * fall-back in cases with no cache checks.
  */
 public class RemoteLatencyDataProvider extends DataProvider {
 
