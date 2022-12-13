@@ -37,12 +37,16 @@ public class DataProviderUtil {
         new EstimatedCoresDataProvider(),
         new GarbageCollectionStatsDataProvider(),
         new MergedEventsPresentDataProvider(),
+        new LocalActionsDataProvider(),
 
         // RemoteExecution
         new CriticalPathQueuingDurationDataProvider(),
         new QueuingObservedDataProvider(),
         new RemoteCachingUsedDataProvider(),
         new RemoteExecutionUsedDataProvider(),
-        new TotalQueuingDurationDataProvider());
+        new TotalQueuingDurationDataProvider(),
+
+        // RemoteCache
+        new RemoteCacheMetricsDataProvider());
   }
 }

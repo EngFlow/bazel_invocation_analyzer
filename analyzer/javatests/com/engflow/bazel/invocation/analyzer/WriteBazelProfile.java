@@ -242,14 +242,30 @@ public class WriteBazelProfile {
    */
   @CheckReturnValue
   public static ThreadEvent complete(
-      String name, String category, Timestamp timestamp, Duration duration) {
+      String name,
+      String category,
+      Timestamp timestamp,
+      Duration duration,
+      Property... properties) {
     return writer ->
         writer.object(
             put(TraceEventFormatConstants.EVENT_NAME, name),
             put(TraceEventFormatConstants.EVENT_CATEGORY, category),
             put(TraceEventFormatConstants.EVENT_TIMESTAMP, timestamp.getMicros()),
             put(TraceEventFormatConstants.EVENT_DURATION, TimeUtil.getMicros(duration)),
-            put(TraceEventFormatConstants.EVENT_PHASE, TraceEventFormatConstants.PHASE_COMPLETE));
+            put(TraceEventFormatConstants.EVENT_PHASE, TraceEventFormatConstants.PHASE_COMPLETE),
+            put(TraceEventFormatConstants.EVENT_ARGUMENTS, properties)
+            );
+  }
+
+  /**
+   * A mnemonic to add to the args.
+   *
+   * @param name for the event
+   */
+  @CheckReturnValue
+  public static Property mnemonic(String name) {
+    return writer -> writer.put("mnemonic", name);
   }
 
   /**
@@ -311,6 +327,9 @@ public class WriteBazelProfile {
     /** writes a String key and object value containing the properties into a json object. */
     @CheckReturnValue
     static Property put(String name, Property... properties) {
+      if (properties.length == 0) {
+        return writer -> {};
+      }
       return writer -> writer.put(name, () -> writer.object(properties));
     }
   }
