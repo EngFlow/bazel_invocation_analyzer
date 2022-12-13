@@ -23,6 +23,7 @@ import org.junit.runners.Suite;
   QueuingObservedDataProviderTest.class,
   RemoteCachingUsedDataProviderTest.class,
   RemoteExecutionUsedDataProviderTest.class,
+  RemoteLatencyDataProviderTest.class,
   TotalQueuingDurationDataProviderTest.class,
 })
 public class RemoteExecutionDataProviderSuite {}

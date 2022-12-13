@@ -3,6 +3,7 @@ TYPES = [
     "QueuingObserved.java",
     "RemoteCachingUsed.java",
     "RemoteExecutionUsed.java",
+    "RemoteLatency.java",
     "TotalQueuingDuration.java",
 ]
 
