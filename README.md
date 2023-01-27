@@ -14,7 +14,7 @@ You can get in touch with us
 - [Bazel Invocation Analyzer Architecture](docs/library-architecture.md)
 - [Adding Suggestions to the Bazel Invocation Analyzer](docs/adding-suggestions.md) walk-through
 
-You can also view this tool's documentation on <https://docs.engflow.com/docs/bia.html>.
+You can also view this tool's documentation on <https://docs.engflow.com/bia/index.html>.
 
 ## Dependencies
 
