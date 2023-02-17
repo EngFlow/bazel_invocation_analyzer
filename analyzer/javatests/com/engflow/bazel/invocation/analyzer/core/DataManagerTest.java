@@ -22,9 +22,8 @@ import com.engflow.bazel.invocation.analyzer.core.TestDatum.DoubleDatum;
 import com.engflow.bazel.invocation.analyzer.core.TestDatum.IntegerDatum;
 import com.engflow.bazel.invocation.analyzer.core.TestDatum.StringDatum;
 import com.google.common.collect.ImmutableList;
-import java.util.HashMap;
+import com.google.common.collect.ImmutableMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import javax.annotation.Nullable;
 import org.junit.Test;
@@ -142,28 +141,17 @@ public class DataManagerTest {
     numericDataProvider.register(dataManager);
 
     var results = dataManager.getAllDataByProvider();
-
-    var expected =
-        new HashMap<Class<? extends DataProvider>, Map<Class<? extends Datum>, Datum>>() {
-          {
-            put(
-                NumericDataProvider.class,
-                new HashMap<>() {
-                  {
-                    put(IntegerDatum.class, numericDataProvider.returnedInt);
-                    put(DoubleDatum.class, numericDataProvider.returnedDouble);
-                  }
-                });
-            put(
-                CharDataProvider.class,
-                new HashMap<>() {
-                  {
-                    put(CharDatum.class, charDataProvider.returnedChar);
-                  }
-                });
-          }
-        };
-    assertThat(results).isEqualTo(expected);
+    assertThat(results)
+        .containsExactly(
+            NumericDataProvider.class,
+            ImmutableMap.<Class<? extends Datum>, Datum>builder()
+                .put(IntegerDatum.class, numericDataProvider.returnedInt)
+                .put(DoubleDatum.class, numericDataProvider.returnedDouble)
+                .build(),
+            CharDataProvider.class,
+            ImmutableMap.<Class<? extends Datum>, Datum>builder()
+                .put(CharDatum.class, charDataProvider.returnedChar)
+                .build());
   }
 
   @Test
@@ -181,31 +169,21 @@ public class DataManagerTest {
     dataManager.getDatum(IntegerDatum.class);
 
     results = dataManager.getUsedDataByProvider();
-    var expected =
-        new HashMap<Class<? extends DataProvider>, Map<Class<?>, Object>>() {
-          {
-            put(
-                NumericDataProvider.class,
-                new HashMap<>() {
-                  {
-                    put(IntegerDatum.class, numericDataProvider.returnedInt);
-                  }
-                });
-          }
-        };
-    assertThat(results).isEqualTo(expected);
+    assertThat(results)
+        .containsExactly(
+            NumericDataProvider.class,
+            ImmutableMap.of(IntegerDatum.class, numericDataProvider.returnedInt));
 
     dataManager.getDatum(CharDatum.class);
 
     results = dataManager.getUsedDataByProvider();
-    expected.put(
-        CharDataProvider.class,
-        new HashMap<>() {
-          {
-            put(CharDatum.class, charDataProvider.returnedChar);
-          }
-        });
-    assertThat(results).isEqualTo(expected);
+
+    assertThat(results)
+        .containsExactly(
+            NumericDataProvider.class,
+            ImmutableMap.of(IntegerDatum.class, numericDataProvider.returnedInt),
+            CharDataProvider.class,
+            ImmutableMap.of(CharDatum.class, charDataProvider.returnedChar));
   }
 
   private static class CharDataProvider extends DataProvider {
