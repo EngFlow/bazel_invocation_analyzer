@@ -69,6 +69,6 @@ public class RemoteCacheMetricsDataProviderTest {
     Truth.assertThat(provider.derive())
         .isEqualTo(
             new RemoteCacheMetrics(
-                Duration.ofSeconds(6), Duration.ofSeconds(4), Duration.ofSeconds(2), 50.0f));
+                Duration.ofSeconds(6), Duration.ofSeconds(4), Duration.ofSeconds(2), 25.0f));
   }
 }

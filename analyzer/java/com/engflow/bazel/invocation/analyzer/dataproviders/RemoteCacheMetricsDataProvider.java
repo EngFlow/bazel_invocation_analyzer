@@ -13,9 +13,7 @@ import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions.LocalAction;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
 import java.time.Duration;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,88 +33,69 @@ public class RemoteCacheMetricsDataProvider extends DataProvider {
         getDataManager().getDatum(LocalActions.class).parallelStream()
             .map(this::coalesce)
             .collect(Collectors.toList());
-
+    var summary = metrics.stream().reduce(RemoteCacheData.EMPTY, RemoteCacheData::plus);
     return new RemoteCacheMetrics(
-        metrics.parallelStream().map(d -> d.check).reduce(Duration::plus).orElse(Duration.ZERO),
-        metrics.parallelStream().map(d -> d.download).reduce(Duration::plus).orElse(Duration.ZERO),
-        metrics.parallelStream().map(d -> d.upload).reduce(Duration::plus).orElse(Duration.ZERO),
-        (metrics.parallelStream()
-                    .map(d -> d.check.isZero() || d.download.isZero() ? 0 : 1f)
-                    .reduce(0f, Float::sum)
-                / metrics.size())
-            * 100);
+        summary.check,
+        summary.download,
+        summary.upload,
+        ((float) summary.uncached / metrics.size()) * 100f);
   }
 
   RemoteCacheData coalesce(LocalAction action) {
-    return new RemoteCacheData(
-        action.action.name,
-        action.action.args.get("mnemonic"),
-        sumDuration(action.relatedEvents, CAT_REMOTE_ACTION_CACHE_CHECK),
-        sumDuration(action.relatedEvents, CAT_REMOTE_OUTPUT_DOWNLOAD),
-        sumDuration(action.relatedEvents, CAT_REMOTE_EXECUTION_UPLOAD_TIME));
+    return action.relatedEvents.stream()
+        .reduce(RemoteCacheData.EMPTY, RemoteCacheData::plus, RemoteCacheData::plus)
+        .calculateCacheState();
   }
 
-  private static Duration sumDuration(Collection<CompleteEvent> events, String category) {
-    return events.stream()
-        .filter(e -> category.equals(e.category))
-        .map(e -> e.duration)
-        .findFirst()
-        .orElse(Duration.ZERO);
-  }
+  private static class RemoteCacheData {
+    private static final RemoteCacheData EMPTY =
+        new RemoteCacheData(Duration.ZERO, Duration.ZERO, Duration.ZERO, 0) {
+          @Override
+          RemoteCacheData plus(RemoteCacheData that) {
+            return that;
+          }
+        };
 
-  static class RemoteCacheData {
-    public final String name;
-    public final String mnemonic;
     public final Duration check;
     public final Duration download;
     private final Duration upload;
+    private final int uncached;
 
-    RemoteCacheData(
-        String name, String mnemonic, Duration check, Duration download, Duration upload) {
-      this.name = name;
-      this.mnemonic = mnemonic;
+    RemoteCacheData(Duration check, Duration download, Duration upload, int uncached) {
       this.check = check;
       this.download = download;
       this.upload = upload;
+      this.uncached = uncached;
     }
 
-    @Override
-    public String toString() {
-      return "RemoteCacheData{"
-          + "name='"
-          + name
-          + '\''
-          + ", mnemonic='"
-          + mnemonic
-          + '\''
-          + ", check="
-          + check
-          + ", download="
-          + download
-          + ", upload="
-          + upload
-          + '}';
+    RemoteCacheData plus(RemoteCacheData other) {
+      return new RemoteCacheData(
+          check.plus(other.check),
+          download.plus(other.download),
+          upload.plus(other.upload),
+          uncached + other.uncached);
     }
 
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
+    RemoteCacheData calculateCacheState() {
+      // The action was checked against remote, and nothing was downloaded.
+      // This means it was not cached remotely.
+      if (!check.isZero() && download.isZero()) {
+        return new RemoteCacheData(check, download, upload, 1);
       }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      RemoteCacheData that = (RemoteCacheData) o;
-      return Objects.equal(name, that.name)
-          && Objects.equal(mnemonic, that.mnemonic)
-          && Objects.equal(check, that.check)
-          && Objects.equal(download, that.download)
-          && Objects.equal(upload, that.upload);
+      return this;
     }
 
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(name, mnemonic, check, download, upload);
+    RemoteCacheData plus(CompleteEvent event) {
+      if (CAT_REMOTE_ACTION_CACHE_CHECK.equals(event.category)) {
+        return new RemoteCacheData(check.plus(event.duration), download, upload, uncached);
+      }
+      if (CAT_REMOTE_OUTPUT_DOWNLOAD.equals(event.category)) {
+        return new RemoteCacheData(check, download.plus(event.duration), upload, uncached);
+      }
+      if (CAT_REMOTE_EXECUTION_UPLOAD_TIME.equals(event.category)) {
+        return new RemoteCacheData(check, download, upload.plus(event.duration), uncached);
+      }
+      return this;
     }
   }
 }
