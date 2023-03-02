@@ -21,12 +21,16 @@ import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatCo
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterators;
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -240,6 +244,14 @@ public class ProfileThread {
         && Objects.equal(completeEvents, that.completeEvents)
         && Objects.equal(counts, that.counts)
         && Objects.equal(instants, that.instants);
+  }
+
+  public static Iterator<CompleteEvent> ofCategoryTypes(
+          Iterable<CompleteEvent> events, String... categories) {
+    Predicate<String> predicate = Set.of(categories)::contains;
+    return Iterators.filter(
+            events.iterator(),
+            e -> predicate.test(e.category));
   }
 
   @Override

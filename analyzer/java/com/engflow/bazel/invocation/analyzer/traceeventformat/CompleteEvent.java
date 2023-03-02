@@ -99,4 +99,18 @@ public class CompleteEvent {
   public int hashCode() {
     return Objects.hashCode(name, category, start, duration, end, threadId, processId, args);
   }
+
+  @Override
+  public String toString() {
+    return "CompleteEvent{" +
+        "name='" + name + '\'' +
+        ", category='" + category + '\'' +
+        ", start=" + start +
+        ", duration=" + duration +
+        ", end=" + end +
+        ", threadId=" + threadId +
+        ", processId=" + processId +
+        ", args=" + args +
+        '}';
+  }
 }
