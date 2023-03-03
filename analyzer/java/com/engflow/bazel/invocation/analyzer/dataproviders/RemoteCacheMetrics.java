@@ -4,6 +4,10 @@ import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.google.common.base.Objects;
 import java.time.Duration;
 
+/**
+ * Metrics on remote caching, namely how much time was spent on cache checks, downloading outputs,
+ * uploading outputs, and what percentage of actions were cached remotely.
+ */
 public class RemoteCacheMetrics implements Datum {
 
   private final Duration totalCacheCheck;
@@ -34,7 +38,7 @@ public class RemoteCacheMetrics implements Datum {
 
   @Override
   public String getEmptyReason() {
-    return isEmpty() ? null : "No remote cache operations available.";
+    return isEmpty() ? "No remote cache operations available." : null;
   }
 
   @Override

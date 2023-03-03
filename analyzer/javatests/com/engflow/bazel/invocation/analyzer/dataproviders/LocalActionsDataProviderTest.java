@@ -58,6 +58,14 @@ public class LocalActionsDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
+  public void extractLocalActionsFromEmptyProfile()
+      throws InvalidProfileException, MissingInputException, DuplicateProviderException,
+          NullDatumException {
+    useProfile(metaData(), trace(mainThread()));
+    expect.about(localActions).that(provider.derive()).isEqualTo(LocalActions.create(List.of()));
+  }
+
+  @Test
   public void extractLocalActionsFromSingleThread()
       throws InvalidProfileException, MissingInputException, DuplicateProviderException,
           NullDatumException {
