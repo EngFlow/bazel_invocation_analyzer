@@ -21,10 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -69,7 +66,10 @@ public class LocalActionsDataProvider extends DataProvider {
             if (!range.contains(relatedEvents.peek().start, relatedEvents.peek().end)) {
               break;
             }
-            Preconditions.checkArgument(action.threadId == relatedEvents.peek().threadId, "Thread ids must match %s != %s", action.threadId == relatedEvents.peek().threadId);
+            Preconditions.checkArgument(
+                action.threadId == relatedEvents.peek().threadId,
+                "Thread ids must match %s != %s",
+                action.threadId == relatedEvents.peek().threadId);
             related.add(relatedEvents.next());
           }
           out.accept(new LocalAction(action, related));

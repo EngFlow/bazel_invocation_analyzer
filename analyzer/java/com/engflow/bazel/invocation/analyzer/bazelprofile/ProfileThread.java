@@ -247,11 +247,9 @@ public class ProfileThread {
   }
 
   public static Iterator<CompleteEvent> ofCategoryTypes(
-          Iterable<CompleteEvent> events, String... categories) {
+      Iterable<CompleteEvent> events, String... categories) {
     Predicate<String> predicate = Set.of(categories)::contains;
-    return Iterators.filter(
-            events.iterator(),
-            e -> predicate.test(e.category));
+    return Iterators.filter(events.iterator(), e -> predicate.test(e.category));
   }
 
   @Override

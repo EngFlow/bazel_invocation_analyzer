@@ -43,7 +43,8 @@ public class LocalActionsDataProviderTest extends DataProviderUnitTestBase {
     }
   }
 
-  private static final Factory<LocalActionsSubject, LocalActions> localActions = LocalActionsSubject::new;
+  private static final Factory<LocalActionsSubject, LocalActions> localActions =
+      LocalActionsSubject::new;
 
   @Rule public final Expect expect = Expect.create();
 

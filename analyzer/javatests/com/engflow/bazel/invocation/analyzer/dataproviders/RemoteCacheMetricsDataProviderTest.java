@@ -55,14 +55,14 @@ public class RemoteCacheMetricsDataProviderTest {
           NullDatumException {
     var thread = new EventThreadBuilder(1, 1);
     thread.action("Cached Work", "WorkC", 5);
-    thread.related( 2, CAT_REMOTE_ACTION_CACHE_CHECK);
+    thread.related(2, CAT_REMOTE_ACTION_CACHE_CHECK);
     thread.related(2, CAT_REMOTE_OUTPUT_DOWNLOAD);
     thread.action("More Cached Work", "WorkC", 5);
-    thread.related( 2, CAT_REMOTE_ACTION_CACHE_CHECK);
+    thread.related(2, CAT_REMOTE_ACTION_CACHE_CHECK);
     thread.related(2, CAT_REMOTE_OUTPUT_DOWNLOAD);
     thread.action("Cache Miss Work", "WorkC", 5);
     thread.related(2, CAT_REMOTE_ACTION_CACHE_CHECK);
-    thread.related( 2, CAT_REMOTE_EXECUTION_UPLOAD_TIME);
+    thread.related(2, CAT_REMOTE_EXECUTION_UPLOAD_TIME);
     thread.action("UnCached Work", "LocalWorkC", 5);
 
     var provider = useProfile(metaData(), trace(mainThread(), thread.asEvent()));
