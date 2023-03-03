@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/** A {@link DataProvider} that supplies data on remote caching. */
 public class RemoteCacheMetricsDataProvider extends DataProvider {
 
   @Override
