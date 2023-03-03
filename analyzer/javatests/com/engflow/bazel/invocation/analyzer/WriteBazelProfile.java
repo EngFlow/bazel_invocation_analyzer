@@ -254,8 +254,7 @@ public class WriteBazelProfile {
             put(TraceEventFormatConstants.EVENT_TIMESTAMP, timestamp.getMicros()),
             put(TraceEventFormatConstants.EVENT_DURATION, TimeUtil.getMicros(duration)),
             put(TraceEventFormatConstants.EVENT_PHASE, TraceEventFormatConstants.PHASE_COMPLETE),
-            put(TraceEventFormatConstants.EVENT_ARGUMENTS, properties)
-            );
+            put(TraceEventFormatConstants.EVENT_ARGUMENTS, properties));
   }
 
   /**

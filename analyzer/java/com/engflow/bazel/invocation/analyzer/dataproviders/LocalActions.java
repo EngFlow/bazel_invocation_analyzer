@@ -2,23 +2,17 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions.LocalAction;
-import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Comparators;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * Organizes events into {@link LocalAction} by category and time period
- */
+/** Organizes events into {@link LocalAction} by category and time period */
 public class LocalActions implements Datum, Iterable<LocalAction> {
 
   private final ImmutableList<LocalAction> actions;
@@ -71,7 +65,7 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
 
   @Override
   public String getEmptyReason() {
-    if(isEmpty()) {
+    if (isEmpty()) {
       return "No local actions executed";
     }
     return null;
@@ -100,9 +94,7 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
     return actions.parallelStream();
   }
 
-  /**
-   * An event and the events related by thread and time period.
-   */
+  /** An event and the events related by thread and time period. */
   public static class LocalAction implements Comparable<LocalAction> {
 
     public final CompleteEvent action;
@@ -140,8 +132,6 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
       return Objects.hashCode(action, relatedEvents);
     }
 
-
-
     @Override
     public int compareTo(LocalAction o) {
       int i;
@@ -159,7 +149,5 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
       if (i != 0) return i;
       return action.start.compareTo(o.action.start);
     }
-
-
   }
 }

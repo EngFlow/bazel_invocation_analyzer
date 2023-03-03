@@ -16,7 +16,8 @@ public class Range {
 
   public boolean contains(Timestamp... values) {
     for (Timestamp value : values) {
-      if (start.plus(Timestamp.ACCEPTABLE_DIVERGENCE.negated()).compareTo(value) > 0 || end.plus(Timestamp.ACCEPTABLE_DIVERGENCE).compareTo(value) < 0) {
+      if (start.plus(Timestamp.ACCEPTABLE_DIVERGENCE.negated()).compareTo(value) > 0
+          || end.plus(Timestamp.ACCEPTABLE_DIVERGENCE).compareTo(value) < 0) {
         return false;
       }
     }
