@@ -49,7 +49,9 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void shouldReturnEmptyOnEmptyProfile()
-      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
           NullDatumException {
     useEstimatedCoresUsed(4);
     useProfile(metaData(), trace(mainThread()));
@@ -59,7 +61,9 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void shouldReturnEmptyOnEmptyEstimatedCoresUsed()
-      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
           NullDatumException {
     useEstimatedCoresUsed(null);
     useProfile(
@@ -78,7 +82,9 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void shouldCaptureBottleneckRunningSingleAction()
-      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
           NullDatumException {
     useEstimatedCoresUsed(4);
     useProfile(
@@ -131,7 +137,9 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void shouldNotCaptureBottleneckWhenRunningMaxActionCount()
-      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
           NullDatumException {
     useEstimatedCoresUsed(4);
     useProfile(

@@ -85,7 +85,9 @@ public abstract class ProfileTestBase {
    * @param bazelProfile BazelProfile to register
    */
   protected abstract void registerBazelProfile(BazelProfile bazelProfile)
-      throws InvalidProfileException, MissingInputException, DuplicateProviderException,
+      throws InvalidProfileException,
+          MissingInputException,
+          DuplicateProviderException,
           NullDatumException;
 
   /**
@@ -108,7 +110,9 @@ public abstract class ProfileTestBase {
    * @return the {@link BazelProfile} created
    */
   protected BazelProfile useProfile(WriteBazelProfile.ProfileSection... profileSections)
-      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
           NullDatumException {
     var profile =
         BazelProfile.createFromInputStream(WriteBazelProfile.toInputStream(profileSections));

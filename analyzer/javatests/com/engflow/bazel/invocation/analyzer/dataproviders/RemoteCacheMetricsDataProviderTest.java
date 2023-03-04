@@ -44,7 +44,9 @@ public class RemoteCacheMetricsDataProviderTest extends DataProviderUnitTestBase
 
   @Test
   public void summarizeCacheData()
-      throws InvalidProfileException, MissingInputException, DuplicateProviderException,
+      throws InvalidProfileException,
+          MissingInputException,
+          DuplicateProviderException,
           NullDatumException {
     useProfile(metaData(), trace(mainThread()));
 
