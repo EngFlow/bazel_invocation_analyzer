@@ -102,25 +102,12 @@ public class CompleteEvent {
 
   @Override
   public String toString() {
-    return "CompleteEvent{"
-        + "name='"
-        + name
-        + '\''
-        + ", category='"
-        + category
-        + '\''
-        + ", start="
-        + start
-        + ", duration="
-        + duration
-        + ", end="
-        + end
-        + ", threadId="
-        + threadId
-        + ", processId="
-        + processId
-        + ", args="
-        + args
-        + '}';
+    return String.format(
+        "CompleteEvent{"
+            + "name='%s', category='%s', "
+            + "start=%s, duration=%s, end=%s, "
+            + "threadId=%d, processId=%d, args=%s"
+            + "}",
+        name, category, start, duration, end, threadId, processId, args);
   }
 }

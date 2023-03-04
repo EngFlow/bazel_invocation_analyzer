@@ -59,7 +59,9 @@ public class LocalActionsDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void extractLocalActionsFromEmptyProfile()
-      throws InvalidProfileException, MissingInputException, DuplicateProviderException,
+      throws InvalidProfileException,
+          MissingInputException,
+          DuplicateProviderException,
           NullDatumException {
     useProfile(metaData(), trace(mainThread()));
     expect.about(localActions).that(provider.derive()).isEqualTo(LocalActions.create(List.of()));
@@ -67,7 +69,9 @@ public class LocalActionsDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void extractLocalActionsFromSingleThread()
-      throws InvalidProfileException, MissingInputException, DuplicateProviderException,
+      throws InvalidProfileException,
+          MissingInputException,
+          DuplicateProviderException,
           NullDatumException {
     var thread = new EventThreadBuilder(1, 1);
     var want =
@@ -88,7 +92,9 @@ public class LocalActionsDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void extractLocalActionsFromMultipleThreads()
-      throws InvalidProfileException, MissingInputException, DuplicateProviderException,
+      throws InvalidProfileException,
+          MissingInputException,
+          DuplicateProviderException,
           NullDatumException {
     var one = new EventThreadBuilder(1, 1);
     var two = new EventThreadBuilder(2, 2);

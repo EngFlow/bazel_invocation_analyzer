@@ -200,7 +200,9 @@ public class BazelProfileTest extends UnitTestBase {
 
   @Test
   public void getActionCountsNew()
-      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
           NullDatumException {
     var profile =
         useProfile(
@@ -244,7 +246,9 @@ public class BazelProfileTest extends UnitTestBase {
 
   @Test
   public void getActionCountsOld()
-      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
           NullDatumException {
     var profile =
         useProfile(
@@ -294,7 +298,9 @@ public class BazelProfileTest extends UnitTestBase {
 
   @Test
   public void getActionCountsMixedUsesNew()
-      throws DuplicateProviderException, InvalidProfileException, MissingInputException,
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
           NullDatumException {
     var profile =
         useProfile(
