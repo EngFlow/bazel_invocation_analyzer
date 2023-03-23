@@ -47,6 +47,8 @@ Examples:
 EOT
 }
 
+# rlocation returns the wrong path (does not exist), and `bazel run` runs this
+# tool in a runfiles directory, so we use pwd instead.
 JAVA_FORMATTER="$(pwd)/third_party/google-java-format/google-java-format"
 STARLARK_FORMATTER="$(pwd)/third_party/buildifier/buildifier.exe"
 POSITIONAL_ARGS=()
