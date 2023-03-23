@@ -47,7 +47,7 @@ Examples:
 EOT
 }
 
-JAVA_FORMATTER="$(rlocation google_java_format/jar/downloaded.jar)"
+JAVA_FORMATTER="$(rlocation com_engflow_bazel_invocation_analyzer/third_party/google-java-format/google-java-format)"
 STARLARK_FORMATTER="$(rlocation com_engflow_bazel_invocation_analyzer/third_party/buildifier/buildifier.exe)"
 POSITIONAL_ARGS=()
 FIX=
@@ -62,7 +62,7 @@ while [[ $# -gt 0 ]]; do
     help
     exit 0
     ;;
-  -* | --*)
+  -*)
     echo >&2 "Unknown option $1"
     help >&2
     exit 1
@@ -82,12 +82,12 @@ function java_files() {
 
 function lint_java() {
   readonly files="$(java_files "${1}")"
-  java -jar "${JAVA_FORMATTER}" --dry-run ${files}
+  "${JAVA_FORMATTER}" --dry-run ${files}
 }
 
 function format_java() {
   readonly files="$(java_files "${1}")"
-  java -jar "${JAVA_FORMATTER}" --replace ${files}
+  "${JAVA_FORMATTER}" --replace ${files}
 }
 
 function lint_starlark() {
