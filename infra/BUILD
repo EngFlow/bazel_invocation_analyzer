@@ -3,7 +3,7 @@ sh_binary(
     srcs = [":lint.sh"],
     data = [
         "//third_party/buildifier",
-        "@google_java_format//jar",
+        "//third_party/google-java-format",
     ],
     deps = ["@bazel_tools//tools/bash/runfiles"],
 )
