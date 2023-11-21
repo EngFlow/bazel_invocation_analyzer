@@ -33,6 +33,7 @@ public class DataProviderUtil {
     return List.of(
         new ActionStatsDataProvider(),
         new BazelPhasesDataProvider(),
+        new BazelVersionDataProvider(),
         new CriticalPathDurationDataProvider(),
         new EstimatedCoresDataProvider(),
         new GarbageCollectionStatsDataProvider(),
