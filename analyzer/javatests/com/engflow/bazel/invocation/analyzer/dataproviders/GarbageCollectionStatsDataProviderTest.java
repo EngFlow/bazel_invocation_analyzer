@@ -54,7 +54,7 @@ public class GarbageCollectionStatsDataProviderTest extends DataProviderUnitTest
             thread(
                 0,
                 0,
-                BazelProfileConstants.THREAD_GARBAGE_COLLECTOR,
+                "Thread with major GC",
                 concat(
                     sequence(
                         Stream.of(50_000, 100_000, 150_000, 200_000),
@@ -81,7 +81,7 @@ public class GarbageCollectionStatsDataProviderTest extends DataProviderUnitTest
             thread(
                 0,
                 0,
-                BazelProfileConstants.THREAD_GARBAGE_COLLECTOR,
+                "Thread without major GC",
                 concat(
                     sequence(
                         Stream.of(50_000, 100_000, 150_000, 200_000),

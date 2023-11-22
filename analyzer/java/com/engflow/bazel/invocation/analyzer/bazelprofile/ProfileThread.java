@@ -19,6 +19,7 @@ import com.engflow.bazel.invocation.analyzer.traceeventformat.CounterEvent;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.InstantEvent;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatConstants;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
@@ -78,19 +79,19 @@ public class ProfileThread {
       ThreadId threadId,
       @Nullable String name,
       @Nullable Integer sortIndex,
-      List<JsonObject> extraMetadata,
-      List<JsonObject> extraEvents,
-      List<CompleteEvent> completeEvents,
-      Map<String, List<CounterEvent>> counts,
-      Map<String, List<InstantEvent>> instants) {
-    this.threadId = threadId;
+      @Nullable List<JsonObject> extraMetadata,
+      @Nullable List<JsonObject> extraEvents,
+      @Nullable List<CompleteEvent> completeEvents,
+      @Nullable Map<String, List<CounterEvent>> counts,
+      @Nullable Map<String, List<InstantEvent>> instants) {
+    this.threadId = Preconditions.checkNotNull(threadId);
     this.name = name;
     this.sortIndex = sortIndex;
-    this.extraMetadata = extraMetadata;
-    this.extraEvents = extraEvents;
-    this.completeEvents = completeEvents;
-    this.counts = counts;
-    this.instants = instants;
+    this.extraMetadata = extraMetadata == null ? new ArrayList<>() : extraMetadata;
+    this.extraEvents = extraEvents == null ? new ArrayList<>() : extraEvents;
+    this.completeEvents = completeEvents == null ? new ArrayList<>() : completeEvents;
+    this.counts = counts == null ? new HashMap<>() : counts;
+    this.instants = instants == null ? new HashMap<>() : instants;
   }
 
   public ThreadId getThreadId() {
