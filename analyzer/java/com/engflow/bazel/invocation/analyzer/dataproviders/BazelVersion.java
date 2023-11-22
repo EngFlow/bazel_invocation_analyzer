@@ -21,7 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-/** Estimate of the number of cores used or available. */
+/** The Bazel version used when the analyzed inputs were generated. */
 public class BazelVersion implements Datum {
   private final Optional<Integer> major;
   private final Optional<Integer> minor;

@@ -28,7 +28,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** A {@link DataProvider} that supplies data on Bazel's garbage collection. */
+/**
+ * A {@link DataProvider} that supplies data on the Bazel version used when the Bazel profile was
+ * generated.
+ */
 public class BazelVersionDataProvider extends DataProvider {
   // See https://bazel.build/release#bazel-versioning
   // See
@@ -55,6 +58,8 @@ public class BazelVersionDataProvider extends DataProvider {
   @VisibleForTesting
   static BazelVersion parse(String version) {
     if (version == null) {
+      // The version metadata was introduced in https://github.com/bazelbuild/bazel/pull/17562 and
+      // added to release 6.1.0.
       return new BazelVersion(
           "No Bazel version was found. Bazel versions before 6.1.0 did not report the version.");
     }
