@@ -22,11 +22,9 @@ import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
-import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
@@ -66,8 +64,9 @@ public class GarbageCollectionStatsDataProviderTest extends DataProviderUnitTest
                                 singleGcDuration))))));
 
     GarbageCollectionStats gcStats = provider.getGarbageCollectionStats();
+    assertThat(gcStats.isEmpty()).isFalse();
     assertThat(gcStats.hasMajorGarbageCollection()).isTrue();
-    assertThat(gcStats.getMajorGarbageCollectionDuration())
+    assertThat(gcStats.getMajorGarbageCollectionDuration().get())
         .isEqualTo(singleGcDuration.multipliedBy(4));
   }
 
@@ -93,14 +92,18 @@ public class GarbageCollectionStatsDataProviderTest extends DataProviderUnitTest
                                 singleGcDuration))))));
 
     GarbageCollectionStats gcStats = provider.getGarbageCollectionStats();
+    assertThat(gcStats.isEmpty()).isFalse();
     assertThat(gcStats.hasMajorGarbageCollection()).isFalse();
-    assertThat(gcStats.getMajorGarbageCollectionDuration()).isEqualTo(Duration.ZERO);
+    assertThat(gcStats.getMajorGarbageCollectionDuration().get()).isEqualTo(Duration.ZERO);
   }
 
   @Test
-  public void shouldThrowWhenNoMajorGarbageCollectorThreadIsPresent() throws Exception {
+  public void shouldReturnEmptyGarbageCollectionStatsWhenNoGarbageCollectorThreadIsPresent()
+      throws Exception {
     useProfile(metaData(), trace(mainThread()));
 
-    assertThrows(InvalidProfileException.class, () -> provider.getGarbageCollectionStats());
+    GarbageCollectionStats gcStats = provider.getGarbageCollectionStats();
+    assertThat(gcStats.isEmpty()).isTrue();
+    assertThat(gcStats.hasMajorGarbageCollection()).isFalse();
   }
 }

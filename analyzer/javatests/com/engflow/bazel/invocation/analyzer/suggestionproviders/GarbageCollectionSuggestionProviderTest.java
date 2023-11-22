@@ -50,8 +50,9 @@ public class GarbageCollectionSuggestionProviderTest extends SuggestionProviderU
   }
 
   @Test
-  public void shouldNotReturnSuggestionForEmptyTotalDuration() {
-    totalDuration = new TotalDuration("empty");
+  public void shouldNotReturnSuggestionForEmptyGarbageCollectionStats() {
+    String emptyReason = "The GC stats are empty!";
+    garbageCollectionStats = new GarbageCollectionStats(emptyReason);
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
@@ -62,7 +63,24 @@ public class GarbageCollectionSuggestionProviderTest extends SuggestionProviderU
     assertThat(suggestionOutput.getCaveatList()).hasSize(1);
     assertThat(suggestionOutput.getCaveat(0).getMessage())
         .contains(GarbageCollectionSuggestionProvider.EMPTY_REASON_PREFIX);
-    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains("empty");
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains(emptyReason);
+  }
+
+  @Test
+  public void shouldNotReturnSuggestionForEmptyTotalDuration() {
+    String emptyReason = "The total duration is empty!";
+    totalDuration = new TotalDuration(emptyReason);
+
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(GarbageCollectionSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getCaveatList()).hasSize(1);
+    assertThat(suggestionOutput.getCaveat(0).getMessage())
+        .contains(GarbageCollectionSuggestionProvider.EMPTY_REASON_PREFIX);
+    assertThat(suggestionOutput.getCaveat(0).getMessage()).contains(emptyReason);
   }
 
   @Test
@@ -101,7 +119,7 @@ public class GarbageCollectionSuggestionProviderTest extends SuggestionProviderU
                 Locale.US,
                 "%s or %.2f%% of the invocation is spent on major garbage collection",
                 DurationUtil.formatDuration(
-                    garbageCollectionStats.getMajorGarbageCollectionDuration()),
+                    garbageCollectionStats.getMajorGarbageCollectionDuration().get()),
                 percent));
 
     Suggestion rules = suggestionOutput.getSuggestionList().get(1);

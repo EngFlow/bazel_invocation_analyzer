@@ -51,19 +51,21 @@ public class GarbageCollectionSuggestionProvider extends SuggestionProviderBase 
       List<Suggestion> suggestions = new ArrayList<>();
       GarbageCollectionStats gcStats = dataManager.getDatum(GarbageCollectionStats.class);
 
+      if (gcStats.isEmpty()) {
+        return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
+            ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + gcStats.getEmptyReason());
+      }
       if (gcStats.hasMajorGarbageCollection()) {
+        Duration majorGcDuration = gcStats.getMajorGarbageCollectionDuration().get();
         TotalDuration totalDurationDatum = dataManager.getDatum(TotalDuration.class);
         if (totalDurationDatum.isEmpty()) {
           return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
               ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + totalDurationDatum.getEmptyReason());
         }
         Duration totalDuration = totalDurationDatum.getTotalDuration().get();
-        double percentOfTotal =
-            DurationUtil.getPercentageOf(
-                gcStats.getMajorGarbageCollectionDuration(), totalDuration);
+        double percentOfTotal = DurationUtil.getPercentageOf(majorGcDuration, totalDuration);
         if (percentOfTotal >= MAJOR_GC_MIN_PERCENTAGE) {
-          Duration optimalDuration =
-              totalDuration.minus(gcStats.getMajorGarbageCollectionDuration());
+          Duration optimalDuration = totalDuration.minus(majorGcDuration);
           PotentialImprovement potentialImprovement =
               SuggestionProviderUtil.createPotentialImprovement(
                   String.format(
@@ -78,7 +80,7 @@ public class GarbageCollectionSuggestionProvider extends SuggestionProviderBase 
                   Locale.US,
                   "%s or %.2f%% of the invocation is spent on major garbage collection which"
                       + " suspends all other threads.",
-                  DurationUtil.formatDuration(gcStats.getMajorGarbageCollectionDuration()),
+                  DurationUtil.formatDuration(majorGcDuration),
                   percentOfTotal);
 
           String titleIncreaseHeapSize = "Increase the Java heap size available to Bazel";
