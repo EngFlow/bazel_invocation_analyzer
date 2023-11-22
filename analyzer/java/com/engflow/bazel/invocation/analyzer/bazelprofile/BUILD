@@ -13,6 +13,7 @@ java_library(
     deps = [
         ":types",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/core",
+        "//analyzer/java/com/engflow/bazel/invocation/analyzer/dataproviders:types",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/time",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/traceeventformat",
         "//third_party/gson",

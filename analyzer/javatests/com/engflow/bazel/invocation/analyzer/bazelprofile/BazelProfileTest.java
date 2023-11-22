@@ -32,6 +32,7 @@ import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
+import com.engflow.bazel.invocation.analyzer.dataproviders.BazelVersion;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
@@ -397,5 +398,68 @@ public class BazelProfileTest extends UnitTestBase {
     ProfileThread thread =
         new ProfileThread(new ThreadId(0, 0), "Service Thread", null, null, null, null, null, null);
     assertThat(BazelProfile.isGarbageCollectorThread(thread)).isTrue();
+  }
+
+  @Test
+  public void getBazelVersionShouldReturnEmptyOnMissingBazelVersion()
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
+          NullDatumException {
+    var profile = useProfile(metaData(), trace(mainThread()));
+    assertThat(profile.getBazelVersion().isEmpty()).isTrue();
+  }
+
+  @Test
+  public void getBazelVersionShouldReturnEmptyOnInvalidBazelVersion()
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
+          NullDatumException {
+    var profile =
+        useProfile(
+            metaData(
+                WriteBazelProfile.Property.put(
+                    BazelProfileConstants.OTHER_DATA_BAZEL_VERSION, "invalid")),
+            trace(mainThread()));
+    assertThat(profile.getBazelVersion().isEmpty()).isTrue();
+  }
+
+  @Test
+  public void getBazelVersionShouldReturnVersionWithoutPreRelease()
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
+          NullDatumException {
+    String validBazelVersion = "release 6.1.0";
+    var profile =
+        useProfile(
+            metaData(
+                WriteBazelProfile.Property.put(
+                    BazelProfileConstants.OTHER_DATA_BAZEL_VERSION, validBazelVersion)),
+            trace(mainThread()));
+
+    BazelVersion version = profile.getBazelVersion();
+    assertThat(version.isEmpty()).isFalse();
+    assertThat(version.getSummary()).isEqualTo(validBazelVersion);
+  }
+
+  @Test
+  public void getBazelVersionShouldReturnBazelVersionWithPreRelease()
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
+          NullDatumException {
+    String validBazelVersion = "release 8.0.0-pre.20231030.2";
+    var profile =
+        useProfile(
+            metaData(
+                WriteBazelProfile.Property.put(
+                    BazelProfileConstants.OTHER_DATA_BAZEL_VERSION, validBazelVersion)),
+            trace(mainThread()));
+
+    BazelVersion version = profile.getBazelVersion();
+    assertThat(version.isEmpty()).isFalse();
+    assertThat(version.getSummary()).isEqualTo(validBazelVersion);
   }
 }

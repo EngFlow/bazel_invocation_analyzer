@@ -19,10 +19,20 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /** The Bazel version used when the analyzed inputs were generated. */
 public class BazelVersion implements Datum {
+  // See https://bazel.build/release#bazel-versioning
+  // See
+  // https://github.com/bazelbuild/bazel/blob/aab19f75cd383c4b09a6ae720f9fa436bf89d271/src/main/java/com/google/devtools/build/lib/profiler/JsonTraceFileWriter.java#L179
+  // See
+  // https://github.com/bazelbuild/bazel/blob/c637041ec145e0964982a2cbf8d5693f0d1d4be0/src/main/java/com/google/devtools/build/lib/analysis/BlazeVersionInfo.java#L119
+  private static final Pattern BAZEL_VERSION_PATTERN =
+      Pattern.compile("^release (\\d+)\\.(\\d+)\\.(\\d+)(|-.*)$");
+
   private final Optional<Integer> major;
   private final Optional<Integer> minor;
   private final Optional<Integer> patch;
@@ -45,6 +55,26 @@ public class BazelVersion implements Datum {
     this.patch = Optional.empty();
     this.preReleaseAnnotation = Optional.empty();
     this.emptyReason = emptyReason;
+  }
+
+  public static BazelVersion parse(String version) {
+    if (version == null) {
+      // The version metadata was introduced in https://github.com/bazelbuild/bazel/pull/17562 and
+      // added to release 6.1.0.
+      return new BazelVersion(
+          "No Bazel version was found. Bazel versions before 6.1.0 did not report the version.");
+    }
+    Matcher m = BAZEL_VERSION_PATTERN.matcher(version);
+    if (m.matches()) {
+      return new BazelVersion(
+          Integer.valueOf(m.group(1)),
+          Integer.valueOf(m.group(2)),
+          Integer.valueOf(m.group(3)),
+          m.group(4));
+    } else {
+      return new BazelVersion(
+          String.format("The provided Bazel version could not be parsed: '%s'", version));
+    }
   }
 
   @Override

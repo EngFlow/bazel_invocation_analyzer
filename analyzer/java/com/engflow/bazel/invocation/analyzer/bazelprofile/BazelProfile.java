@@ -19,6 +19,7 @@ import com.engflow.bazel.invocation.analyzer.core.DataProvider;
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
+import com.engflow.bazel.invocation.analyzer.dataproviders.BazelVersion;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CounterEvent;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatConstants;
@@ -204,6 +205,18 @@ public class BazelProfile implements Datum {
     return ImmutableMap.copyOf(otherData);
   }
 
+  /**
+   * For performance reasons, prefer getting the Datum {@link BazelVersion} provided by {@link
+   * com.engflow.bazel.invocation.analyzer.dataproviders.BazelVersionDataProvider}, which memoizes
+   * the value.
+   *
+   * @return the BazelVersion included in the profile, if any.
+   */
+  public BazelVersion getBazelVersion() {
+    String bazelVersion = getOtherData().get(BazelProfileConstants.OTHER_DATA_BAZEL_VERSION);
+    return BazelVersion.parse(bazelVersion);
+  }
+
   public Stream<ProfileThread> getThreads() {
     return threads.values().stream();
   }
@@ -307,7 +320,9 @@ public class BazelProfile implements Datum {
   @Override
   public String getSummary() {
     StringBuilder sb = new StringBuilder();
-    sb.append("Threads:\n");
+    sb.append("Bazel version:\n");
+    sb.append(getBazelVersion().toString());
+    sb.append("\n\nThreads:\n");
     appendThreadSummary(sb, getMainThread());
     Optional<ProfileThread> optionalCriticalPath = getCriticalPath();
     if (optionalCriticalPath.isPresent()) {

@@ -97,22 +97,4 @@ public class BazelVersionDataProviderTest extends DataProviderUnitTestBase {
     assertThat(version.isEmpty()).isFalse();
     assertThat(version.getSummary()).isEqualTo(validBazelVersion);
   }
-
-  @Test
-  public void parseReturnsEmpty() {
-    assertThat(BazelVersionDataProvider.parse("").isEmpty()).isTrue();
-    assertThat(BazelVersionDataProvider.parse("1.2.3").isEmpty()).isTrue();
-    assertThat(BazelVersionDataProvider.parse("1.2.3-foo").isEmpty()).isTrue();
-    assertThat(BazelVersionDataProvider.parse("release 1").isEmpty()).isTrue();
-    assertThat(BazelVersionDataProvider.parse("release 1.2").isEmpty()).isTrue();
-    assertThat(BazelVersionDataProvider.parse("release 1.2.3foo").isEmpty()).isTrue();
-  }
-
-  @Test
-  public void parseReturnsNonempty() {
-    assertThat(BazelVersionDataProvider.parse("release 1.23.4"))
-        .isEqualTo(new BazelVersion(1, 23, 4, ""));
-    assertThat(BazelVersionDataProvider.parse("release 12.3.45-foo"))
-        .isEqualTo(new BazelVersion(12, 3, 45, "-foo"));
-  }
 }
