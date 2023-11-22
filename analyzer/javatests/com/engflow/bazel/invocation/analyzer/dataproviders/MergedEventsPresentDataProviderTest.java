@@ -15,14 +15,12 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,10 +36,9 @@ public class MergedEventsPresentDataProviderTest extends DataProviderUnitTestBas
 
   @Test
   public void shouldReturnMergedEventsPresent() throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 20,
                 0,
@@ -58,10 +55,9 @@ public class MergedEventsPresentDataProviderTest extends DataProviderUnitTestBas
 
   @Test
   public void shouldReturnMergedEventsNotPresent() throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 20,
                 0,

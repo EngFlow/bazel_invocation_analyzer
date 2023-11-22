@@ -15,17 +15,18 @@
 package com.engflow.bazel.invocation.analyzer.bazelprofile;
 
 import java.util.Objects;
+import javax.annotation.Nullable;
 
 public class ThreadId {
   private final int processId;
-  private final int threadId;
+  private final Integer threadId;
 
-  public ThreadId(int processId, int threadId) {
+  public ThreadId(int processId, @Nullable Integer threadId) {
     this.processId = processId;
     this.threadId = threadId;
   }
 
-  public int getThreadId() {
+  public Integer getThreadId() {
     return threadId;
   }
 
@@ -42,7 +43,7 @@ public class ThreadId {
       return false;
     }
     ThreadId other = (ThreadId) o;
-    return processId == other.processId && threadId == other.threadId;
+    return processId == other.processId && Objects.equals(threadId, other.threadId);
   }
 
   @Override

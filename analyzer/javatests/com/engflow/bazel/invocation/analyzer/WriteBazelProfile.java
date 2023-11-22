@@ -40,6 +40,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 
 /**
  * Defines an embedded domain specific language class to simplify writing Bazel profile events.
@@ -104,22 +105,27 @@ public class WriteBazelProfile {
    * @return an instance of {@link TraceEvent} to be serialized to json.
    */
   @CheckReturnValue
-  public static TraceEvent thread(int id, int index, String name, ThreadEvent... events) {
+  public static TraceEvent thread(
+      @Nullable Integer id, int index, String name, ThreadEvent... events) {
     return out -> {
-      out.object(
-          put(TraceEventFormatConstants.EVENT_NAME, TraceEventFormatConstants.METADATA_THREAD_NAME),
-          put(TraceEventFormatConstants.EVENT_PHASE, TraceEventFormatConstants.PHASE_METADATA),
-          put(TraceEventFormatConstants.EVENT_THREAD_ID, id),
-          put(TraceEventFormatConstants.EVENT_PROCESS_ID, 1),
-          put(TraceEventFormatConstants.EVENT_ARGUMENTS, put("name", name)));
-      out.object(
-          put(
-              TraceEventFormatConstants.EVENT_NAME,
-              TraceEventFormatConstants.METADATA_THREAD_SORT_INDEX),
-          put(TraceEventFormatConstants.EVENT_PHASE, TraceEventFormatConstants.PHASE_METADATA),
-          put(TraceEventFormatConstants.EVENT_THREAD_ID, id),
-          put(TraceEventFormatConstants.EVENT_PROCESS_ID, 1),
-          put(TraceEventFormatConstants.EVENT_ARGUMENTS, put("sort_index", index)));
+      if (id != null) {
+        out.object(
+            put(
+                TraceEventFormatConstants.EVENT_NAME,
+                TraceEventFormatConstants.METADATA_THREAD_NAME),
+            put(TraceEventFormatConstants.EVENT_PHASE, TraceEventFormatConstants.PHASE_METADATA),
+            put(TraceEventFormatConstants.EVENT_THREAD_ID, id),
+            put(TraceEventFormatConstants.EVENT_PROCESS_ID, 1),
+            put(TraceEventFormatConstants.EVENT_ARGUMENTS, put("name", name)));
+        out.object(
+            put(
+                TraceEventFormatConstants.EVENT_NAME,
+                TraceEventFormatConstants.METADATA_THREAD_SORT_INDEX),
+            put(TraceEventFormatConstants.EVENT_PHASE, TraceEventFormatConstants.PHASE_METADATA),
+            put(TraceEventFormatConstants.EVENT_THREAD_ID, id),
+            put(TraceEventFormatConstants.EVENT_PROCESS_ID, 1),
+            put(TraceEventFormatConstants.EVENT_ARGUMENTS, put("sort_index", index)));
+      }
 
       for (ThreadEvent event : events) {
         final AtomicBoolean topLevel = new AtomicBoolean(true);
@@ -132,7 +138,9 @@ public class WriteBazelProfile {
                       // ensures tid and pid are only added to the events but not nested
                       // objects like 'args'
                       if (topLevel.getAndSet(false)) {
-                        put(TraceEventFormatConstants.EVENT_THREAD_ID, id);
+                        if (id != null) {
+                          put(TraceEventFormatConstants.EVENT_THREAD_ID, id);
+                        }
                         put(TraceEventFormatConstants.EVENT_PROCESS_ID, 1);
                       }
                       contents.apply();
@@ -196,7 +204,7 @@ public class WriteBazelProfile {
    *
    * @param items a stream of changing values to generate an event.
    * @param generator function to create {@link ThreadEvent} instances.
-   * @return an array of {@link ThreadEvent}s to pass to {@link #thread(int, int, String,
+   * @return an array of {@link ThreadEvent}s to pass to {@link #thread(Integer, int, String,
    *     ThreadEvent...)}
    */
   @CheckReturnValue
@@ -305,7 +313,9 @@ public class WriteBazelProfile {
   /** Marker interface for events in the {@link #trace(TraceEvent...)} {@link ProfileSection}. */
   public interface TraceEvent extends WriteJson {}
 
-  /** Marker interface for events in a {@link #thread(int, int, String, ThreadEvent...)} event. */
+  /**
+   * Marker interface for events in a {@link #thread(Integer, int, String, ThreadEvent...)} event.
+   */
   public interface ThreadEvent extends WriteJson {}
 
   /** Property represents a key/value pair in a json object. */

@@ -12,6 +12,7 @@ java_test(
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/traceeventformat",
         "//analyzer/javatests/com/engflow/bazel/invocation/analyzer:test_base",
         "//third_party/guava",
+        "//third_party/jsr305",
         "//third_party/junit",
         "//third_party/truth",
     ],

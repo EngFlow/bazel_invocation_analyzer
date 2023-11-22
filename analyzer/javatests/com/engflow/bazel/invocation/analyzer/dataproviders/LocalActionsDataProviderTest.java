@@ -1,8 +1,5 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_OUTPUT_DOWNLOAD;
 
@@ -63,7 +60,7 @@ public class LocalActionsDataProviderTest extends DataProviderUnitTestBase {
           MissingInputException,
           DuplicateProviderException,
           NullDatumException {
-    useProfile(metaData(), trace(mainThread()));
+    useMinimalProfile();
     expect.about(localActions).that(provider.derive()).isEqualTo(LocalActions.create(List.of()));
   }
 
@@ -86,7 +83,7 @@ public class LocalActionsDataProviderTest extends DataProviderUnitTestBase {
                     thread.action("cached", "Work2", 5, 5),
                     List.of(thread.related(5, 2, CAT_REMOTE_ACTION_CACHE_CHECK)))));
 
-    useProfile(metaData(), trace(mainThread(), thread.asEvent()));
+    useProfileWithDefaults(List.of(), List.of(thread.asEvent()));
     expect.about(localActions).that(provider.derive()).isEqualTo(want);
   }
 
@@ -118,7 +115,7 @@ public class LocalActionsDataProviderTest extends DataProviderUnitTestBase {
                     two.action("two cache miss", "Work3", 8, 5),
                     List.of(two.related(8, 2, CAT_REMOTE_ACTION_CACHE_CHECK)))));
 
-    useProfile(metaData(), trace(mainThread(), one.asEvent(), two.asEvent()));
+    useProfileWithDefaults(List.of(), List.of(one.asEvent(), two.asEvent()));
     expect.about(localActions).that(provider.derive()).isEqualTo(want);
   }
 }

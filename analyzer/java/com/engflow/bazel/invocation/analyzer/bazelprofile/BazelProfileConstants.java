@@ -30,10 +30,17 @@ public class BazelProfileConstants {
 
   // CounterEvent names
   // These constants should not be used outside this package.
+
+  // See
+  // https://github.com/bazelbuild/bazel/blob/01f620599c6138de4b4551da92917148ab18efe3/src/main/java/com/google/devtools/build/lib/profiler/ProfilerTask.java#L69
   @VisibleForTesting public static final String COUNTER_ACTION_COUNT = "action count";
   // See
   // https://github.com/bazelbuild/bazel/commit/ec2eda1b56a5197ee2d019f58d89a68b17974b13#diff-f8db96cce91c612e82faa11be7a835199fd31777cf6bf7ce39a069e140a199b2
   static final String COUNTER_ACTION_COUNT_OLD = "action counters";
+
+  // See
+  // https://github.com/bazelbuild/bazel/blob/01f620599c6138de4b4551da92917148ab18efe3/src/main/java/com/google/devtools/build/lib/profiler/CounterSeriesTraceData.java#L92
+  @VisibleForTesting public static final String COUNTER_ACTION_COUNT_TYPE_ACTION = "action";
 
   // Category names
   public static final String CAT_ACTION_PROCESSING = "action processing";

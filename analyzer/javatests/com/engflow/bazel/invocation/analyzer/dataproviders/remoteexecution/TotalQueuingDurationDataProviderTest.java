@@ -15,11 +15,8 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -30,6 +27,7 @@ import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.DataProviderUnitTestBase;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,10 +45,9 @@ public class TotalQueuingDurationDataProviderTest extends DataProviderUnitTestBa
   @Test
   public void shouldReturnNonZeroQueuingDuration() throws Exception {
     Duration[] durations = {Duration.ofMillis(123), Duration.ofMillis(432), Duration.ofMillis(8)};
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -71,9 +68,9 @@ public class TotalQueuingDurationDataProviderTest extends DataProviderUnitTestBa
 
   @Test
   public void shouldReturnZeroQueuingDuration() throws Exception {
-    useProfile(metaData(), trace(mainThread()));
+    useMinimalProfile();
 
-    TotalQueuingDuration queuing = provider.getTotalQueuingDuration();
+    provider.getTotalQueuingDuration();
     verify(dataManager).registerProvider(provider);
     verify(dataManager).getDatum(BazelProfile.class);
     verifyNoMoreInteractions(dataManager);

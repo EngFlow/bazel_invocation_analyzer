@@ -15,10 +15,7 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
@@ -26,6 +23,7 @@ import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.DataProviderUnitTestBase;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,10 +41,9 @@ public class RemoteLatencyDataProviderTest extends DataProviderUnitTestBase {
   public void shouldReturnRemoteLatencyWhenCacheCheck() throws Exception {
     var expectedLatencyMillis = 123456;
     var checkRoundTripTimeMillis = expectedLatencyMillis * 2;
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -68,10 +65,9 @@ public class RemoteLatencyDataProviderTest extends DataProviderUnitTestBase {
   public void shouldReturnRemoteLatencyWhenRemoteExecution() throws Exception {
     var expectedLatencyMillis = 543210;
     var executionRoundTripTimeMillis = expectedLatencyMillis * 2;
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -106,10 +102,9 @@ public class RemoteLatencyDataProviderTest extends DataProviderUnitTestBase {
             latencyCheckMillis1,
             Math.min(
                 latencyCheckMillis2, Math.min(latencyExecutionMillis1, latencyExecutionMillis2)));
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -147,7 +142,7 @@ public class RemoteLatencyDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void shouldBeEmptyWhenRemoteActionsMissing() throws Exception {
-    useProfile(metaData(), trace(mainThread()));
+    useMinimalProfile();
 
     var remoteLatency = provider.getRemoteLatency();
     assertThat(remoteLatency.isEmpty()).isTrue();

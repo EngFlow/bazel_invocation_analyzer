@@ -17,7 +17,6 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.concat;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.count;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
@@ -48,34 +47,13 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void shouldReturnEmptyOnEmptyProfile()
-      throws DuplicateProviderException,
-          InvalidProfileException,
-          MissingInputException,
-          NullDatumException {
-    useEstimatedCoresUsed(4);
-    useProfile(metaData(), trace(mainThread()));
-
-    assertThat(provider.getActionStats().getBottlenecks().isEmpty()).isTrue();
-  }
-
-  @Test
   public void shouldReturnEmptyOnEmptyEstimatedCoresUsed()
       throws DuplicateProviderException,
           InvalidProfileException,
           MissingInputException,
           NullDatumException {
+    useMinimalProfile();
     useEstimatedCoresUsed(null);
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                0,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                sequence(
-                    IntStream.rangeClosed(0, 100).boxed(),
-                    ts -> count(BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "4")))));
 
     assertThat(provider.getActionStats().getBottlenecks().isEmpty()).isTrue();
   }
@@ -105,15 +83,28 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
                                 TimeUtil.getDurationForMicros(80))),
                     sequence(
                         IntStream.rangeClosed(0, 100).boxed(),
-                        ts -> count(BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "4")),
+                        ts ->
+                            count(
+                                BazelProfileConstants.COUNTER_ACTION_COUNT,
+                                ts,
+                                BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+                                "4")),
                     sequence(
                         IntStream.rangeClosed(100, 200).boxed(),
-                        ts -> count(BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "1")),
+                        ts ->
+                            count(
+                                BazelProfileConstants.COUNTER_ACTION_COUNT,
+                                ts,
+                                BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+                                "1")),
                     sequence(
                         IntStream.rangeClosed(200, 300).boxed(),
                         ts ->
                             count(
-                                BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "4"))))));
+                                BazelProfileConstants.COUNTER_ACTION_COUNT,
+                                ts,
+                                BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+                                "4"))))));
 
     final var actionStats = provider.getActionStats();
 
@@ -162,7 +153,10 @@ public class ActionStatsDataProviderTest extends DataProviderUnitTestBase {
                         IntStream.rangeClosed(0, 300).boxed(),
                         ts ->
                             count(
-                                BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "4"))))));
+                                BazelProfileConstants.COUNTER_ACTION_COUNT,
+                                ts,
+                                BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+                                "4"))))));
 
     final var actionStats = provider.getActionStats();
 

@@ -15,7 +15,11 @@
 package com.engflow.bazel.invocation.analyzer;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.count;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.instant;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static java.nio.file.Files.createTempDirectory;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
@@ -28,6 +32,7 @@ import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
+import com.google.common.collect.Lists;
 import com.google.devtools.build.runfiles.Runfiles;
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +46,12 @@ import org.junit.BeforeClass;
 public abstract class ProfileTestBase {
   private static final String WORKSPACE_ROOT = "com_engflow_bazel_invocation_analyzer/";
 
+  private static final WriteBazelProfile.ThreadEvent ACTION_COUNT =
+      count(
+          BazelProfileConstants.COUNTER_ACTION_COUNT,
+          0,
+          BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+          "1");
   protected static Runfiles RUNFILES;
   protected static final String ROOT =
       WORKSPACE_ROOT + "analyzer/javatests/com/engflow/bazel/invocation/analyzer/profiles/";
@@ -116,6 +127,49 @@ public abstract class ProfileTestBase {
           NullDatumException {
     var profile =
         BazelProfile.createFromInputStream(WriteBazelProfile.toInputStream(profileSections));
+    registerBazelProfile(profile);
+    return profile;
+  }
+
+  /**
+   * Create a Bazel profile that contains the bare minimum to be parsed, load it into a {@link
+   * BazelProfile}, and set up the {@link DataManager} to return the loaded profile.
+   *
+   * @return the {@link BazelProfile} created
+   */
+  protected BazelProfile useMinimalProfile()
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
+          NullDatumException {
+    return useProfileWithDefaults(List.of(), List.of());
+  }
+
+  /**
+   * Create a Bazel profile that contains the bare minimum to be parsed plus the specified
+   * additions, load it into a {@link BazelProfile}, and set up the {@link DataManager} to return
+   * the loaded profile.
+   *
+   * @param additionalMainThreadEvents additional event to add to the main thread
+   * @return the {@link BazelProfile} created
+   */
+  protected BazelProfile useProfileWithDefaults(
+      List<WriteBazelProfile.ThreadEvent> additionalMainThreadEvents,
+      List<WriteBazelProfile.TraceEvent> additionalTraces)
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
+          NullDatumException {
+    var mainThreadEvents = Lists.newArrayList(ACTION_COUNT);
+    mainThreadEvents.addAll(additionalMainThreadEvents);
+    var traces =
+        Lists.newArrayList(
+            mainThread(mainThreadEvents.toArray(new WriteBazelProfile.ThreadEvent[0])));
+    traces.addAll(additionalTraces);
+    var profile =
+        BazelProfile.createFromInputStream(
+            WriteBazelProfile.toInputStream(
+                metaData(), trace(traces.toArray(new WriteBazelProfile.TraceEvent[0]))));
     registerBazelProfile(profile);
     return profile;
   }

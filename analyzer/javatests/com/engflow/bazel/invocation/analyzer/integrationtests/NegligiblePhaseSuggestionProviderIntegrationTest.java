@@ -14,17 +14,14 @@
 
 package com.engflow.bazel.invocation.analyzer.integrationtests;
 
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
-import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfilePhase;
 import com.engflow.bazel.invocation.analyzer.dataproviders.BazelPhasesDataProvider;
 import com.engflow.bazel.invocation.analyzer.suggestionproviders.NegligiblePhaseSuggestionProvider;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,22 +47,18 @@ public class NegligiblePhaseSuggestionProviderIntegrationTest extends Integerati
     final Timestamp FINISH_START = Timestamp.ofSeconds(99);
     final Timestamp FINISH_TIME = Timestamp.ofSeconds(100);
 
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+    useProfileWithDefaults(
+        List.of(
+            createPhaseEvents(
+                LAUNCH_START,
+                INIT_START,
+                EVAL_START,
+                DEP_START,
+                PREP_START,
+                EXEC_START,
+                FINISH_START,
+                FINISH_TIME)),
+        List.of());
 
     SuggestionOutput output = provider.getSuggestions(dataManager);
 
@@ -87,22 +80,18 @@ public class NegligiblePhaseSuggestionProviderIntegrationTest extends Integerati
     final Timestamp FINISH_START = Timestamp.ofSeconds(70);
     final Timestamp FINISH_TIME = Timestamp.ofSeconds(80);
 
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+    useProfileWithDefaults(
+        List.of(
+            createPhaseEvents(
+                LAUNCH_START,
+                INIT_START,
+                EVAL_START,
+                DEP_START,
+                PREP_START,
+                EXEC_START,
+                FINISH_START,
+                FINISH_TIME)),
+        List.of());
 
     SuggestionOutput output = provider.getSuggestions(dataManager);
 
@@ -134,22 +123,18 @@ public class NegligiblePhaseSuggestionProviderIntegrationTest extends Integerati
     final Timestamp FINISH_START = Timestamp.ofMicros(99_000);
     final Timestamp FINISH_TIME = Timestamp.ofMicros(100_000);
 
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+    useProfileWithDefaults(
+        List.of(
+            createPhaseEvents(
+                LAUNCH_START,
+                INIT_START,
+                EVAL_START,
+                DEP_START,
+                PREP_START,
+                EXEC_START,
+                FINISH_START,
+                FINISH_TIME)),
+        List.of());
 
     SuggestionOutput output = provider.getSuggestions(dataManager);
 

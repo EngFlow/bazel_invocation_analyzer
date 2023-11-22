@@ -14,9 +14,6 @@
 
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
@@ -25,6 +22,8 @@ import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfilePhase;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,22 +48,18 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void getBazelPhaseDescriptionsShouldWorkWhenAllPhasesArePresent() throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+    useProfileWithDefaults(
+        List.of(
+            createPhaseEvents(
+                LAUNCH_START,
+                INIT_START,
+                EVAL_START,
+                DEP_START,
+                PREP_START,
+                EXEC_START,
+                FINISH_START,
+                FINISH_TIME)),
+        List.of());
 
     BazelPhaseDescriptions descriptions = provider.getBazelPhaseDescriptions();
     assertThat(descriptions.get(BazelProfilePhase.LAUNCH).get())
@@ -99,22 +94,11 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void getBazelPhaseDescriptionsShouldWorkWhenSomePhasesAreMissing() throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    null,
-                    null,
-                    PREP_START,
-                    null,
-                    FINISH_START,
-                    FINISH_TIME))));
+    useProfileWithDefaults(
+        Arrays.asList(
+            createPhaseEvents(
+                LAUNCH_START, INIT_START, null, null, PREP_START, null, FINISH_START, FINISH_TIME)),
+        List.of());
 
     BazelPhaseDescriptions descriptions = provider.getBazelPhaseDescriptions();
     assertThat(descriptions.get(BazelProfilePhase.LAUNCH).get())
@@ -138,14 +122,10 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
   @Test
   public void getBazelPhaseDescriptionsShouldWorkWhenAllButLaunchAndFinishPhaseAreMissing()
       throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(LAUNCH_START, null, null, null, null, null, null, FINISH_TIME))));
+    useProfileWithDefaults(
+        Arrays.asList(
+            createPhaseEvents(LAUNCH_START, null, null, null, null, null, null, FINISH_TIME)),
+        List.of());
 
     BazelPhaseDescriptions descriptions = provider.getBazelPhaseDescriptions();
     assertThat(descriptions.get(BazelProfilePhase.FINISH).get())
@@ -157,22 +137,18 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
   @Test
   public void getBazelPhaseDescriptionsShouldThrowWhenTwoMarkersHaveTheSameTimestamp()
       throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    DEP_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+    useProfileWithDefaults(
+        Arrays.asList(
+            createPhaseEvents(
+                LAUNCH_START,
+                INIT_START,
+                EVAL_START,
+                DEP_START,
+                PREP_START,
+                DEP_START,
+                FINISH_START,
+                FINISH_TIME)),
+        List.of());
 
     InvalidProfileException invalidProfileException =
         assertThrows(InvalidProfileException.class, () -> provider.getBazelPhaseDescriptions());
@@ -187,22 +163,18 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void getBazelPhaseDescriptionsShouldThrowWhenLaunchPhaseIsMissing() throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    null,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+    useProfileWithDefaults(
+        Arrays.asList(
+            createPhaseEvents(
+                null,
+                INIT_START,
+                EVAL_START,
+                DEP_START,
+                PREP_START,
+                EXEC_START,
+                FINISH_START,
+                FINISH_TIME)),
+        List.of());
 
     InvalidProfileException invalidProfileException =
         assertThrows(InvalidProfileException.class, () -> provider.getBazelPhaseDescriptions());
@@ -211,22 +183,18 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void getBazelPhaseDescriptionsShouldThrowWhenFinishPhaseIsMissing() throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    null))));
+    useProfileWithDefaults(
+        Arrays.asList(
+            createPhaseEvents(
+                LAUNCH_START,
+                INIT_START,
+                EVAL_START,
+                DEP_START,
+                PREP_START,
+                EXEC_START,
+                FINISH_START,
+                null)),
+        List.of());
 
     InvalidProfileException invalidProfileException =
         assertThrows(InvalidProfileException.class, () -> provider.getBazelPhaseDescriptions());
@@ -237,22 +205,18 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void getTotalDurationShouldWorkWhenAllPhasesArePresent() throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+    useProfileWithDefaults(
+        Arrays.asList(
+            createPhaseEvents(
+                LAUNCH_START,
+                INIT_START,
+                EVAL_START,
+                DEP_START,
+                PREP_START,
+                EXEC_START,
+                FINISH_START,
+                FINISH_TIME)),
+        List.of());
 
     TotalDuration duration = provider.getTotalDuration();
     assertThat(duration.getTotalDuration().isPresent()).isTrue();
@@ -263,14 +227,10 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
   @Test
   public void getTotalDurationShouldWorkWhenAllButLaunchAndFinishPhaseAreMissing()
       throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(LAUNCH_START, null, null, null, null, null, null, FINISH_TIME))));
+    useProfileWithDefaults(
+        Arrays.asList(
+            createPhaseEvents(LAUNCH_START, null, null, null, null, null, null, FINISH_TIME)),
+        List.of());
 
     TotalDuration duration = provider.getTotalDuration();
     assertThat(duration.getTotalDuration().isPresent()).isTrue();
@@ -280,22 +240,18 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void getTotalDurationShouldThrowWhenLaunchPhasesIsMissing() throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    null,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+    useProfileWithDefaults(
+        Arrays.asList(
+            createPhaseEvents(
+                null,
+                INIT_START,
+                EVAL_START,
+                DEP_START,
+                PREP_START,
+                EXEC_START,
+                FINISH_START,
+                FINISH_TIME)),
+        List.of());
 
     InvalidProfileException invalidProfileException =
         assertThrows(InvalidProfileException.class, () -> provider.getTotalDuration());
@@ -304,22 +260,18 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void getTotalDurationShouldThrowWhenFinishingPhaseIsMissing() throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    null))));
+    useProfileWithDefaults(
+        Arrays.asList(
+            createPhaseEvents(
+                LAUNCH_START,
+                INIT_START,
+                EVAL_START,
+                DEP_START,
+                PREP_START,
+                EXEC_START,
+                FINISH_START,
+                null)),
+        List.of());
 
     InvalidProfileException invalidProfileException =
         assertThrows(InvalidProfileException.class, () -> provider.getTotalDuration());

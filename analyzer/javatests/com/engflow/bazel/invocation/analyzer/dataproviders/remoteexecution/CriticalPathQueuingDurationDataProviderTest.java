@@ -16,11 +16,8 @@ package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.concat;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.engflow.bazel.invocation.analyzer.WriteBazelProfile;
@@ -49,10 +46,9 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
     List<Integer> microseconds = List.of(1_000, 20_000, 300);
     String evaluatorThreadActionNameFormat = "some random action %d";
     String criticalPathThreadActionNameFormat = "action 'some random action %d'";
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -101,10 +97,9 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
     long mod = TimeUtil.getMicros(Timestamp.ACCEPTABLE_DIVERGENCE);
     String evaluatorThreadActionNameFormat = "some random action %d";
     String criticalPathThreadActionNameFormat = "action 'some random action %d'";
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -154,10 +149,9 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
     String evaluatorThreadActionName = "a generic action name that is seen more often";
     String criticalPathThreadActionName = String.format("action '%s'", evaluatorThreadActionName);
     Duration expectedQueuingDuration = TimeUtil.getDurationForMicros(7_000);
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -216,10 +210,9 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
     long divergence = TimeUtil.getMicros(Timestamp.ACCEPTABLE_DIVERGENCE) + 1;
     String evaluatorThreadActionNameFormat = "some random action %d";
     String criticalPathThreadActionNameFormat = "action 'some random action %d'";
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -267,10 +260,9 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
     long divergence = TimeUtil.getMicros(Timestamp.ACCEPTABLE_DIVERGENCE) + 1;
     String evaluatorThreadActionNameFormat = "some random action %d";
     String criticalPathThreadActionNameFormat = "action 'some random action %d'";
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -314,10 +306,9 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
     List<Integer> microseconds = List.of(1_000, 20_000, 300);
     String evaluatorThreadActionNameFormat = "some random action %d";
     String criticalPathThreadActionNameFormat = "action 'some other action %d'";
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -358,8 +349,8 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
 
   @Test
   public void shouldReturnZeroQueuingDurationWhenCriticalPathIsEmpty() throws Exception {
-    useProfile(
-        metaData(), trace(mainThread(), thread(0, 0, BazelProfileConstants.THREAD_CRITICAL_PATH)));
+    useProfileWithDefaults(
+        List.of(), List.of(thread(0, 0, BazelProfileConstants.THREAD_CRITICAL_PATH)));
 
     assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().get())
         .isEqualTo(Duration.ZERO);
@@ -367,7 +358,7 @@ public class CriticalPathQueuingDurationDataProviderTest extends DataProviderUni
 
   @Test
   public void shouldBeEmptyWhenCriticalPathIsMissing() throws Exception {
-    useProfile(metaData(), trace(mainThread()));
+    useMinimalProfile();
 
     assertThat(provider.getCriticalPathQueuingDuration().getCriticalPathQueuingDuration().isEmpty())
         .isTrue();

@@ -15,10 +15,7 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +25,7 @@ import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.google.common.collect.Sets;
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,10 +53,9 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     Timestamp start = Timestamp.ofMicros(20_000);
     Timestamp within = Timestamp.ofMicros(22_000);
     Timestamp end = Timestamp.ofMicros(30_000);
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             skyFrameThread(0, start, Duration.ZERO),
             skyFrameThread(1, end, Duration.ZERO),
             skyFrameThread(2, within, Duration.ZERO),
@@ -83,10 +80,9 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     Timestamp within = Timestamp.ofMicros(22_000);
     Timestamp end = Timestamp.ofMicros(30_000);
     Timestamp outsideRange = Timestamp.ofMicros(30_001);
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             skyFrameThread(maxIndexInRelevantPhase - 1, start, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase - 2, within, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase, end, Duration.ZERO),
@@ -111,10 +107,9 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     Timestamp within1 = Timestamp.ofMicros(22_000);
     Timestamp end = Timestamp.ofMicros(30_000);
     Timestamp outsideRange = Timestamp.ofMicros(30_001);
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             skyFrameThread(maxIndexInRelevantPhase, within1, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
 
@@ -136,10 +131,9 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     Timestamp within1 = Timestamp.ofMicros(22_000);
     Timestamp end = Timestamp.ofMicros(30_000);
     Timestamp outsideRange = Timestamp.ofMicros(30_001);
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             skyFrameThread(maxIndexInRelevantPhase, within1, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
 
@@ -162,10 +156,9 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     Timestamp within2 = Timestamp.ofMicros(28_000);
     Timestamp end = Timestamp.ofMicros(30_000);
     Timestamp outsideRange = Timestamp.ofMicros(30_001);
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             skyFrameThread(maxIndexInRelevantPhase, within1, Duration.ZERO),
             skyFrameThread(maxIndexInRelevantPhase + 3, outsideRange, Duration.ZERO)));
 
@@ -187,7 +180,7 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     Timestamp within2 = Timestamp.ofMicros(28_000);
     Timestamp end = Timestamp.ofMicros(30_000);
     Timestamp outsideRange = Timestamp.ofMicros(30_001);
-    useProfile(metaData(), trace(mainThread(), skyFrameThread(3, outsideRange, Duration.ZERO)));
+    useProfileWithDefaults(List.of(), List.of(skyFrameThread(3, outsideRange, Duration.ZERO)));
 
     BazelPhaseDescriptions bazelPhaseDescriptions =
         BazelPhaseDescriptions.newBuilder()
@@ -204,10 +197,9 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
   public void shouldReturnEstimatedCoresUsedAllThreadsWithinRange() throws Exception {
     Timestamp start = Timestamp.ofMicros(20_000);
     Timestamp end = Timestamp.ofMicros(30_000);
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             skyFrameThread(0, start, Duration.ZERO),
             skyFrameThread(1, start, Duration.ZERO),
             skyFrameThread(2, start, Duration.ZERO),
@@ -229,10 +221,9 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     Timestamp start = Timestamp.ofMicros(20_000);
     Timestamp end = Timestamp.ofMicros(30_000);
     Timestamp outsideRangeAfter = Timestamp.ofMicros(30_001);
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             skyFrameThread(0, outsideRangeAfter, Duration.ZERO),
             skyFrameThread(1, start, Duration.ZERO),
             skyFrameThread(2, start, Duration.ZERO),
@@ -254,10 +245,9 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     Timestamp start = Timestamp.ofMicros(20_000);
     Timestamp end = Timestamp.ofMicros(30_000);
     Timestamp outsideRangeAfter = Timestamp.ofMicros(30_001);
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             skyFrameThread(1, outsideRangeBefore, Duration.ZERO),
             skyFrameThread(2, outsideRangeAfter, Duration.ZERO)));
     BazelPhaseDescriptions bazelPhaseDescriptions =
@@ -279,10 +269,9 @@ public class EstimatedCoresDataProviderTest extends DataProviderUnitTestBase {
     Timestamp within2 = Timestamp.ofMicros(28_000);
     Timestamp end = Timestamp.ofMicros(30_000);
     Timestamp outsideRangeAfter = Timestamp.ofMicros(30_001);
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             skyFrameThread(0, outsideRangeBefore, Duration.ZERO),
             skyFrameThread(1, within2, Duration.ZERO),
             skyFrameThread(2, outsideRangeAfter, Duration.ZERO),

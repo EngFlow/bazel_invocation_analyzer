@@ -15,17 +15,15 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,10 +41,9 @@ public class CriticalPathDurationDataProviderTest extends DataProviderUnitTestBa
   @Test
   public void shouldReturnCriticalPathDuration() throws Exception {
     Duration[] durations = {Duration.ofMillis(12), Duration.ofMillis(234), Duration.ofMillis(5)};
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -64,15 +61,15 @@ public class CriticalPathDurationDataProviderTest extends DataProviderUnitTestBa
 
   @Test
   public void shouldBeEmptyWhenCriticalPathIsEmpty() throws Exception {
-    useProfile(metaData(), trace(mainThread()));
+    useMinimalProfile();
 
     assertThat(provider.getCriticalPathDuration().getCriticalPathDuration().isEmpty()).isTrue();
   }
 
   @Test
   public void shouldBeEmptyWhenCriticalPathHasNoEvents() throws Exception {
-    useProfile(
-        metaData(), trace(mainThread(), thread(0, 0, BazelProfileConstants.THREAD_CRITICAL_PATH)));
+    useProfileWithDefaults(
+        List.of(), List.of(thread(0, 0, BazelProfileConstants.THREAD_CRITICAL_PATH)));
     assertThat(provider.getCriticalPathDuration().getCriticalPathDuration().isEmpty()).isTrue();
   }
 }

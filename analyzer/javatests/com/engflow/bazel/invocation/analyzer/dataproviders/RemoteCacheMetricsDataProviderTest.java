@@ -1,8 +1,5 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_EXECUTION_UPLOAD_TIME;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_OUTPUT_DOWNLOAD;
@@ -35,7 +32,7 @@ public class RemoteCacheMetricsDataProviderTest extends DataProviderUnitTestBase
 
   @Test
   public void shouldBeEmptyWhenNoCachingIsIncluded() throws Exception {
-    useProfile(metaData(), trace(mainThread()));
+    useMinimalProfile();
     when(dataManager.getDatum(LocalActions.class)).thenReturn(LocalActions.create(List.of()));
 
     assertThat(provider.derive().isEmpty()).isTrue();
@@ -48,7 +45,7 @@ public class RemoteCacheMetricsDataProviderTest extends DataProviderUnitTestBase
           MissingInputException,
           DuplicateProviderException,
           NullDatumException {
-    useProfile(metaData(), trace(mainThread()));
+    useMinimalProfile();
 
     var thread = new EventThreadBuilder(1, 1);
     when(dataManager.getDatum(LocalActions.class))

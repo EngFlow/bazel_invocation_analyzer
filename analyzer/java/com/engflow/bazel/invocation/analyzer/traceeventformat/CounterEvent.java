@@ -16,24 +16,24 @@ package com.engflow.bazel.invocation.analyzer.traceeventformat;
 
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CounterEvent {
   private final String name;
   private final Timestamp timestamp;
-  private final double totalValue;
+  private final Map<String, Double> values = new HashMap<>();
 
   public CounterEvent(JsonObject event) {
     this.name = event.get(TraceEventFormatConstants.EVENT_NAME).getAsString();
     this.timestamp =
         Timestamp.ofMicros(event.get(TraceEventFormatConstants.EVENT_TIMESTAMP).getAsLong());
 
-    // For now we are treating all the different counts as a single metric by summing them
-    // together. In the future we may want to respect each count individually.
-    this.totalValue =
-        event.get(TraceEventFormatConstants.EVENT_ARGUMENTS).getAsJsonObject().entrySet().stream()
-            .mapToDouble(e -> e.getValue().getAsDouble())
-            .sum();
+    // We assume that each key is present at most once.
+    event.get(TraceEventFormatConstants.EVENT_ARGUMENTS).getAsJsonObject().entrySet().stream()
+        .forEach(e -> values.put(e.getKey(), e.getValue().getAsDouble()));
   }
 
   public String getName() {
@@ -44,8 +44,14 @@ public class CounterEvent {
     return timestamp;
   }
 
-  public double getTotalValue() {
-    return totalValue;
+  public Double getValue(String type) {
+    Preconditions.checkNotNull(type);
+    return values.get(type);
+  }
+
+  public double getValueOrZero(String type) {
+    Preconditions.checkNotNull(type);
+    return values.containsKey(type) ? getValue(type) : 0;
   }
 
   @Override
@@ -58,12 +64,12 @@ public class CounterEvent {
     }
     CounterEvent that = (CounterEvent) o;
     return Objects.equal(timestamp, that.timestamp)
-        && Double.compare(that.totalValue, totalValue) == 0
+        && Objects.equal(values, that.values)
         && Objects.equal(name, that.name);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(name, timestamp, totalValue);
+    return Objects.hashCode(name, timestamp, values);
   }
 }

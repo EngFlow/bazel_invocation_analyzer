@@ -42,11 +42,32 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.Test;
 
 public class BazelProfileTest extends UnitTestBase {
+
+  private static final WriteBazelProfile.ThreadEvent[] ACTION_COUNTS =
+      sequence(
+          IntStream.rangeClosed(0, 100).boxed(),
+          ts ->
+              count(
+                  BazelProfileConstants.COUNTER_ACTION_COUNT,
+                  ts,
+                  BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+                  "1"));
+  private static final WriteBazelProfile.TraceEvent COUNTER_SERIES_THREAD_NULL =
+      thread(null, 1, null, ACTION_COUNTS);
+  private static final WriteBazelProfile.Property
+      BAZEL_VERSION_PROPERTY_COUNTER_SERIES_IN_NULL_THREAD =
+          WriteBazelProfile.Property.put(
+              BazelProfileConstants.OTHER_DATA_BAZEL_VERSION,
+              String.format(
+                  "release %d.0.0",
+                  BazelProfile.MIN_BAZEL_MAJOR_VERSION_FOR_COUNTER_SERIES_IN_NULL_THREAD));
+
   @Test
   public void shouldRejectWhenInvalidJson() {
     assertThrows(
@@ -108,15 +129,41 @@ public class BazelProfileTest extends UnitTestBase {
   }
 
   @Test
-  public void shouldParseGzippedJsonBazelProfile() {
-    String profilePath = RUNFILES.rlocation(ROOT + "tiny.json.gz");
-    BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
+  public void shouldRejectWhenCounterSeriesIsMissing() {
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                BazelProfile.createFromInputStream(
+                    WriteBazelProfile.toInputStream(metaData(), trace(mainThread()))));
+    assertThat(exception.getMessage()).contains("counter series");
+  }
+
+  @Test
+  public void shouldParseMinimalProfileBeforeActionCountNullThread() {
+    BazelProfile bazelProfile =
+        createMinimalProfile(
+            BazelVersion.parse(
+                String.format(
+                    "release %d.0.0",
+                    BazelProfile.MIN_BAZEL_MAJOR_VERSION_FOR_COUNTER_SERIES_IN_NULL_THREAD - 1)));
     assertThat(bazelProfile.getThreads().count()).isGreaterThan(0);
   }
 
   @Test
-  public void shouldParseJsonBazelProfile() {
-    String profilePath = RUNFILES.rlocation(ROOT + "bazel-profile-Long-Phase-Test.json");
+  public void shouldParseMinimalProfileWithActionCountNullThread() {
+    BazelProfile bazelProfile =
+        createMinimalProfile(
+            BazelVersion.parse(
+                String.format(
+                    "release %d.0.0",
+                    BazelProfile.MIN_BAZEL_MAJOR_VERSION_FOR_COUNTER_SERIES_IN_NULL_THREAD)));
+    assertThat(bazelProfile.getThreads().count()).isGreaterThan(0);
+  }
+
+  @Test
+  public void shouldParseGzippedJsonBazelProfile() {
+    String profilePath = RUNFILES.rlocation(ROOT + "tiny.json.gz");
     BazelProfile bazelProfile = BazelProfile.createFromPath(profilePath);
     assertThat(bazelProfile.getThreads().count()).isGreaterThan(0);
   }
@@ -182,7 +229,7 @@ public class BazelProfileTest extends UnitTestBase {
         useProfile(
             metaData(),
             trace(
-                mainThread(),
+                mainThread(ACTION_COUNTS),
                 thread(
                     1,
                     0,
@@ -200,7 +247,60 @@ public class BazelProfileTest extends UnitTestBase {
   }
 
   @Test
-  public void getActionCountsNew()
+  public void getActionCountsWithCounterSeriesInNullThread()
+      throws DuplicateProviderException,
+          InvalidProfileException,
+          MissingInputException,
+          NullDatumException {
+    var profile =
+        useProfile(
+            metaData(BAZEL_VERSION_PROPERTY_COUNTER_SERIES_IN_NULL_THREAD),
+            trace(
+                mainThread(
+                    sequence(
+                        Stream.of(0, 80, 160, 240),
+                        ts ->
+                            complete(
+                                "An action",
+                                BazelProfileConstants.CAT_ACTION_PROCESSING,
+                                Timestamp.ofMicros(ts),
+                                TimeUtil.getDurationForMicros(80)))),
+                thread(
+                    null,
+                    1,
+                    null,
+                    concat(
+                        sequence(
+                            IntStream.rangeClosed(0, 50).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT,
+                                    ts,
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+                                    "4")),
+                        sequence(
+                            IntStream.rangeClosed(51, 100).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT,
+                                    ts,
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+                                    "1")),
+                        sequence(
+                            IntStream.rangeClosed(101, 149).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT,
+                                    ts,
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+                                    "4"))))));
+
+    assertThat(profile.getActionCounts()).isNotNull();
+    assertThat(profile.getActionCounts()).hasSize(150);
+  }
+
+  @Test
+  public void getActionCountsWithCounterSeriesInMainThread()
       throws DuplicateProviderException,
           InvalidProfileException,
           MissingInputException,
@@ -223,26 +323,32 @@ public class BazelProfileTest extends UnitTestBase {
                                     Timestamp.ofMicros(ts),
                                     TimeUtil.getDurationForMicros(80))),
                         sequence(
-                            IntStream.rangeClosed(0, 100).boxed(),
-                            ts ->
-                                count(
-                                    BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "4")),
-                        sequence(
-                            IntStream.rangeClosed(101, 200).boxed(),
-                            ts ->
-                                count(
-                                    BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "1")),
-                        sequence(
-                            IntStream.rangeClosed(201, 300).boxed(),
+                            IntStream.rangeClosed(0, 10).boxed(),
                             ts ->
                                 count(
                                     BazelProfileConstants.COUNTER_ACTION_COUNT,
                                     ts,
-                                    "action",
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+                                    "4")),
+                        sequence(
+                            IntStream.rangeClosed(11, 20).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT,
+                                    ts,
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+                                    "1")),
+                        sequence(
+                            IntStream.rangeClosed(21, 30).boxed(),
+                            ts ->
+                                count(
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT,
+                                    ts,
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
                                     "4"))))));
 
-    assertThat(profile.getActionCounts().isPresent()).isTrue();
-    assertThat(profile.getActionCounts().get().size()).isEqualTo(301);
+    assertThat(profile.getActionCounts()).isNotNull();
+    assertThat(profile.getActionCounts()).hasSize(31);
   }
 
   @Test
@@ -274,7 +380,7 @@ public class BazelProfileTest extends UnitTestBase {
                                 count(
                                     BazelProfileConstants.COUNTER_ACTION_COUNT_OLD,
                                     ts,
-                                    "action",
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
                                     "4")),
                         sequence(
                             IntStream.rangeClosed(101, 200).boxed(),
@@ -282,7 +388,7 @@ public class BazelProfileTest extends UnitTestBase {
                                 count(
                                     BazelProfileConstants.COUNTER_ACTION_COUNT_OLD,
                                     ts,
-                                    "action",
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
                                     "1")),
                         sequence(
                             IntStream.rangeClosed(201, 300).boxed(),
@@ -290,11 +396,11 @@ public class BazelProfileTest extends UnitTestBase {
                                 count(
                                     BazelProfileConstants.COUNTER_ACTION_COUNT_OLD,
                                     ts,
-                                    "action",
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
                                     "4"))))));
 
-    assertThat(profile.getActionCounts().isPresent()).isTrue();
-    assertThat(profile.getActionCounts().get().size()).isEqualTo(301);
+    assertThat(profile.getActionCounts()).isNotNull();
+    assertThat(profile.getActionCounts()).hasSize(301);
   }
 
   @Test
@@ -324,23 +430,29 @@ public class BazelProfileTest extends UnitTestBase {
                             IntStream.rangeClosed(0, 100).boxed(),
                             ts ->
                                 count(
-                                    BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "4")),
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT,
+                                    ts,
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+                                    "4")),
                         sequence(
                             IntStream.rangeClosed(101, 200).boxed(),
                             ts ->
                                 count(
-                                    BazelProfileConstants.COUNTER_ACTION_COUNT, ts, "action", "1")),
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT,
+                                    ts,
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
+                                    "1")),
                         sequence(
                             IntStream.rangeClosed(201, 300).boxed(),
                             ts ->
                                 count(
                                     BazelProfileConstants.COUNTER_ACTION_COUNT_OLD,
                                     ts,
-                                    "action",
+                                    BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION,
                                     "4"))))));
 
-    assertThat(profile.getActionCounts().isPresent()).isTrue();
-    assertThat(profile.getActionCounts().get().size()).isEqualTo(201);
+    assertThat(profile.getActionCounts()).isNotNull();
+    assertThat(profile.getActionCounts()).hasSize(201);
   }
 
   @Test
@@ -401,65 +513,58 @@ public class BazelProfileTest extends UnitTestBase {
   }
 
   @Test
-  public void getBazelVersionShouldReturnEmptyOnMissingBazelVersion()
-      throws DuplicateProviderException,
-          InvalidProfileException,
-          MissingInputException,
-          NullDatumException {
-    var profile = useProfile(metaData(), trace(mainThread()));
+  public void getBazelVersionShouldReturnEmptyOnMissingBazelVersion() {
+    var profile = createMinimalProfile(null);
     assertThat(profile.getBazelVersion().isEmpty()).isTrue();
   }
 
   @Test
-  public void getBazelVersionShouldReturnEmptyOnInvalidBazelVersion()
-      throws DuplicateProviderException,
-          InvalidProfileException,
-          MissingInputException,
-          NullDatumException {
-    var profile =
-        useProfile(
-            metaData(
-                WriteBazelProfile.Property.put(
-                    BazelProfileConstants.OTHER_DATA_BAZEL_VERSION, "invalid")),
-            trace(mainThread()));
+  public void getBazelVersionShouldReturnEmptyOnInvalidBazelVersion() {
+    var profile = createMinimalProfile(BazelVersion.parse("invalid"));
     assertThat(profile.getBazelVersion().isEmpty()).isTrue();
   }
 
   @Test
-  public void getBazelVersionShouldReturnVersionWithoutPreRelease()
-      throws DuplicateProviderException,
-          InvalidProfileException,
-          MissingInputException,
-          NullDatumException {
-    String validBazelVersion = "release 6.1.0";
-    var profile =
-        useProfile(
-            metaData(
-                WriteBazelProfile.Property.put(
-                    BazelProfileConstants.OTHER_DATA_BAZEL_VERSION, validBazelVersion)),
-            trace(mainThread()));
-
-    BazelVersion version = profile.getBazelVersion();
-    assertThat(version.isEmpty()).isFalse();
-    assertThat(version.getSummary()).isEqualTo(validBazelVersion);
+  public void getBazelVersionShouldReturnVersionBeforeActionCountNullThread() {
+    String validBazelVersion =
+        String.format(
+            "release %d.1.2",
+            BazelProfile.MIN_BAZEL_MAJOR_VERSION_FOR_COUNTER_SERIES_IN_NULL_THREAD - 1);
+    BazelVersion bazelVersion = BazelVersion.parse(validBazelVersion);
+    var profile = createMinimalProfile(bazelVersion);
+    assertThat(profile.getBazelVersion()).isEqualTo(bazelVersion);
   }
 
   @Test
-  public void getBazelVersionShouldReturnBazelVersionWithPreRelease()
-      throws DuplicateProviderException,
-          InvalidProfileException,
-          MissingInputException,
-          NullDatumException {
-    String validBazelVersion = "release 8.0.0-pre.20231030.2";
-    var profile =
-        useProfile(
-            metaData(
-                WriteBazelProfile.Property.put(
-                    BazelProfileConstants.OTHER_DATA_BAZEL_VERSION, validBazelVersion)),
-            trace(mainThread()));
+  public void getBazelVersionShouldReturnVersionWithActionCountNullThread() {
+    String validBazelVersion =
+        String.format(
+            "release %d.0.0",
+            BazelProfile.MIN_BAZEL_MAJOR_VERSION_FOR_COUNTER_SERIES_IN_NULL_THREAD);
+    BazelVersion bazelVersion = BazelVersion.parse(validBazelVersion);
+    var profile = createMinimalProfile(bazelVersion);
+    assertThat(profile.getBazelVersion()).isEqualTo(bazelVersion);
+  }
 
-    BazelVersion version = profile.getBazelVersion();
-    assertThat(version.isEmpty()).isFalse();
-    assertThat(version.getSummary()).isEqualTo(validBazelVersion);
+  private BazelProfile createMinimalProfile(BazelVersion bazelVersion) {
+    ArrayList<WriteBazelProfile.TraceEvent> traceEvents = new ArrayList<>();
+    if (bazelVersion != null
+        && bazelVersion.getMajor().isPresent()
+        && bazelVersion.getMajor().get()
+            >= BazelProfile.MIN_BAZEL_MAJOR_VERSION_FOR_COUNTER_SERIES_IN_NULL_THREAD) {
+      traceEvents.add(mainThread());
+      traceEvents.add(COUNTER_SERIES_THREAD_NULL);
+    } else {
+      traceEvents.add(mainThread(ACTION_COUNTS));
+    }
+    var bazelVersionProperty =
+        bazelVersion != null
+            ? WriteBazelProfile.Property.put(
+                BazelProfileConstants.OTHER_DATA_BAZEL_VERSION, bazelVersion.toString())
+            : null;
+    var metaData = bazelVersionProperty != null ? metaData(bazelVersionProperty) : metaData();
+    return BazelProfile.createFromInputStream(
+        WriteBazelProfile.toInputStream(
+            metaData, trace(traceEvents.toArray(new WriteBazelProfile.TraceEvent[0]))));
   }
 }

@@ -15,10 +15,7 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
@@ -26,6 +23,7 @@ import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.DataProviderUnitTestBase;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,10 +39,9 @@ public class RemoteCachingUsedDataProviderTest extends DataProviderUnitTestBase 
 
   @Test
   public void shouldReturnRemoteCachingUsed() throws Exception {
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -60,7 +57,7 @@ public class RemoteCachingUsedDataProviderTest extends DataProviderUnitTestBase 
 
   @Test
   public void shouldReturnRemoteCachingNotUsed() throws Exception {
-    useProfile(metaData(), trace(mainThread()));
+    useMinimalProfile();
 
     assertThat(provider.getRemoteCachingUsed().isRemoteCachingUsed()).isFalse();
   }

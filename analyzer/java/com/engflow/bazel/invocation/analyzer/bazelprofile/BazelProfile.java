@@ -48,6 +48,8 @@ public class BazelProfile implements Datum {
   // Best effort to get somewhat good alignment when outputting a list of thread names.
   private static final int THREAD_NAME_MIN_OUTPUT_LENGTH = "\"Garbage Collector\"".length() + 1;
 
+  @VisibleForTesting static final int MIN_BAZEL_MAJOR_VERSION_FOR_COUNTER_SERIES_IN_NULL_THREAD = 7;
+
   public static BazelProfile createFromPath(String path) throws IllegalArgumentException {
     File bazelProfileFile = new File(path);
 
@@ -87,6 +89,7 @@ public class BazelProfile implements Datum {
   }
 
   private final Map<String, String> otherData = new HashMap<>();
+  private final BazelVersion bazelVersion;
   private final Map<ThreadId, ProfileThread> threads = new HashMap<>();
 
   private BazelProfile(JsonObject profile) {
@@ -104,6 +107,8 @@ public class BazelProfile implements Datum {
           .getAsJsonObject()
           .entrySet()
           .forEach(entry -> otherData.put(entry.getKey(), entry.getValue().getAsString()));
+      this.bazelVersion =
+          BazelVersion.parse(otherData.get(BazelProfileConstants.OTHER_DATA_BAZEL_VERSION));
 
       profile
           .get(TraceEventFormatConstants.SECTION_TRACE_EVENTS)
@@ -112,13 +117,18 @@ public class BazelProfile implements Datum {
               element -> {
                 JsonObject object = element.getAsJsonObject();
                 int pid;
-                int tid;
                 try {
                   pid = object.get(TraceEventFormatConstants.EVENT_PROCESS_ID).getAsInt();
+                } catch (Exception e) {
+                  // Skip events that do not have a valid pid.
+                  return;
+                }
+                Integer tid;
+                try {
                   tid = object.get(TraceEventFormatConstants.EVENT_THREAD_ID).getAsInt();
                 } catch (Exception e) {
-                  // Skip events that do not have a valid pid or tid.
-                  return;
+                  // Collect all events without a tid into one thread.
+                  tid = null;
                 }
                 ThreadId threadId = new ThreadId(pid, tid);
                 ProfileThread profileThread =
@@ -143,6 +153,11 @@ public class BazelProfile implements Datum {
               "Invalid Bazel profile, JSON file missing \"%s\".",
               BazelProfileConstants.THREAD_MAIN));
     }
+
+    if (!containsCounterSeriesThread()) {
+      throw new IllegalArgumentException(
+          "Invalid Bazel profile, JSON file missing counter series.");
+    }
   }
 
   /**
@@ -151,6 +166,15 @@ public class BazelProfile implements Datum {
    */
   private boolean containsMainThread() {
     return threads.values().stream().anyMatch(BazelProfile::isMainThread);
+  }
+
+  /**
+   * This method is called from the constructor. Either it needs to stay private or it must be
+   * declared final, so that it cannot be overridden.
+   */
+  private boolean containsCounterSeriesThread() {
+    return threads.values().stream()
+        .anyMatch(thread -> isCounterSeriesThread(bazelVersion, thread));
   }
 
   /**
@@ -192,6 +216,33 @@ public class BazelProfile implements Datum {
   }
 
   /**
+   * Returns whether the passed-in thread looks like the thread that includes counter series, which
+   * includes counters for data such as action count, CPU usage or memory usage.
+   *
+   * @param thread the thread to check
+   * @return whether the thread looks like it includes Bazel's counter series
+   */
+  @VisibleForTesting
+  static boolean isCounterSeriesThread(BazelVersion bazelVersion, ProfileThread thread) {
+    if (!thread.getCounts().containsKey(BazelProfileConstants.COUNTER_ACTION_COUNT)
+        && !thread.getCounts().containsKey(BazelProfileConstants.COUNTER_ACTION_COUNT_OLD)) {
+      // Any counter series thread should at least include an action count event.
+      return false;
+    }
+    if (bazelVersion.getMajor().isPresent()
+        && bazelVersion.getMajor().get()
+            >= MIN_BAZEL_MAJOR_VERSION_FOR_COUNTER_SERIES_IN_NULL_THREAD) {
+      // As of https://github.com/bazelbuild/bazel/commit/610b56f50d98181ee5051f2644295e0fea43560a
+      // counter series no longer include a `tid`.
+      return thread.getThreadId().getThreadId() == null;
+    } else {
+      // Prior https://github.com/bazelbuild/bazel/commit/610b56f50d98181ee5051f2644295e0fea43560a
+      // counter series were included in the main thread.
+      return isMainThread(thread);
+    }
+  }
+
+  /**
    * Returns whether the passed-in thread looks like the critical path thread.
    *
    * @param thread the thread to check
@@ -213,8 +264,7 @@ public class BazelProfile implements Datum {
    * @return the BazelVersion included in the profile, if any.
    */
   public BazelVersion getBazelVersion() {
-    String bazelVersion = getOtherData().get(BazelProfileConstants.OTHER_DATA_BAZEL_VERSION);
-    return BazelVersion.parse(bazelVersion);
+    return bazelVersion;
   }
 
   public Stream<ProfileThread> getThreads() {
@@ -233,13 +283,22 @@ public class BazelProfile implements Datum {
     return threads.values().stream().filter(BazelProfile::isGarbageCollectorThread).findAny();
   }
 
-  public Optional<ImmutableList<CounterEvent>> getActionCounts() {
-    var actionCounts = getMainThread().getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT);
+  public ProfileThread getCounterSeriesThread() {
+    return threads.values().stream()
+        .filter(thread -> isCounterSeriesThread(bazelVersion, thread))
+        .findAny()
+        .get();
+  }
+
+  public ImmutableList<CounterEvent> getActionCounts() {
+    ProfileThread counterSeriesThread = getCounterSeriesThread();
+    var actionCounts =
+        counterSeriesThread.getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT);
     if (actionCounts == null) {
       actionCounts =
-          getMainThread().getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT_OLD);
+          counterSeriesThread.getCounts().get(BazelProfileConstants.COUNTER_ACTION_COUNT_OLD);
     }
-    return Optional.ofNullable(actionCounts);
+    return actionCounts;
   }
 
   /**

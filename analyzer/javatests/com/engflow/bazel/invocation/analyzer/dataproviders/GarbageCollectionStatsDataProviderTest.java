@@ -16,11 +16,8 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.concat;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.sequence;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
@@ -30,6 +27,7 @@ import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,10 +45,9 @@ public class GarbageCollectionStatsDataProviderTest extends DataProviderUnitTest
   @Test
   public void shouldReturnMajorGarbageCollection() throws Exception {
     Duration singleGcDuration = TimeUtil.getDurationForMicros(10_000);
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -74,10 +71,9 @@ public class GarbageCollectionStatsDataProviderTest extends DataProviderUnitTest
   @Test
   public void shouldReturnNoMajorGarbageCollection() throws Exception {
     Duration singleGcDuration = TimeUtil.getDurationForMicros(10_000);
-    useProfile(
-        metaData(),
-        trace(
-            mainThread(),
+    useProfileWithDefaults(
+        List.of(),
+        List.of(
             thread(
                 0,
                 0,
@@ -99,7 +95,7 @@ public class GarbageCollectionStatsDataProviderTest extends DataProviderUnitTest
 
   @Test
   public void shouldThrowWhenNoMajorGarbageCollectorThreadIsPresent() throws Exception {
-    useProfile(metaData(), trace(mainThread()));
+    useMinimalProfile();
 
     assertThrows(InvalidProfileException.class, () -> provider.getGarbageCollectionStats());
   }

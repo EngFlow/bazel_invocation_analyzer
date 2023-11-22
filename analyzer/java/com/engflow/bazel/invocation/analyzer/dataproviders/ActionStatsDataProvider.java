@@ -34,10 +34,6 @@ import java.util.stream.Collectors;
 
 /** A {@link DataProvider} that supplies data on action counts, including bottleneck statistics. */
 public class ActionStatsDataProvider extends DataProvider {
-  public static final String EMPTY_REASON_ACTION_COUNT =
-      "The Bazel profile does not include an action count, which is required for extracting"
-          + " bottlenecks. Try analyzing a profile that processes actions, for example a build or"
-          + " test.";
   public static final String EMPTY_REASON_ESTIMATED_CORES_USED =
       "The Bazel profile does not include the data required for estimating the number of cores"
           + " used, which is needed for extracting bottlenecks. Try analyzing a profile that"
@@ -52,11 +48,7 @@ public class ActionStatsDataProvider extends DataProvider {
   public ActionStats getActionStats()
       throws InvalidProfileException, MissingInputException, NullDatumException {
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
-    var optionalActionCounts = bazelProfile.getActionCounts();
-    if (optionalActionCounts.isEmpty()) {
-      return new ActionStats(EMPTY_REASON_ACTION_COUNT);
-    }
-    var actionCounts = optionalActionCounts.get();
+    var actionCounts = bazelProfile.getActionCounts();
 
     Optional<Integer> optionalEstimatedCoresUsed =
         getDataManager().getDatum(EstimatedCoresUsed.class).getEstimatedCores();
@@ -69,12 +61,14 @@ public class ActionStatsDataProvider extends DataProvider {
     Bottleneck.Builder currentBottleneck = null;
 
     for (CounterEvent actionCount : actionCounts) {
-      boolean isBottleneck = actionCount.getTotalValue() < coresUsed;
+      var actionCountActions =
+          actionCount.getValueOrZero(BazelProfileConstants.COUNTER_ACTION_COUNT_TYPE_ACTION);
+      boolean isBottleneck = actionCountActions < coresUsed;
       boolean bottleneckInProgress = currentBottleneck != null;
 
       if (bottleneckInProgress) {
         if (isBottleneck) {
-          currentBottleneck.addActionCountSample(actionCount.getTotalValue());
+          currentBottleneck.addActionCountSample(actionCountActions);
           currentBottleneck.setEnd(actionCount.getTimestamp());
         } else {
           bottlenecks.add(currentBottleneck);
@@ -83,7 +77,7 @@ public class ActionStatsDataProvider extends DataProvider {
       } else {
         if (isBottleneck) {
           currentBottleneck = Bottleneck.newBuilder(actionCount.getTimestamp());
-          currentBottleneck.addActionCountSample(actionCount.getTotalValue());
+          currentBottleneck.addActionCountSample(actionCountActions);
         }
       }
     }

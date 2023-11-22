@@ -26,4 +26,7 @@ java_library(
     name = "types",
     srcs = TYPES,
     visibility = ["//visibility:public"],
+    deps = [
+        "//third_party/jsr305",
+    ],
 )
