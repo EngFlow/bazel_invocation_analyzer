@@ -22,6 +22,7 @@ import org.junit.runners.Suite;
   ActionStatsDataProviderTest.class,
   BazelPhasesDataProviderTest.class,
   BazelPhaseDescriptionsTest.class,
+  BazelVersionDataProviderTest.class,
   BazelProfilePhaseTest.class,
   CriticalPathDurationDataProviderTest.class,
   EstimatedCoresDataProviderTest.class,

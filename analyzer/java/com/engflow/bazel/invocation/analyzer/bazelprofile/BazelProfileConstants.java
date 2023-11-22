@@ -61,4 +61,9 @@ public class BazelProfileConstants {
 
   // InstantEvent names
   public static final String INSTANT_FINISHING = "Finishing";
+
+  // otherData key names
+  // See
+  // https://github.com/bazelbuild/bazel/blob/aab19f75cd383c4b09a6ae720f9fa436bf89d271/src/main/java/com/google/devtools/build/lib/profiler/JsonTraceFileWriter.java#L179-L183
+  public static final String OTHER_DATA_BAZEL_VERSION = "bazel_version";
 }
