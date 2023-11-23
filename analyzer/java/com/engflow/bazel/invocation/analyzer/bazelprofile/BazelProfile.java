@@ -86,6 +86,7 @@ public class BazelProfile implements Datum {
     return new BazelProfile(bazelProfile);
   }
 
+  private final BazelVersion bazelVersion;
   private final Map<String, String> otherData = new HashMap<>();
   private final Map<ThreadId, ProfileThread> threads = new HashMap<>();
 
@@ -104,6 +105,8 @@ public class BazelProfile implements Datum {
           .getAsJsonObject()
           .entrySet()
           .forEach(entry -> otherData.put(entry.getKey(), entry.getValue().getAsString()));
+      this.bazelVersion =
+          BazelVersion.parse(otherData.get(BazelProfileConstants.OTHER_DATA_BAZEL_VERSION));
 
       profile
           .get(TraceEventFormatConstants.SECTION_TRACE_EVENTS)
@@ -206,15 +209,15 @@ public class BazelProfile implements Datum {
   }
 
   /**
-   * For performance reasons, prefer getting the Datum {@link BazelVersion} provided by {@link
-   * com.engflow.bazel.invocation.analyzer.dataproviders.BazelVersionDataProvider}, which memoizes
-   * the value.
+   * The Bazel version used to generate the profile, if known.
    *
-   * @return the BazelVersion included in the profile, if any.
+   * <p>This data is also provided by {@link
+   * com.engflow.bazel.invocation.analyzer.dataproviders.BazelVersionDataProvider}.
+   *
+   * @return the Bazel version included in the profile, if any.
    */
   public BazelVersion getBazelVersion() {
-    String bazelVersion = getOtherData().get(BazelProfileConstants.OTHER_DATA_BAZEL_VERSION);
-    return BazelVersion.parse(bazelVersion);
+    return bazelVersion;
   }
 
   public Stream<ProfileThread> getThreads() {
