@@ -21,9 +21,34 @@ public class BazelProfileConstants {
   // Thread names: event.name == METADATA_THREAD_NAME && event.args.name == constant below
   // These constants should not be used outside this package.
   @VisibleForTesting public static final String THREAD_CRITICAL_PATH = "Critical Path";
-  @VisibleForTesting public static final String THREAD_GARBAGE_COLLECTOR = "Garbage Collector";
-  // See https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c
-  static final String THREAD_GARBAGE_COLLECTOR_OLD = "Service Thread";
+
+  /**
+   * Deprecated.
+   *
+   * <p>The thread that contains GC events has been renamed multiple times, so it's discouraged to
+   * use it to filter for GC events. Instead, match the event category against {@link
+   * #CAT_GARBAGE_COLLECTION}.
+   *
+   * <p>Used thread names over time include "Service Thread", "Garbage Collector" and "Notification
+   * Thread". E.g. see
+   * https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c
+   */
+  @Deprecated @VisibleForTesting
+  public static final String THREAD_GARBAGE_COLLECTOR = "Garbage Collector";
+
+  /**
+   * Deprecated.
+   *
+   * <p>The thread that contains GC events has been renamed multiple times, so it's discouraged to
+   * use it to filter for GC events. Instead, match the event category against {@link
+   * #CAT_GARBAGE_COLLECTION}.
+   *
+   * <p>Used thread names over time include "Service Thread", "Garbage Collector" and "Notification
+   * Thread". E.g. see
+   * https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c
+   */
+  @Deprecated static final String THREAD_GARBAGE_COLLECTOR_OLD = "Service Thread";
+
   @VisibleForTesting public static final String THREAD_MAIN = "Main Thread";
   // See https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c
   static final String THREAD_MAIN_OLD_PREFIX = "grpc-command";

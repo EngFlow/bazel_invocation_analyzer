@@ -371,7 +371,7 @@ public class BazelProfileTest extends UnitTestBase {
   }
 
   @Test
-  public void isGarbageCollectorThreadShouldReturnFalseOnUnnamedProfileThread() {
+  public void isGarbageCollectorThreadShouldReturnFalseOnEmptyProfileThread() {
     ProfileThread thread = new ProfileThread(new ThreadId(0, 0));
     assertThat(BazelProfile.isGarbageCollectorThread(thread)).isFalse();
   }
@@ -385,17 +385,48 @@ public class BazelProfileTest extends UnitTestBase {
   }
 
   @Test
-  public void isGarbageCollectorShouldReturnTrueOnNewName() {
+  public void isGarbageCollectorShouldReturnFalseOnGCThreadWithoutGCEvents() {
     ProfileThread thread =
         new ProfileThread(
-            new ThreadId(0, 0), "Garbage Collector", null, null, null, null, null, null);
-    assertThat(BazelProfile.isGarbageCollectorThread(thread)).isTrue();
+            new ThreadId(0, 0),
+            "Garbage Collector",
+            null,
+            null,
+            null,
+            Lists.newArrayList(
+                new CompleteEvent(
+                    null,
+                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                    Timestamp.ofMicros(11),
+                    TimeUtil.getDurationForMicros(10),
+                    1,
+                    1,
+                    ImmutableMap.of())),
+            null,
+            null);
+    assertThat(BazelProfile.isGarbageCollectorThread(thread)).isFalse();
   }
 
   @Test
-  public void isGarbageCollectorShouldReturnTrueOnOldName() {
+  public void isGarbageCollectorShouldReturnTrueOnThreadWithGC() {
     ProfileThread thread =
-        new ProfileThread(new ThreadId(0, 0), "Service Thread", null, null, null, null, null, null);
+        new ProfileThread(
+            new ThreadId(0, 0),
+            "Foo Thread",
+            null,
+            null,
+            null,
+            Lists.newArrayList(
+                new CompleteEvent(
+                    null,
+                    BazelProfileConstants.CAT_GARBAGE_COLLECTION,
+                    Timestamp.ofMicros(11),
+                    TimeUtil.getDurationForMicros(10),
+                    1,
+                    1,
+                    ImmutableMap.of())),
+            null,
+            null);
     assertThat(BazelProfile.isGarbageCollectorThread(thread)).isTrue();
   }
 }

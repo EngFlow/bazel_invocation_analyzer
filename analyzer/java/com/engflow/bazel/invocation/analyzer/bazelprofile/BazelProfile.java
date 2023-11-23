@@ -172,22 +172,15 @@ public class BazelProfile implements Datum {
   }
 
   /**
-   * Returns whether the passed-in thread looks like the garbage collection, both for newer and
-   * older versions of Bazel. See
-   * https://github.com/bazelbuild/bazel/commit/a03674e6297ed5f6f740889cba8780d7c4ffe05c for when
-   * the naming of the garbage collection thread was changed.
+   * Returns whether the passed-in thread has at least one garbage collection event.
    *
    * @param thread the thread to check
-   * @return whether the thread looks like it is the garbage collection thread
+   * @return whether the thread includes a garbage collection event
    */
   @VisibleForTesting
   static boolean isGarbageCollectorThread(ProfileThread thread) {
-    String name = thread.getName();
-    if (Strings.isNullOrEmpty(name)) {
-      return false;
-    }
-    return name.equals(BazelProfileConstants.THREAD_GARBAGE_COLLECTOR)
-        || name.equals(BazelProfileConstants.THREAD_GARBAGE_COLLECTOR_OLD);
+    return thread.getCompleteEvents().stream()
+        .anyMatch(event -> event.category.equals(BazelProfileConstants.CAT_GARBAGE_COLLECTION));
   }
 
   /**
