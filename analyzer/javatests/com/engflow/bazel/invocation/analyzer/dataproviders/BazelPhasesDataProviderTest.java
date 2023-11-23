@@ -25,6 +25,8 @@ import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfilePhase;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,7 +34,8 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
   private final Timestamp LAUNCH_START = Timestamp.ofMicros(-10_000);
   private final Timestamp INIT_START = Timestamp.ofMicros(0);
   private final Timestamp EVAL_START = Timestamp.ofMicros(20_000);
-  private final Timestamp DEP_START = Timestamp.ofMicros(50_000);
+  private final Timestamp ANALYZE_START = Timestamp.ofMicros(50_000);
+  private final Timestamp LICENSE_START = Timestamp.ofMicros(80_000);
   private final Timestamp PREP_START = Timestamp.ofMicros(90_000);
   private final Timestamp EXEC_START = Timestamp.ofMicros(140_000);
   private final Timestamp FINISH_START = Timestamp.ofMicros(200_000);
@@ -48,7 +51,18 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void getBazelPhaseDescriptionsShouldWorkWhenAllPhasesArePresent() throws Exception {
+  public void getBazelPhaseDescriptionsShouldWorkWhenAllPhasesArePresentWithoutSkymeld()
+      throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    startTimes.put(BazelProfilePhase.LAUNCH, LAUNCH_START);
+    startTimes.put(BazelProfilePhase.INIT, INIT_START);
+    startTimes.put(BazelProfilePhase.TARGET_PATTERN_EVAL, EVAL_START);
+    startTimes.put(BazelProfilePhase.ANALYZE, ANALYZE_START);
+    startTimes.put(BazelProfilePhase.LICENSE, LICENSE_START);
+    startTimes.put(BazelProfilePhase.PREPARE, PREP_START);
+    startTimes.put(BazelProfilePhase.EXECUTE, EXEC_START);
+    startTimes.put(BazelProfilePhase.FINISH, FINISH_START);
+
     useProfile(
         metaData(),
         trace(
@@ -56,15 +70,7 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                 20,
                 0,
                 BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+                createPhaseEvents(startTimes, FINISH_TIME))));
 
     BazelPhaseDescriptions descriptions = provider.getBazelPhaseDescriptions();
     assertThat(descriptions.get(BazelProfilePhase.LAUNCH).get())
@@ -75,14 +81,18 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
         .isEqualTo(
             new BazelPhaseDescription(
                 INIT_START, TimeUtil.getDurationBetween(INIT_START, EVAL_START)));
-    assertThat(descriptions.get(BazelProfilePhase.EVALUATE).get())
+    assertThat(descriptions.get(BazelProfilePhase.TARGET_PATTERN_EVAL).get())
         .isEqualTo(
             new BazelPhaseDescription(
-                EVAL_START, TimeUtil.getDurationBetween(EVAL_START, DEP_START)));
-    assertThat(descriptions.get(BazelProfilePhase.DEPENDENCIES).get())
+                EVAL_START, TimeUtil.getDurationBetween(EVAL_START, ANALYZE_START)));
+    assertThat(descriptions.get(BazelProfilePhase.ANALYZE).get())
         .isEqualTo(
             new BazelPhaseDescription(
-                DEP_START, TimeUtil.getDurationBetween(DEP_START, PREP_START)));
+                ANALYZE_START, TimeUtil.getDurationBetween(ANALYZE_START, LICENSE_START)));
+    assertThat(descriptions.get(BazelProfilePhase.LICENSE).get())
+        .isEqualTo(
+            new BazelPhaseDescription(
+                LICENSE_START, TimeUtil.getDurationBetween(LICENSE_START, PREP_START)));
     assertThat(descriptions.get(BazelProfilePhase.PREPARE).get())
         .isEqualTo(
             new BazelPhaseDescription(
@@ -98,7 +108,15 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void getBazelPhaseDescriptionsShouldWorkWhenSomePhasesAreMissing() throws Exception {
+  public void getBazelPhaseDescriptionsShouldWorkWhenAllPhasesArePresentWithSkymeld()
+      throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    startTimes.put(BazelProfilePhase.LAUNCH, LAUNCH_START);
+    startTimes.put(BazelProfilePhase.INIT, INIT_START);
+    startTimes.put(BazelProfilePhase.TARGET_PATTERN_EVAL, EVAL_START);
+    startTimes.put(BazelProfilePhase.ANALYZE_AND_EXECUTE, ANALYZE_START);
+    startTimes.put(BazelProfilePhase.FINISH, FINISH_START);
+
     useProfile(
         metaData(),
         trace(
@@ -106,15 +124,51 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                 20,
                 0,
                 BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    null,
-                    null,
-                    PREP_START,
-                    null,
-                    FINISH_START,
-                    FINISH_TIME))));
+                createPhaseEvents(startTimes, FINISH_TIME))));
+
+    BazelPhaseDescriptions descriptions = provider.getBazelPhaseDescriptions();
+    assertThat(descriptions.get(BazelProfilePhase.LAUNCH).get())
+        .isEqualTo(
+            new BazelPhaseDescription(
+                LAUNCH_START, TimeUtil.getDurationBetween(LAUNCH_START, INIT_START)));
+    assertThat(descriptions.get(BazelProfilePhase.INIT).get())
+        .isEqualTo(
+            new BazelPhaseDescription(
+                INIT_START, TimeUtil.getDurationBetween(INIT_START, EVAL_START)));
+    assertThat(descriptions.get(BazelProfilePhase.TARGET_PATTERN_EVAL).get())
+        .isEqualTo(
+            new BazelPhaseDescription(
+                EVAL_START, TimeUtil.getDurationBetween(EVAL_START, ANALYZE_START)));
+    assertThat(descriptions.get(BazelProfilePhase.ANALYZE_AND_EXECUTE).get())
+        .isEqualTo(
+            new BazelPhaseDescription(
+                ANALYZE_START, TimeUtil.getDurationBetween(ANALYZE_START, FINISH_START)));
+    assertThat(descriptions.get(BazelProfilePhase.FINISH).get())
+        .isEqualTo(
+            new BazelPhaseDescription(
+                FINISH_START, TimeUtil.getDurationBetween(FINISH_START, FINISH_TIME)));
+  }
+
+  @Test
+  public void getBazelPhaseDescriptionsShouldWorkWhenSomePhasesAreMissing() throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    startTimes.put(BazelProfilePhase.LAUNCH, LAUNCH_START);
+    startTimes.put(BazelProfilePhase.INIT, INIT_START);
+    // No BazelProfilePhase.TARGET_PATTERN_EVAL
+    // No BazelProfilePhase.ANALYZE
+    // No BazelProfilePhase.LICENSE
+    startTimes.put(BazelProfilePhase.PREPARE, PREP_START);
+    // No BazelProfilePhase.EXECUTE
+    startTimes.put(BazelProfilePhase.FINISH, FINISH_START);
+
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                20,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                createPhaseEvents(startTimes, FINISH_TIME))));
 
     BazelPhaseDescriptions descriptions = provider.getBazelPhaseDescriptions();
     assertThat(descriptions.get(BazelProfilePhase.LAUNCH).get())
@@ -138,6 +192,9 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
   @Test
   public void getBazelPhaseDescriptionsShouldWorkWhenAllButLaunchAndFinishPhaseAreMissing()
       throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    startTimes.put(BazelProfilePhase.LAUNCH, LAUNCH_START);
+
     useProfile(
         metaData(),
         trace(
@@ -145,7 +202,7 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                 20,
                 0,
                 BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(LAUNCH_START, null, null, null, null, null, null, FINISH_TIME))));
+                createPhaseEvents(startTimes, FINISH_TIME))));
 
     BazelPhaseDescriptions descriptions = provider.getBazelPhaseDescriptions();
     assertThat(descriptions.get(BazelProfilePhase.FINISH).get())
@@ -157,6 +214,16 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
   @Test
   public void getBazelPhaseDescriptionsShouldThrowWhenTwoMarkersHaveTheSameTimestamp()
       throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    startTimes.put(BazelProfilePhase.LAUNCH, LAUNCH_START);
+    startTimes.put(BazelProfilePhase.INIT, INIT_START);
+    startTimes.put(BazelProfilePhase.TARGET_PATTERN_EVAL, EVAL_START);
+    startTimes.put(BazelProfilePhase.ANALYZE, ANALYZE_START);
+    startTimes.put(BazelProfilePhase.PREPARE, PREP_START);
+    // Duplicate timestamp.
+    startTimes.put(BazelProfilePhase.EXECUTE, ANALYZE_START);
+    startTimes.put(BazelProfilePhase.FINISH, FINISH_START);
+
     useProfile(
         metaData(),
         trace(
@@ -164,29 +231,28 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                 20,
                 0,
                 BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    DEP_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+                createPhaseEvents(startTimes, FINISH_TIME))));
 
     InvalidProfileException invalidProfileException =
         assertThrows(InvalidProfileException.class, () -> provider.getBazelPhaseDescriptions());
-    assertThat(invalidProfileException)
-        .hasMessageThat()
-        .contains(BazelProfilePhase.DEPENDENCIES.name);
+    assertThat(invalidProfileException).hasMessageThat().contains(BazelProfilePhase.ANALYZE.name);
     assertThat(invalidProfileException).hasMessageThat().contains(BazelProfilePhase.EXECUTE.name);
     assertThat(invalidProfileException)
         .hasMessageThat()
-        .contains(String.valueOf(DEP_START.getMicros()));
+        .contains(String.valueOf(ANALYZE_START.getMicros()));
   }
 
   @Test
   public void getBazelPhaseDescriptionsShouldThrowWhenLaunchPhaseIsMissing() throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    // No BazelProfilePhase.LAUNCH
+    startTimes.put(BazelProfilePhase.INIT, INIT_START);
+    startTimes.put(BazelProfilePhase.TARGET_PATTERN_EVAL, EVAL_START);
+    startTimes.put(BazelProfilePhase.ANALYZE, ANALYZE_START);
+    startTimes.put(BazelProfilePhase.PREPARE, PREP_START);
+    startTimes.put(BazelProfilePhase.EXECUTE, EXEC_START);
+    startTimes.put(BazelProfilePhase.FINISH, FINISH_START);
+
     useProfile(
         metaData(),
         trace(
@@ -194,15 +260,7 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                 20,
                 0,
                 BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    null,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+                createPhaseEvents(startTimes, FINISH_TIME))));
 
     InvalidProfileException invalidProfileException =
         assertThrows(InvalidProfileException.class, () -> provider.getBazelPhaseDescriptions());
@@ -211,22 +269,19 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void getBazelPhaseDescriptionsShouldThrowWhenFinishPhaseIsMissing() throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    startTimes.put(BazelProfilePhase.LAUNCH, LAUNCH_START);
+    startTimes.put(BazelProfilePhase.INIT, INIT_START);
+    startTimes.put(BazelProfilePhase.TARGET_PATTERN_EVAL, EVAL_START);
+    startTimes.put(BazelProfilePhase.ANALYZE, ANALYZE_START);
+    startTimes.put(BazelProfilePhase.PREPARE, PREP_START);
+    startTimes.put(BazelProfilePhase.EXECUTE, EXEC_START);
+    startTimes.put(BazelProfilePhase.FINISH, FINISH_START);
+
     useProfile(
         metaData(),
         trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    null))));
+            thread(20, 0, BazelProfileConstants.THREAD_MAIN, createPhaseEvents(startTimes, null))));
 
     InvalidProfileException invalidProfileException =
         assertThrows(InvalidProfileException.class, () -> provider.getBazelPhaseDescriptions());
@@ -237,6 +292,16 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void getTotalDurationShouldWorkWhenAllPhasesArePresent() throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    startTimes.put(BazelProfilePhase.LAUNCH, LAUNCH_START);
+    startTimes.put(BazelProfilePhase.INIT, INIT_START);
+    startTimes.put(BazelProfilePhase.TARGET_PATTERN_EVAL, EVAL_START);
+    startTimes.put(BazelProfilePhase.ANALYZE, ANALYZE_START);
+    startTimes.put(BazelProfilePhase.LICENSE, LICENSE_START);
+    startTimes.put(BazelProfilePhase.PREPARE, PREP_START);
+    startTimes.put(BazelProfilePhase.EXECUTE, EXEC_START);
+    startTimes.put(BazelProfilePhase.FINISH, FINISH_START);
+
     useProfile(
         metaData(),
         trace(
@@ -244,15 +309,7 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                 20,
                 0,
                 BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+                createPhaseEvents(startTimes, FINISH_TIME))));
 
     TotalDuration duration = provider.getTotalDuration();
     assertThat(duration.getTotalDuration().isPresent()).isTrue();
@@ -263,6 +320,9 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
   @Test
   public void getTotalDurationShouldWorkWhenAllButLaunchAndFinishPhaseAreMissing()
       throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    startTimes.put(BazelProfilePhase.LAUNCH, LAUNCH_START);
+
     useProfile(
         metaData(),
         trace(
@@ -270,7 +330,7 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                 20,
                 0,
                 BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(LAUNCH_START, null, null, null, null, null, null, FINISH_TIME))));
+                createPhaseEvents(startTimes, FINISH_TIME))));
 
     TotalDuration duration = provider.getTotalDuration();
     assertThat(duration.getTotalDuration().isPresent()).isTrue();
@@ -280,6 +340,16 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void getTotalDurationShouldThrowWhenLaunchPhasesIsMissing() throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    // No BazelProfilePhase.LAUNCH
+    startTimes.put(BazelProfilePhase.INIT, INIT_START);
+    startTimes.put(BazelProfilePhase.TARGET_PATTERN_EVAL, EVAL_START);
+    startTimes.put(BazelProfilePhase.ANALYZE, ANALYZE_START);
+    startTimes.put(BazelProfilePhase.LICENSE, LICENSE_START);
+    startTimes.put(BazelProfilePhase.PREPARE, PREP_START);
+    startTimes.put(BazelProfilePhase.EXECUTE, EXEC_START);
+    startTimes.put(BazelProfilePhase.FINISH, FINISH_START);
+
     useProfile(
         metaData(),
         trace(
@@ -287,15 +357,7 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
                 20,
                 0,
                 BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    null,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+                createPhaseEvents(startTimes, FINISH_TIME))));
 
     InvalidProfileException invalidProfileException =
         assertThrows(InvalidProfileException.class, () -> provider.getTotalDuration());
@@ -304,22 +366,18 @@ public class BazelPhasesDataProviderTest extends DataProviderUnitTestBase {
 
   @Test
   public void getTotalDurationShouldThrowWhenFinishingPhaseIsMissing() throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    startTimes.put(BazelProfilePhase.LAUNCH, LAUNCH_START);
+    startTimes.put(BazelProfilePhase.INIT, INIT_START);
+    startTimes.put(BazelProfilePhase.TARGET_PATTERN_EVAL, EVAL_START);
+    startTimes.put(BazelProfilePhase.ANALYZE, ANALYZE_START);
+    startTimes.put(BazelProfilePhase.PREPARE, PREP_START);
+    startTimes.put(BazelProfilePhase.EXECUTE, EXEC_START);
+    startTimes.put(BazelProfilePhase.FINISH, FINISH_START);
     useProfile(
         metaData(),
         trace(
-            thread(
-                20,
-                0,
-                BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    null))));
+            thread(20, 0, BazelProfileConstants.THREAD_MAIN, createPhaseEvents(startTimes, null))));
 
     InvalidProfileException invalidProfileException =
         assertThrows(InvalidProfileException.class, () -> provider.getTotalDuration());

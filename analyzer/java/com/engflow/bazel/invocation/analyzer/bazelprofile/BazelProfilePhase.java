@@ -17,10 +17,14 @@ package com.engflow.bazel.invocation.analyzer.bazelprofile;
 public enum BazelProfilePhase {
   // The order of these is important, it reflects in which order we expect the timestamps of the
   // phases markers in the Bazel profile to be.
+  // Names taken from
+  // https://github.com/bazelbuild/bazel/blob/febfa54dbe62d719ad6dbbfdd12bd6f8c0923b7a/src/main/java/com/google/devtools/build/lib/profiler/ProfilePhase.java#L20-L32
   LAUNCH("Launch Blaze"),
   INIT("Initialize command"),
-  EVALUATE("Evaluate target patterns"),
-  DEPENDENCIES("Load and analyze dependencies"),
+  TARGET_PATTERN_EVAL("Evaluate target patterns"),
+  ANALYZE("Load and analyze dependencies"),
+  ANALYZE_AND_EXECUTE("Load, analyze dependencies and build artifacts"),
+  LICENSE("Analyze licenses"),
   PREPARE("Prepare for build"),
   EXECUTE("Build artifacts"),
   FINISH("Complete build");

@@ -27,8 +27,9 @@ import org.junit.runners.Suite;
   CriticalPathDurationDataProviderTest.class,
   EstimatedCoresDataProviderTest.class,
   GarbageCollectionStatsDataProviderTest.class,
-  MergedEventsPresentDataProviderTest.class,
   LocalActionsDataProviderTest.class,
-  RemoteCacheMetricsDataProviderTest.class
+  MergedEventsPresentDataProviderTest.class,
+  RemoteCacheMetricsDataProviderTest.class,
+  SkymeldUsedDataProviderTest.class
 })
 public class DataProvidersTestSuite {}
