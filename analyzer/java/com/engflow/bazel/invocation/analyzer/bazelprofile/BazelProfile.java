@@ -180,9 +180,7 @@ public class BazelProfile implements Datum {
   @VisibleForTesting
   static boolean isGarbageCollectorThread(ProfileThread thread) {
     return thread.getCompleteEvents().stream()
-        .filter(event -> event.category.equals(BazelProfileConstants.CAT_GARBAGE_COLLECTION))
-        .findAny()
-        .isPresent();
+        .anyMatch(event -> event.category.equals(BazelProfileConstants.CAT_GARBAGE_COLLECTION));
   }
 
   /**
