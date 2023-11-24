@@ -173,10 +173,13 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
     rationale.add(
         String.format(
             Locale.US,
-            "The profile includes a bottleneck lasting %s with an average action count of"
-                + " %.2f.",
+            "The profile includes a bottleneck lasting %s with an average action count of %.2f."
+                + " That's only %.1f%% of the estimated maximum of %d actions that could have been"
+                + " executed in parallel.",
             formatDuration(bottleneck.bottleneck.getDuration()),
-            bottleneck.bottleneck.getAvgActionCount()));
+            bottleneck.bottleneck.getAvgActionCount(),
+            100 * bottleneck.bottleneck.getAvgActionCount() / bottleneck.potentialMaxActionCount,
+            bottleneck.potentialMaxActionCount));
     final List<Caveat> caveats = new ArrayList<>();
     final var actionCount = bottleneck.bottleneck.getPartialEvents().size();
     if (actionCount > maxActionsPerBottleneck) {
@@ -277,30 +280,36 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
 
   private static class BottleneckStats {
     private final Bottleneck bottleneck;
+    private final int potentialMaxActionCount;
     private final Duration optimalWallDuration;
     private final double improvementPercentage;
 
     private BottleneckStats(
-        Bottleneck bottleneck, Duration optimalWallDuration, double improvementPercentage) {
+        Bottleneck bottleneck,
+        int potentialMaxActionCount,
+        Duration optimalWallDuration,
+        double improvementPercentage) {
       this.bottleneck = bottleneck;
+      this.potentialMaxActionCount = potentialMaxActionCount;
       this.optimalWallDuration = optimalWallDuration;
       this.improvementPercentage = improvementPercentage;
     }
 
     private static BottleneckStats fromBottleneckAndCoresAndWallDuration(
-        Bottleneck bottleneck, int coresCount, Duration totalDuration) {
+        Bottleneck bottleneck, int potentialMaxActionCount, Duration totalDuration) {
       final var optimalBottleneckDuration =
           bottleneck
               .getDuration()
               .multipliedBy((int) Math.ceil(bottleneck.getAvgActionCount()))
-              .dividedBy(coresCount);
+              .dividedBy(potentialMaxActionCount);
       final var optimalWallDuration =
           totalDuration.minus(bottleneck.getDuration()).plus(optimalBottleneckDuration);
       final var improvement =
           totalDuration.isZero()
               ? 0
               : 100 - DurationUtil.getPercentageOf(optimalWallDuration, totalDuration);
-      return new BottleneckStats(bottleneck, optimalWallDuration, improvement);
+      return new BottleneckStats(
+          bottleneck, potentialMaxActionCount, optimalWallDuration, improvement);
     }
   }
 }
