@@ -42,7 +42,8 @@ public class GarbageCollectionStatsDataProvider extends DataProvider {
     BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
     Optional<ProfileThread> garbageCollectorThread = bazelProfile.getGarbageCollectorThread();
     if (garbageCollectorThread.isEmpty()) {
-      throw new InvalidProfileException("Unable to find garbage collector thread.");
+      return new GarbageCollectionStats(
+          "Failed to find a garbage collector thread in the Bazel profile.");
     }
     Duration majorGarbageCollection =
         garbageCollectorThread.get().getCompleteEvents().stream()

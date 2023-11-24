@@ -16,7 +16,11 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import java.time.Duration;
+import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Data on the garbage collection performed during the invocation. Major garbage collection suspends
@@ -25,28 +29,36 @@ import java.time.Duration;
  * an invocation's performance.
  */
 public class GarbageCollectionStats implements Datum {
-  private final Duration majorGarbageCollectionDuration;
+  private final Optional<Duration> majorGarbageCollectionDuration;
+  @Nullable private final String emptyReason;
 
   public GarbageCollectionStats(Duration majorGarbageCollectionDuration) {
-    this.majorGarbageCollectionDuration = majorGarbageCollectionDuration;
+    this.majorGarbageCollectionDuration = Optional.of(majorGarbageCollectionDuration);
+    this.emptyReason = null;
+  }
+
+  public GarbageCollectionStats(String emptyReason) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(emptyReason));
+    this.majorGarbageCollectionDuration = Optional.empty();
+    this.emptyReason = emptyReason;
   }
 
   public boolean hasMajorGarbageCollection() {
-    return !majorGarbageCollectionDuration.isZero();
+    return !isEmpty() && !majorGarbageCollectionDuration.get().isZero();
   }
 
-  public Duration getMajorGarbageCollectionDuration() {
+  public Optional<Duration> getMajorGarbageCollectionDuration() {
     return majorGarbageCollectionDuration;
   }
 
   @Override
   public boolean isEmpty() {
-    return false;
+    return majorGarbageCollectionDuration.isEmpty();
   }
 
   @Override
   public String getEmptyReason() {
-    return null;
+    return emptyReason;
   }
 
   @Override
@@ -56,9 +68,13 @@ public class GarbageCollectionStats implements Datum {
 
   @Override
   public String getSummary() {
+    if (isEmpty()) {
+      return null;
+    }
     return hasMajorGarbageCollection()
         ? String.format(
-            "Major GC duration of %s", DurationUtil.formatDuration(majorGarbageCollectionDuration))
+            "Major GC duration of %s",
+            DurationUtil.formatDuration(majorGarbageCollectionDuration.get()))
         : "No major GC occurred";
   }
 }
