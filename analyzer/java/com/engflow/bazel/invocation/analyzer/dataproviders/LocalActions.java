@@ -1,8 +1,13 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
+import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_GENERAL_INFORMATION;
+import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_LOCAL_ACTION_EXECUTION;
+import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_SUBPROCESS_RUN;
+
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions.LocalAction;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -14,14 +19,15 @@ import java.util.stream.Stream;
 
 /** Organizes events into {@link LocalAction} by category and time period */
 public class LocalActions implements Datum, Iterable<LocalAction> {
-
   private final ImmutableList<LocalAction> actions;
 
   private LocalActions(List<LocalAction> actions) {
+    Preconditions.checkNotNull(actions);
     this.actions = actions.stream().sorted().collect(ImmutableList.toImmutableList());
   }
 
-  static LocalActions create(List<LocalAction> actions) {
+  @VisibleForTesting
+  public static LocalActions create(List<LocalAction> actions) {
     var duplicated = Lists.newArrayList();
     var actionEvents = Sets.newHashSet();
     for (LocalAction action : actions) {
@@ -97,16 +103,27 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
   /** An event and the events related by thread and time period. */
   public static class LocalAction implements Comparable<LocalAction> {
 
-    public final CompleteEvent action;
-    public final ImmutableList<CompleteEvent> relatedEvents;
+    private final CompleteEvent action;
+    private final ImmutableList<CompleteEvent> relatedEvents;
+    private final boolean executedLocally;
 
-    LocalAction(CompleteEvent action, List<CompleteEvent> relatedEvents) {
+    @VisibleForTesting
+    public LocalAction(CompleteEvent action, List<CompleteEvent> relatedEvents) {
       this.action = action;
       this.relatedEvents = ImmutableList.copyOf(relatedEvents);
+      this.executedLocally = relatedEvents.stream().anyMatch(e -> indicatesLocalExecution(e));
     }
 
     public CompleteEvent getAction() {
       return action;
+    }
+
+    public List<CompleteEvent> getRelatedEvents() {
+      return relatedEvents;
+    }
+
+    public boolean isExecutedLocally() {
+      return executedLocally;
     }
 
     @Override
@@ -148,6 +165,12 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
       i = Integer.compare(action.threadId, o.action.threadId);
       if (i != 0) return i;
       return action.start.compareTo(o.action.start);
+    }
+
+    public static boolean indicatesLocalExecution(CompleteEvent event) {
+      return CAT_LOCAL_ACTION_EXECUTION.equals(event.category)
+          || CAT_GENERAL_INFORMATION.equals(event.category)
+              && COMPLETE_SUBPROCESS_RUN.equals(event.name);
     }
   }
 }

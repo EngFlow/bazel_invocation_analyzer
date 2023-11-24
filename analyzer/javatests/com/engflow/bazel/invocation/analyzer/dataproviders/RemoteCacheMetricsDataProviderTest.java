@@ -9,6 +9,7 @@ import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileCon
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.engflow.bazel.invocation.analyzer.EventThreadBuilder;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
@@ -56,22 +57,23 @@ public class RemoteCacheMetricsDataProviderTest extends DataProviderUnitTestBase
             LocalActions.create(
                 List.of(
                     new LocalActions.LocalAction(
-                        thread.action("Cached Work", "WorkC", 5),
+                        thread.actionProcessingAction("Cached Work", "WorkC", 5),
                         List.of(
                             thread.related(1, CAT_REMOTE_ACTION_CACHE_CHECK),
                             thread.related(2, CAT_REMOTE_OUTPUT_DOWNLOAD))),
                     new LocalActions.LocalAction(
-                        thread.action("More Cached Work", "WorkC", 5),
+                        thread.actionProcessingAction("More Cached Work", "WorkC", 5),
                         List.of(
                             thread.related(4, CAT_REMOTE_ACTION_CACHE_CHECK),
                             thread.related(8, CAT_REMOTE_OUTPUT_DOWNLOAD))),
                     new LocalActions.LocalAction(
-                        thread.action("Cache Miss Work", "WorkC", 5),
+                        thread.actionProcessingAction("Cache Miss Work", "WorkC", 5),
                         List.of(
                             thread.related(16, CAT_REMOTE_ACTION_CACHE_CHECK),
                             thread.related(32, CAT_REMOTE_EXECUTION_UPLOAD_TIME))),
                     new LocalActions.LocalAction(
-                        thread.action("UnCached Work", "LocalWorkC", 5), List.of()))));
+                        thread.actionProcessingAction("UnCached Work", "LocalWorkC", 5),
+                        List.of()))));
 
     Truth.assertThat(provider.derive())
         .isEqualTo(

@@ -43,7 +43,7 @@ public class RemoteCacheMetricsDataProvider extends DataProvider {
   }
 
   RemoteCacheData coalesce(LocalAction action) {
-    return action.relatedEvents.stream()
+    return action.getRelatedEvents().stream()
         .reduce(RemoteCacheData.EMPTY, RemoteCacheData::plus, RemoteCacheData::plus)
         .calculateCacheState();
   }

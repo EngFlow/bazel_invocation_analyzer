@@ -1,4 +1,5 @@
 TYPES = [
+    "BazelProfileConstants.java",
     "BazelProfilePhase.java",
     "ThreadId.java",
 ]
@@ -25,4 +26,7 @@ java_library(
     name = "types",
     srcs = TYPES,
     visibility = ["//visibility:public"],
+    deps = [
+        "//third_party/guava",
+    ],
 )
