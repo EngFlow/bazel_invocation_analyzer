@@ -49,6 +49,7 @@ public class SuggestionProviderUtil {
         new CriticalPathNotDominantSuggestionProvider(),
         new GarbageCollectionSuggestionProvider(),
         new JobsSuggestionProvider(),
+        new UseSkymeldSuggestionProvider(),
         new NegligiblePhaseSuggestionProvider(),
         new QueuingSuggestionProvider(),
         new IncompleteProfileSuggestionProvider(),
