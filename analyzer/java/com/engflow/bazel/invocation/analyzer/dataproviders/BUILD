@@ -2,6 +2,7 @@ TYPES = [
     "ActionStats.java",
     "BazelPhaseDescription.java",
     "BazelPhaseDescriptions.java",
+    "BazelVersion.java",
     "Bottleneck.java",
     "CriticalPathDuration.java",
     "EstimatedCores.java",

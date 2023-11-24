@@ -32,6 +32,7 @@ import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
+import com.engflow.bazel.invocation.analyzer.dataproviders.BazelVersion;
 import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
@@ -104,6 +105,12 @@ public class BazelProfileTest extends UnitTestBase {
                 BazelProfile.createFromInputStream(
                     WriteBazelProfile.toInputStream(metaData(), trace())));
     assertThat(exception.getMessage()).contains(BazelProfileConstants.THREAD_MAIN);
+  }
+
+  @Test
+  public void shouldParseMinimalProfile() throws Exception {
+    var bazelProfile = useProfile(metaData(), trace(mainThread()));
+    assertThat(bazelProfile.getThreads().count()).isGreaterThan(0);
   }
 
   @Test
@@ -428,5 +435,30 @@ public class BazelProfileTest extends UnitTestBase {
             null,
             null);
     assertThat(BazelProfile.isGarbageCollectorThread(thread)).isTrue();
+  }
+
+  @Test
+  public void getBazelVersionShouldReturnEmptyOnMissingBazelVersion() throws Exception {
+    var profile = useProfile(metaData(), trace(mainThread()));
+    assertThat(profile.getBazelVersion().isEmpty()).isTrue();
+  }
+
+  @Test
+  public void getBazelVersionShouldReturnEmptyOnInvalidBazelVersion() throws Exception {
+    var invalidBazelVersionProperty =
+        WriteBazelProfile.Property.put(BazelProfileConstants.OTHER_DATA_BAZEL_VERSION, "invalid");
+    var profile = useProfile(metaData(invalidBazelVersionProperty), trace(mainThread()));
+    assertThat(profile.getBazelVersion().isEmpty()).isTrue();
+  }
+
+  @Test
+  public void getBazelVersionShouldReturnValidBazelVersion() throws Exception {
+    BazelVersion expectedBazelVersion = BazelVersion.parse("release 6.1.2");
+    var bazelVersionProperty =
+        WriteBazelProfile.Property.put(
+            BazelProfileConstants.OTHER_DATA_BAZEL_VERSION, expectedBazelVersion.toString());
+    var profile = useProfile(metaData(bazelVersionProperty), trace(mainThread()));
+    assertThat(profile.getBazelVersion().isEmpty()).isFalse();
+    assertThat(profile.getBazelVersion()).isEqualTo(expectedBazelVersion);
   }
 }

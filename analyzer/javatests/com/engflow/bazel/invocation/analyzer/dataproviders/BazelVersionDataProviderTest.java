@@ -14,14 +14,11 @@
 
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import com.engflow.bazel.invocation.analyzer.WriteBazelProfile;
-import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
-import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
@@ -39,80 +36,14 @@ public class BazelVersionDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void shouldReturnEmptyOnMissingBazelVersion()
-      throws DuplicateProviderException,
-          InvalidProfileException,
-          MissingInputException,
-          NullDatumException {
-    useProfile(metaData(), trace(mainThread()));
-    assertThat(provider.getBazelVersion().isEmpty()).isTrue();
-  }
+  public void shouldReturnBazelVersionFromBazelProfile()
+      throws InvalidProfileException, MissingInputException, NullDatumException {
+    BazelVersion expected = BazelVersion.parse("release 1.2.3");
 
-  @Test
-  public void shouldReturnEmptyOnInvalidBazelVersion()
-      throws DuplicateProviderException,
-          InvalidProfileException,
-          MissingInputException,
-          NullDatumException {
-    useProfile(
-        metaData(
-            WriteBazelProfile.Property.put(
-                BazelProfileConstants.OTHER_DATA_BAZEL_VERSION, "invalid")),
-        trace(mainThread()));
-    assertThat(provider.getBazelVersion().isEmpty()).isTrue();
-  }
+    BazelProfile mockProfile = mock(BazelProfile.class);
+    when(dataManager.getDatum(BazelProfile.class)).thenReturn(mockProfile);
+    when(mockProfile.getBazelVersion()).thenReturn(expected);
 
-  @Test
-  public void shouldReturnVersionWithoutPreRelease()
-      throws DuplicateProviderException,
-          InvalidProfileException,
-          MissingInputException,
-          NullDatumException {
-    String validBazelVersion = "release 6.1.0";
-    useProfile(
-        metaData(
-            WriteBazelProfile.Property.put(
-                BazelProfileConstants.OTHER_DATA_BAZEL_VERSION, validBazelVersion)),
-        trace(mainThread()));
-
-    BazelVersion version = provider.getBazelVersion();
-    assertThat(version.isEmpty()).isFalse();
-    assertThat(version.getSummary()).isEqualTo(validBazelVersion);
-  }
-
-  @Test
-  public void shouldReturnBazelVersionWithPreRelease()
-      throws DuplicateProviderException,
-          InvalidProfileException,
-          MissingInputException,
-          NullDatumException {
-    String validBazelVersion = "release 8.0.0-pre.20231030.2";
-    useProfile(
-        metaData(
-            WriteBazelProfile.Property.put(
-                BazelProfileConstants.OTHER_DATA_BAZEL_VERSION, validBazelVersion)),
-        trace(mainThread()));
-
-    BazelVersion version = provider.getBazelVersion();
-    assertThat(version.isEmpty()).isFalse();
-    assertThat(version.getSummary()).isEqualTo(validBazelVersion);
-  }
-
-  @Test
-  public void parseReturnsEmpty() {
-    assertThat(BazelVersionDataProvider.parse("").isEmpty()).isTrue();
-    assertThat(BazelVersionDataProvider.parse("1.2.3").isEmpty()).isTrue();
-    assertThat(BazelVersionDataProvider.parse("1.2.3-foo").isEmpty()).isTrue();
-    assertThat(BazelVersionDataProvider.parse("release 1").isEmpty()).isTrue();
-    assertThat(BazelVersionDataProvider.parse("release 1.2").isEmpty()).isTrue();
-    assertThat(BazelVersionDataProvider.parse("release 1.2.3foo").isEmpty()).isTrue();
-  }
-
-  @Test
-  public void parseReturnsNonempty() {
-    assertThat(BazelVersionDataProvider.parse("release 1.23.4"))
-        .isEqualTo(new BazelVersion(1, 23, 4, ""));
-    assertThat(BazelVersionDataProvider.parse("release 12.3.45-foo"))
-        .isEqualTo(new BazelVersion(12, 3, 45, "-foo"));
+    assertThat(provider.getBazelVersion()).isEqualTo(expected);
   }
 }
