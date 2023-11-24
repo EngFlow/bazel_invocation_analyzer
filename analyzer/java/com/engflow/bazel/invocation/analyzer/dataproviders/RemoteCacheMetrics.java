@@ -1,7 +1,9 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
+import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import java.time.Duration;
 
 /**
@@ -25,9 +27,9 @@ public class RemoteCacheMetrics implements Datum {
       Duration totalDownloadOutputs,
       Duration totalUploadOutputs,
       float percentCachedRemotely) {
-    this.totalCacheCheck = totalCacheCheck;
-    this.totalDownloadOutputs = totalDownloadOutputs;
-    this.totalUploadOutputs = totalUploadOutputs;
+    this.totalCacheCheck = Preconditions.checkNotNull(totalCacheCheck);
+    this.totalDownloadOutputs = Preconditions.checkNotNull(totalDownloadOutputs);
+    this.totalUploadOutputs = Preconditions.checkNotNull(totalUploadOutputs);
     this.percentCachedRemotely = percentCachedRemotely;
   }
 
@@ -85,9 +87,12 @@ public class RemoteCacheMetrics implements Datum {
   public String getSummary() {
     return String.format(
         "Total Remote Cache Check Duration: %s\n"
-            + "Total Remote Download Outputs: %s\n"
-            + "Total Remote Upload Outputs: %s\n"
-            + "Percent cached remotely: %s",
-        totalCacheCheck, totalDownloadOutputs, totalUploadOutputs, percentCachedRemotely);
+            + "Total Remote Download Outputs:     %s\n"
+            + "Total Remote Upload Outputs:       %s\n"
+            + "Percent cached remotely:           %,.2f%%",
+        DurationUtil.formatDuration(totalCacheCheck),
+        DurationUtil.formatDuration(totalDownloadOutputs),
+        DurationUtil.formatDuration(totalUploadOutputs),
+        percentCachedRemotely);
   }
 }
