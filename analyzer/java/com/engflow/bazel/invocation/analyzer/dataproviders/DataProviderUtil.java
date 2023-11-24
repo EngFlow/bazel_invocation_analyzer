@@ -37,8 +37,9 @@ public class DataProviderUtil {
         new CriticalPathDurationDataProvider(),
         new EstimatedCoresDataProvider(),
         new GarbageCollectionStatsDataProvider(),
-        new MergedEventsPresentDataProvider(),
         new LocalActionsDataProvider(),
+        new MergedEventsPresentDataProvider(),
+        new SkymeldUsedDataProvider(),
 
         // RemoteExecution
         new CriticalPathQueuingDurationDataProvider(),
