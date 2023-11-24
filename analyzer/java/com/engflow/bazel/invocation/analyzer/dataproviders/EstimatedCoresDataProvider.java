@@ -103,7 +103,7 @@ public class EstimatedCoresDataProvider extends DataProvider {
     if (evaluateAndDependenciesPhaseSkyframeEvaluators == null) {
       return new EstimatedJobsFlagValue(ESTIMATED_JOBS_FLAG_VALUE_EMPTY_REASON_EVAL_DEP_MISSING);
     }
-    if (executionPhaseSkyframeEvaluators == null
+    if (executionPhaseSkyframeEvaluatorsMaxValue == null
         || evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue == null) {
       return new EstimatedJobsFlagValue(ESTIMATED_JOBS_FLAG_VALUE_EMPTY_REASON_EVENTS_MISSING);
     }
@@ -171,13 +171,13 @@ public class EstimatedCoresDataProvider extends DataProvider {
       // phases. These phases should use as many cores as there are available, irrespective of
       // whether the Bazel flag `--jobs` is set or not.
       Optional<BazelPhaseDescription> start =
-          bazelPhaseDescriptions.has(BazelProfilePhase.EVALUATE)
-              ? bazelPhaseDescriptions.get(BazelProfilePhase.EVALUATE)
-              : bazelPhaseDescriptions.get(BazelProfilePhase.DEPENDENCIES);
+          bazelPhaseDescriptions.has(BazelProfilePhase.TARGET_PATTERN_EVAL)
+              ? bazelPhaseDescriptions.get(BazelProfilePhase.TARGET_PATTERN_EVAL)
+              : bazelPhaseDescriptions.get(BazelProfilePhase.ANALYZE);
       Optional<BazelPhaseDescription> end =
-          bazelPhaseDescriptions.has(BazelProfilePhase.DEPENDENCIES)
-              ? bazelPhaseDescriptions.get(BazelProfilePhase.DEPENDENCIES)
-              : bazelPhaseDescriptions.get(BazelProfilePhase.EVALUATE);
+          bazelPhaseDescriptions.has(BazelProfilePhase.ANALYZE)
+              ? bazelPhaseDescriptions.get(BazelProfilePhase.ANALYZE)
+              : bazelPhaseDescriptions.get(BazelProfilePhase.TARGET_PATTERN_EVAL);
       if (start.isEmpty() || end.isEmpty()) {
         // The profile does not include that data necessary.
         return;

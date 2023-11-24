@@ -54,7 +54,10 @@ public class NegligiblePhaseSuggestionProvider extends SuggestionProviderBase {
   @VisibleForTesting
   public static final List<BazelProfilePhase> NON_NEGLIGIBLE_PHASES =
       List.of(
-          BazelProfilePhase.EVALUATE, BazelProfilePhase.DEPENDENCIES, BazelProfilePhase.EXECUTE);
+          BazelProfilePhase.TARGET_PATTERN_EVAL,
+          BazelProfilePhase.ANALYZE,
+          BazelProfilePhase.ANALYZE_AND_EXECUTE,
+          BazelProfilePhase.EXECUTE);
   // Don't apply this check to profiles shorter than this duration
   private static final Duration MIN_DURATION = Duration.ofSeconds(30);
   // Non-negligible phases should be less than this percentage of total duration (1.0 = 1%)

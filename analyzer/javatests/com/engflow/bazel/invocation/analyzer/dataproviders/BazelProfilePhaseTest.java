@@ -25,9 +25,15 @@ public class BazelProfilePhaseTest {
   public void getPreviousWorks() {
     assertThat(BazelProfilePhase.FINISH.getPrevious()).isEqualTo(BazelProfilePhase.EXECUTE);
     assertThat(BazelProfilePhase.EXECUTE.getPrevious()).isEqualTo(BazelProfilePhase.PREPARE);
-    assertThat(BazelProfilePhase.PREPARE.getPrevious()).isEqualTo(BazelProfilePhase.DEPENDENCIES);
-    assertThat(BazelProfilePhase.DEPENDENCIES.getPrevious()).isEqualTo(BazelProfilePhase.EVALUATE);
-    assertThat(BazelProfilePhase.EVALUATE.getPrevious()).isEqualTo(BazelProfilePhase.INIT);
+    assertThat(BazelProfilePhase.PREPARE.getPrevious()).isEqualTo(BazelProfilePhase.LICENSE);
+    assertThat(BazelProfilePhase.LICENSE.getPrevious())
+        .isEqualTo(BazelProfilePhase.ANALYZE_AND_EXECUTE);
+    assertThat(BazelProfilePhase.ANALYZE_AND_EXECUTE.getPrevious())
+        .isEqualTo(BazelProfilePhase.ANALYZE);
+    assertThat(BazelProfilePhase.ANALYZE.getPrevious())
+        .isEqualTo(BazelProfilePhase.TARGET_PATTERN_EVAL);
+    assertThat(BazelProfilePhase.TARGET_PATTERN_EVAL.getPrevious())
+        .isEqualTo(BazelProfilePhase.INIT);
     assertThat(BazelProfilePhase.INIT.getPrevious()).isEqualTo(BazelProfilePhase.LAUNCH);
     assertThrows(UnsupportedOperationException.class, () -> BazelProfilePhase.LAUNCH.getPrevious());
   }
@@ -35,9 +41,14 @@ public class BazelProfilePhaseTest {
   @Test
   public void getNextWorks() {
     assertThat(BazelProfilePhase.LAUNCH.getNext()).isEqualTo(BazelProfilePhase.INIT);
-    assertThat(BazelProfilePhase.INIT.getNext()).isEqualTo(BazelProfilePhase.EVALUATE);
-    assertThat(BazelProfilePhase.EVALUATE.getNext()).isEqualTo(BazelProfilePhase.DEPENDENCIES);
-    assertThat(BazelProfilePhase.DEPENDENCIES.getNext()).isEqualTo(BazelProfilePhase.PREPARE);
+    assertThat(BazelProfilePhase.INIT.getNext()).isEqualTo(BazelProfilePhase.TARGET_PATTERN_EVAL);
+    assertThat(BazelProfilePhase.TARGET_PATTERN_EVAL.getNext())
+        .isEqualTo(BazelProfilePhase.ANALYZE);
+    assertThat(BazelProfilePhase.ANALYZE.getNext())
+        .isEqualTo(BazelProfilePhase.ANALYZE_AND_EXECUTE);
+    assertThat(BazelProfilePhase.ANALYZE_AND_EXECUTE.getNext())
+        .isEqualTo(BazelProfilePhase.LICENSE);
+    assertThat(BazelProfilePhase.LICENSE.getNext()).isEqualTo(BazelProfilePhase.PREPARE);
     assertThat(BazelProfilePhase.PREPARE.getNext()).isEqualTo(BazelProfilePhase.EXECUTE);
     assertThat(BazelProfilePhase.EXECUTE.getNext()).isEqualTo(BazelProfilePhase.FINISH);
     assertThrows(UnsupportedOperationException.class, () -> BazelProfilePhase.FINISH.getNext());

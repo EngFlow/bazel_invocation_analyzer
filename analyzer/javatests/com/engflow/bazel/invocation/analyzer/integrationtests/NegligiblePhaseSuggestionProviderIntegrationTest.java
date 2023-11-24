@@ -25,6 +25,8 @@ import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfilePhase;
 import com.engflow.bazel.invocation.analyzer.dataproviders.BazelPhasesDataProvider;
 import com.engflow.bazel.invocation.analyzer.suggestionproviders.NegligiblePhaseSuggestionProvider;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,15 +42,16 @@ public class NegligiblePhaseSuggestionProviderIntegrationTest extends Integerati
 
   @Test
   public void singleLongPhaseSuggestion() throws Exception {
-    final Timestamp LAUNCH_START = Timestamp.ofSeconds(0);
-    final Timestamp INIT_START = Timestamp.ofSeconds(1);
-    final Timestamp EVAL_START = Timestamp.ofSeconds(2);
-    final Timestamp DEP_START = Timestamp.ofSeconds(12);
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    startTimes.put(BazelProfilePhase.LAUNCH, Timestamp.ofSeconds(0));
+    startTimes.put(BazelProfilePhase.INIT, Timestamp.ofSeconds(1));
+    startTimes.put(BazelProfilePhase.TARGET_PATTERN_EVAL, Timestamp.ofSeconds(2));
+    startTimes.put(BazelProfilePhase.ANALYZE, Timestamp.ofSeconds(12));
     // Too long
-    final Timestamp PREP_START = Timestamp.ofSeconds(22);
-    final Timestamp EXEC_START = Timestamp.ofSeconds(32);
-    final Timestamp FINISH_START = Timestamp.ofSeconds(99);
-    final Timestamp FINISH_TIME = Timestamp.ofSeconds(100);
+    startTimes.put(BazelProfilePhase.PREPARE, Timestamp.ofSeconds(22));
+    startTimes.put(BazelProfilePhase.EXECUTE, Timestamp.ofSeconds(32));
+    startTimes.put(BazelProfilePhase.FINISH, Timestamp.ofSeconds(99));
+    Timestamp finishTime = Timestamp.ofSeconds(100);
 
     useProfile(
         metaData(),
@@ -57,15 +60,7 @@ public class NegligiblePhaseSuggestionProviderIntegrationTest extends Integerati
                 20,
                 0,
                 BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+                createPhaseEvents(startTimes, finishTime))));
 
     SuggestionOutput output = provider.getSuggestions(dataManager);
 
@@ -78,14 +73,11 @@ public class NegligiblePhaseSuggestionProviderIntegrationTest extends Integerati
 
   @Test
   public void allLongPhaseSuggestion() throws Exception {
-    final Timestamp LAUNCH_START = Timestamp.ofSeconds(10);
-    final Timestamp INIT_START = Timestamp.ofSeconds(20);
-    final Timestamp EVAL_START = Timestamp.ofSeconds(30);
-    final Timestamp DEP_START = Timestamp.ofSeconds(40);
-    final Timestamp PREP_START = Timestamp.ofSeconds(50);
-    final Timestamp EXEC_START = Timestamp.ofSeconds(60);
-    final Timestamp FINISH_START = Timestamp.ofSeconds(70);
-    final Timestamp FINISH_TIME = Timestamp.ofSeconds(80);
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    for (var phase : BazelProfilePhase.values()) {
+      startTimes.put(phase, Timestamp.ofSeconds(10 * (phase.ordinal() + 1)));
+    }
+    Timestamp finishTime = Timestamp.ofSeconds(10 * (BazelProfilePhase.values().length + 1));
 
     useProfile(
         metaData(),
@@ -94,15 +86,7 @@ public class NegligiblePhaseSuggestionProviderIntegrationTest extends Integerati
                 20,
                 0,
                 BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+                createPhaseEvents(startTimes, finishTime))));
 
     SuggestionOutput output = provider.getSuggestions(dataManager);
 
@@ -124,15 +108,16 @@ public class NegligiblePhaseSuggestionProviderIntegrationTest extends Integerati
   }
 
   @Test
-  public void shouldNotProduceOutputOnOkayProfile() throws Exception {
-    final Timestamp LAUNCH_START = Timestamp.ofMicros(0);
-    final Timestamp INIT_START = Timestamp.ofMicros(1_000);
-    final Timestamp EVAL_START = Timestamp.ofMicros(2_000);
-    final Timestamp DEP_START = Timestamp.ofMicros(12_000);
-    final Timestamp PREP_START = Timestamp.ofMicros(22_000);
-    final Timestamp EXEC_START = Timestamp.ofMicros(23_000);
-    final Timestamp FINISH_START = Timestamp.ofMicros(99_000);
-    final Timestamp FINISH_TIME = Timestamp.ofMicros(100_000);
+  public void shouldNotProduceOutputOnOkayProfileWithoutSkymeld() throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    startTimes.put(BazelProfilePhase.LAUNCH, Timestamp.ofMicros(0));
+    startTimes.put(BazelProfilePhase.INIT, Timestamp.ofMicros(1_000));
+    startTimes.put(BazelProfilePhase.TARGET_PATTERN_EVAL, Timestamp.ofMicros(2_000));
+    startTimes.put(BazelProfilePhase.ANALYZE, Timestamp.ofMicros(12_000));
+    startTimes.put(BazelProfilePhase.PREPARE, Timestamp.ofMicros(22_000));
+    startTimes.put(BazelProfilePhase.EXECUTE, Timestamp.ofMicros(23_000));
+    startTimes.put(BazelProfilePhase.FINISH, Timestamp.ofMicros(99_000));
+    Timestamp finishTime = Timestamp.ofMicros(100_000);
 
     useProfile(
         metaData(),
@@ -141,15 +126,33 @@ public class NegligiblePhaseSuggestionProviderIntegrationTest extends Integerati
                 20,
                 0,
                 BazelProfileConstants.THREAD_MAIN,
-                createPhaseEvents(
-                    LAUNCH_START,
-                    INIT_START,
-                    EVAL_START,
-                    DEP_START,
-                    PREP_START,
-                    EXEC_START,
-                    FINISH_START,
-                    FINISH_TIME))));
+                createPhaseEvents(startTimes, finishTime))));
+
+    SuggestionOutput output = provider.getSuggestions(dataManager);
+
+    assertThat(output.hasFailure()).isFalse();
+    assertThat(output.getMissingInputList()).isEmpty();
+    assertThat(output.getSuggestionList().size()).isEqualTo(0);
+  }
+
+  @Test
+  public void shouldNotProduceOutputOnOkayProfileWithSkymeld() throws Exception {
+    Map<BazelProfilePhase, Timestamp> startTimes = new HashMap<>();
+    startTimes.put(BazelProfilePhase.LAUNCH, Timestamp.ofMicros(0));
+    startTimes.put(BazelProfilePhase.INIT, Timestamp.ofMicros(1_000));
+    startTimes.put(BazelProfilePhase.TARGET_PATTERN_EVAL, Timestamp.ofMicros(2_000));
+    startTimes.put(BazelProfilePhase.ANALYZE_AND_EXECUTE, Timestamp.ofMicros(12_000));
+    startTimes.put(BazelProfilePhase.FINISH, Timestamp.ofMicros(99_000));
+    Timestamp finishTime = Timestamp.ofMicros(100_000);
+
+    useProfile(
+        metaData(),
+        trace(
+            thread(
+                20,
+                0,
+                BazelProfileConstants.THREAD_MAIN,
+                createPhaseEvents(startTimes, finishTime))));
 
     SuggestionOutput output = provider.getSuggestions(dataManager);
 

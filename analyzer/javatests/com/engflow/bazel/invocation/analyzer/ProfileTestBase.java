@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.After;
 import org.junit.BeforeClass;
@@ -122,78 +123,37 @@ public abstract class ProfileTestBase {
 
   /**
    * Create the Bazel profile events that establish the phases of invocation processing. For a valid
-   * profile, at least launchStart and finishTime have to be non-null.
+   * profile, at least {@link BazelProfilePhase#LAUNCH} has to be included in `startTimes`, and
+   * `finishTime` has to be non-null.
    *
-   * @param launchStart timestamp of the Launch Blaze event
-   * @param initStart timestamp of the Initialize command event
-   * @param evalStart timestamp of the Evaluate target patterns event
-   * @param depStart timestamp of the Load and analyze dependencies event
-   * @param prepStart timestamp of the Prepare for build event
-   * @param execStart timestamp of the Build artifacts event
-   * @param finishStart timestamp of the Complete build event
+   * @param startTimes map of start times of the Bazel profile phases to include
    * @param finishTime timestamp of the Finishing event
    * @return array of phase marker events
    */
   protected WriteBazelProfile.ThreadEvent[] createPhaseEvents(
-      @Nullable Timestamp launchStart,
-      @Nullable Timestamp initStart,
-      @Nullable Timestamp evalStart,
-      @Nullable Timestamp depStart,
-      @Nullable Timestamp prepStart,
-      @Nullable Timestamp execStart,
-      @Nullable Timestamp finishStart,
-      @Nullable Timestamp finishTime) {
+      Map<BazelProfilePhase, Timestamp> startTimes, @Nullable Timestamp finishTime) {
     List<WriteBazelProfile.ThreadEvent> threadEvents = new ArrayList<>();
-    if (launchStart != null) {
-      threadEvents.add(
-          complete(
-              BazelProfilePhase.LAUNCH.name,
-              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
-              launchStart,
-              TimeUtil.getDurationBetween(
-                  launchStart, initStart == null ? Timestamp.ofMicros(0) : initStart)));
-    }
-    if (initStart != null) {
-      threadEvents.add(
-          instant(
-              BazelProfilePhase.INIT.name,
-              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
-              initStart));
-    }
-    if (evalStart != null) {
-      threadEvents.add(
-          instant(
-              BazelProfilePhase.EVALUATE.name,
-              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
-              evalStart));
-    }
-    if (depStart != null) {
-      threadEvents.add(
-          instant(
-              BazelProfilePhase.DEPENDENCIES.name,
-              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
-              depStart));
-    }
-    if (prepStart != null) {
-      threadEvents.add(
-          instant(
-              BazelProfilePhase.PREPARE.name,
-              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
-              prepStart));
-    }
-    if (execStart != null) {
-      threadEvents.add(
-          instant(
-              BazelProfilePhase.EXECUTE.name,
-              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
-              execStart));
-    }
-    if (finishStart != null) {
-      threadEvents.add(
-          instant(
-              BazelProfilePhase.FINISH.name,
-              BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
-              finishStart));
+    for (var entry : startTimes.entrySet()) {
+      switch (entry.getKey()) {
+        case LAUNCH:
+          threadEvents.add(
+              complete(
+                  entry.getKey().name,
+                  BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
+                  entry.getValue(),
+                  TimeUtil.getDurationBetween(
+                      entry.getValue(),
+                      startTimes.containsKey(BazelProfilePhase.INIT)
+                          ? startTimes.get(BazelProfilePhase.INIT)
+                          : Timestamp.ofMicros(0))));
+          break;
+        default:
+          threadEvents.add(
+              instant(
+                  entry.getKey().name,
+                  BazelProfileConstants.CAT_BUILD_PHASE_MARKER,
+                  entry.getValue()));
+      }
     }
     if (finishTime != null) {
       threadEvents.add(
