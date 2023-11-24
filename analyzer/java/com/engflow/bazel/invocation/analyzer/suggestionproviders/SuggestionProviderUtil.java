@@ -45,6 +45,9 @@ public class SuggestionProviderUtil {
         verbose
             ? BottleneckSuggestionProvider.createVerbose()
             : BottleneckSuggestionProvider.createDefault(),
+        verbose
+            ? LocalActionsWithRemoteExecutionSuggestionProvider.createVerbose()
+            : LocalActionsWithRemoteExecutionSuggestionProvider.createDefault(),
         new BuildWithoutTheBytesSuggestionProvider(),
         new CriticalPathNotDominantSuggestionProvider(),
         new GarbageCollectionSuggestionProvider(),

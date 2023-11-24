@@ -25,6 +25,7 @@ import org.junit.runners.Suite;
   GarbageCollectionSuggestionProviderTest.class,
   IncompleteProfileSuggestionProviderTest.class,
   JobsSuggestionProviderTest.class,
+  LocalActionsWithRemoteExecutionSuggestionProviderTest.class,
   MergedEventsSuggestionProviderTest.class,
   NegligiblePhaseSuggestionProviderTest.class,
   QueuingSuggestionProviderTest.class,

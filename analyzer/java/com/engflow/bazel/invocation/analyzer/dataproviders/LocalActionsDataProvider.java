@@ -22,10 +22,16 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class LocalActionsDataProvider extends DataProvider {
+  private static final Set<String> RELATED_EVENTS_CATEGORIES =
+      Set.of(
+          CAT_REMOTE_ACTION_CACHE_CHECK,
+          CAT_REMOTE_OUTPUT_DOWNLOAD,
+          CAT_REMOTE_EXECUTION_UPLOAD_TIME);
 
   @Override
   public List<DatumSupplierSpecification<?>> getSuppliers() {
@@ -44,16 +50,17 @@ public class LocalActionsDataProvider extends DataProvider {
             .collect(Collectors.toList()));
   }
 
+  private static boolean isRelatedEvent(CompleteEvent event) {
+    return RELATED_EVENTS_CATEGORIES.contains(event.category)
+        || LocalActions.LocalAction.indicatesLocalExecution(event);
+  }
+
   Stream<LocalAction> coalesce(ProfileThread thread) {
     var localActionEvents =
         ofCategoryTypes(thread.getCompleteEvents(), BazelProfileConstants.CAT_ACTION_PROCESSING);
     var relatedEvents =
         Iterators.peekingIterator(
-            ofCategoryTypes(
-                thread.getCompleteEvents(),
-                CAT_REMOTE_ACTION_CACHE_CHECK,
-                CAT_REMOTE_OUTPUT_DOWNLOAD,
-                CAT_REMOTE_EXECUTION_UPLOAD_TIME));
+            thread.getCompleteEvents().stream().filter(event -> isRelatedEvent(event)).iterator());
 
     var out = Stream.<LocalAction>builder();
 

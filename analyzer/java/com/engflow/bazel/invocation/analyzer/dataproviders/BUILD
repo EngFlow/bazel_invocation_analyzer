@@ -10,6 +10,7 @@ TYPES = [
     "EstimatedCoresUsed.java",
     "EstimatedJobsFlagValue.java",
     "GarbageCollectionStats.java",
+    "LocalActions.java",
     "MergedEventsPresent.java",
     "SkymeldUsed.java",
     "TotalDuration.java",

@@ -10,6 +10,7 @@ java_test(
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/dataproviders/remoteexecution:types",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/suggestionproviders",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/time",
+        "//analyzer/javatests/com/engflow/bazel/invocation/analyzer:test_base",
         "//proto:bazel_invocation_analyzer_java_proto",
         "//third_party/junit",
         "//third_party/mockito",

@@ -5,6 +5,7 @@ java_test(
     test_class = "com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteExecutionDataProviderSuite",
     deps = [
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/bazelprofile",
+        "//analyzer/java/com/engflow/bazel/invocation/analyzer/bazelprofile:types",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/core",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/dataproviders/remoteexecution",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/dataproviders/remoteexecution:types",

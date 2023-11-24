@@ -1,4 +1,4 @@
-package com.engflow.bazel.invocation.analyzer.dataproviders;
+package com.engflow.bazel.invocation.analyzer;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mnemonic;
@@ -15,7 +15,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-class EventThreadBuilder {
+public class EventThreadBuilder {
 
   private final int id;
   private final int pid;
@@ -26,13 +26,14 @@ class EventThreadBuilder {
   private int nextActionStart = 0;
   private int nextRelatedStart = 0;
 
-  EventThreadBuilder(int id, int index) {
+  public EventThreadBuilder(int id, int index) {
     this.id = id;
     this.pid = 1; // hard coded by bazel
     this.index = index;
   }
 
-  public CompleteEvent action(String name, String mnemonic, int start, int duration) {
+  public CompleteEvent actionProcessingAction(
+      String name, String mnemonic, int start, int duration) {
     CompleteEvent event =
         new CompleteEvent(
             name,
@@ -48,14 +49,14 @@ class EventThreadBuilder {
     return event;
   }
 
-  public CompleteEvent action(String name, String mnemonic, int duration) {
-    return action(name, mnemonic, nextActionStart, duration);
+  public CompleteEvent actionProcessingAction(String name, String mnemonic, int duration) {
+    return actionProcessingAction(name, mnemonic, nextActionStart, duration);
   }
 
-  public CompleteEvent related(int start, int duration, String category) {
+  public CompleteEvent related(int start, int duration, String category, String name) {
     var event =
         new CompleteEvent(
-            category,
+            name,
             category,
             Timestamp.ofSeconds(start),
             Duration.ofSeconds(duration),
@@ -67,11 +68,15 @@ class EventThreadBuilder {
     return event;
   }
 
+  public CompleteEvent related(int start, int duration, String category) {
+    return related(start, duration, category, category);
+  }
+
   public CompleteEvent related(int duration, String category) {
     return related(nextRelatedStart, duration, category);
   }
 
-  TraceEvent asEvent() {
+  public TraceEvent asEvent() {
     return thread(
         id,
         index,

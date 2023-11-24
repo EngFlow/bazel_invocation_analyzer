@@ -66,6 +66,8 @@ public class BazelProfileConstants {
   public static final String CAT_CRITICAL_PATH_COMPONENT = "critical path component";
   public static final String CAT_GARBAGE_COLLECTION = "gc notification";
   public static final String CAT_GENERAL_INFORMATION = "general information";
+
+  public static final String CAT_LOCAL_ACTION_EXECUTION = "local action execution";
   public static final String CAT_REMOTE_ACTION_CACHE_CHECK = "remote action cache check";
   public static final String CAT_REMOTE_ACTION_EXECUTION = "remote action execution";
   public static final String CAT_REMOTE_OUTPUT_DOWNLOAD = "remote output download";
@@ -82,6 +84,10 @@ public class BazelProfileConstants {
   // CompleteEvent names
   public static final String COMPLETE_MAJOR_GARBAGE_COLLECTION = "major GC";
   public static final String COMPLETE_MINOR_GARBAGE_COLLECTION = "minor GC";
+
+  // One of the events written when an action is executed locally, see
+  // https://github.com/bazelbuild/bazel/blob/36614cf29867c7ca86ae44b60ac2d92dcf03f204/src/main/java/com/google/devtools/build/lib/sandbox/AbstractSandboxSpawnRunner.java#L147
+  public static final String COMPLETE_SUBPROCESS_RUN = "subprocess.run";
   public static final String COMPLETE_EXECUTE_REMOTELY = "execute remotely";
 
   // InstantEvent names
