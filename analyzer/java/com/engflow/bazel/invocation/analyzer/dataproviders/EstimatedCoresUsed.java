@@ -29,7 +29,7 @@ public class EstimatedCoresUsed extends EstimatedCores {
 
   @Override
   public String getDescription() {
-    return "The estimated number of cores used, as well as how many numbers were skipped when"
-        + " naming skyframe-evaluators. Extracted from the Bazel profile.";
+    return "The estimated number of cores used during execution, as well as how many numbers were"
+        + " skipped when naming skyframe-evaluators. Extracted from the Bazel profile.";
   }
 }

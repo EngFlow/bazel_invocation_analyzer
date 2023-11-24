@@ -157,7 +157,7 @@ public class EstimatedCoresDataProvider extends DataProvider {
    * It assumes the maxValue passed in is the largest value present in the set of values.
    */
   @VisibleForTesting
-  int getGaps(Set<Integer> values, Integer maxValue) {
+  static int getGaps(Set<Integer> values, Integer maxValue) {
     return (maxValue + 1) - values.size();
   }
 
@@ -165,25 +165,22 @@ public class EstimatedCoresDataProvider extends DataProvider {
       throws InvalidProfileException, MissingInputException, NullDatumException {
     if (evaluateAndDependenciesPhaseSkyframeEvaluators == null) {
       BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
+      SkymeldUsed skymeldUsed = getDataManager().getDatum(SkymeldUsed.class);
       BazelPhaseDescriptions bazelPhaseDescriptions =
           getDataManager().getDatum(BazelPhaseDescriptions.class);
-      // Evaluate only events within the target pattern evaluation and dependency analysis
-      // phases. These phases should use as many cores as there are available, irrespective of
-      // whether the Bazel flag `--jobs` is set or not.
-      Optional<BazelPhaseDescription> start =
-          bazelPhaseDescriptions.has(BazelProfilePhase.TARGET_PATTERN_EVAL)
-              ? bazelPhaseDescriptions.get(BazelProfilePhase.TARGET_PATTERN_EVAL)
-              : bazelPhaseDescriptions.get(BazelProfilePhase.ANALYZE);
-      Optional<BazelPhaseDescription> end =
-          bazelPhaseDescriptions.has(BazelProfilePhase.ANALYZE)
-              ? bazelPhaseDescriptions.get(BazelProfilePhase.ANALYZE)
-              : bazelPhaseDescriptions.get(BazelProfilePhase.TARGET_PATTERN_EVAL);
-      if (start.isEmpty() || end.isEmpty()) {
+
+      Optional<BazelPhaseDescription> evalAndAnalysisPhase =
+          getEvalAndAnalysisPhase(skymeldUsed, bazelPhaseDescriptions);
+      if (evalAndAnalysisPhase.isEmpty()) {
         // The profile does not include that data necessary.
         return;
       }
+
       evaluateAndDependenciesPhaseSkyframeEvaluators =
-          getSkyframeEvaluators(bazelProfile, start.get().getStart(), end.get().getEnd());
+          getSkyframeEvaluators(
+              bazelProfile,
+              evalAndAnalysisPhase.get().getStart(),
+              evalAndAnalysisPhase.get().getEnd());
       evaluateAndDependenciesPhaseSkyframeEvaluatorsMaxValue =
           evaluateAndDependenciesPhaseSkyframeEvaluators.stream()
               .max(Integer::compareTo)
@@ -195,24 +192,27 @@ public class EstimatedCoresDataProvider extends DataProvider {
       throws InvalidProfileException, MissingInputException, NullDatumException {
     if (executionPhaseSkyframeEvaluators == null) {
       BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
+      SkymeldUsed skymeldUsed = getDataManager().getDatum(SkymeldUsed.class);
       BazelPhaseDescriptions bazelPhaseDescriptions =
           getDataManager().getDatum(BazelPhaseDescriptions.class);
-      // Evaluate only threads with events in the execution phase, as the Bazel flag `--jobs`
-      // applies to that phase specifically.
-      Optional<BazelPhaseDescription> execution =
-          bazelPhaseDescriptions.get(BazelProfilePhase.EXECUTE);
-      if (execution.isEmpty()) {
+
+      Optional<BazelPhaseDescription> executionPhase =
+          getExecutionPhase(skymeldUsed, bazelPhaseDescriptions);
+      if (executionPhase.isEmpty()) {
+        // The profile does not include that data necessary.
         return;
       }
+
       executionPhaseSkyframeEvaluators =
-          getSkyframeEvaluators(bazelProfile, execution.get().getStart(), execution.get().getEnd());
+          getSkyframeEvaluators(
+              bazelProfile, executionPhase.get().getStart(), executionPhase.get().getEnd());
       executionPhaseSkyframeEvaluatorsMaxValue =
           executionPhaseSkyframeEvaluators.stream().max(Integer::compareTo).orElse(null);
     }
   }
 
   private static Set<Integer> getSkyframeEvaluators(
-      BazelProfile bazelProfile, Timestamp start, Timestamp end) throws InvalidProfileException {
+      BazelProfile bazelProfile, Timestamp start, Timestamp end) {
     Set<Integer> result = new HashSet<>();
     bazelProfile
         .getThreads()
@@ -236,5 +236,57 @@ public class EstimatedCoresDataProvider extends DataProvider {
         .mapToInt(x -> Integer.valueOf(x))
         .forEach(x -> result.add(x));
     return result;
+  }
+
+  @VisibleForTesting
+  static Optional<BazelPhaseDescription> getEvalAndAnalysisPhase(
+      SkymeldUsed skymeldUsed, BazelPhaseDescriptions bazelPhaseDescriptions) {
+    Timestamp start = null;
+    Timestamp end = null;
+
+    if (skymeldUsed.isSkymeldUsed()) {
+      // Start evaluating events within the target pattern evaluation phase, if present.
+      // Continue evaluating until the interleaved analysis and execution phase has a first
+      // event that suggests action execution.
+      // Within this period, only as many cores should be used as there are available,
+      // irrespective of whether the Bazel flag `--jobs` is set or not.
+      Optional<BazelPhaseDescription> phaseStart =
+          bazelPhaseDescriptions.has(BazelProfilePhase.TARGET_PATTERN_EVAL)
+              ? bazelPhaseDescriptions.get(BazelProfilePhase.TARGET_PATTERN_EVAL)
+              : bazelPhaseDescriptions.get(BazelProfilePhase.ANALYZE_AND_EXECUTE);
+      if (phaseStart.isPresent() && skymeldUsed.getExecutionPhase().isPresent()) {
+        start = phaseStart.get().getStart();
+        end = skymeldUsed.getExecutionPhase().get().getStart();
+      }
+    } else {
+      // Evaluate only events within the target pattern evaluation and dependency analysis
+      // phases. These phases should use as many cores as there are available, irrespective of
+      // whether the Bazel flag `--jobs` is set or not.
+      Optional<BazelPhaseDescription> phaseStart =
+          bazelPhaseDescriptions.has(BazelProfilePhase.TARGET_PATTERN_EVAL)
+              ? bazelPhaseDescriptions.get(BazelProfilePhase.TARGET_PATTERN_EVAL)
+              : bazelPhaseDescriptions.get(BazelProfilePhase.ANALYZE);
+      Optional<BazelPhaseDescription> phaseEnd =
+          bazelPhaseDescriptions.has(BazelProfilePhase.ANALYZE)
+              ? bazelPhaseDescriptions.get(BazelProfilePhase.ANALYZE)
+              : bazelPhaseDescriptions.get(BazelProfilePhase.TARGET_PATTERN_EVAL);
+      if (phaseStart.isPresent() || phaseEnd.isPresent()) {
+        start = phaseStart.get().getStart();
+        end = phaseEnd.get().getEnd();
+      }
+    }
+
+    if (start == null || end == null) {
+      return Optional.empty();
+    }
+    return Optional.of(new BazelPhaseDescription(start, end));
+  }
+
+  @VisibleForTesting
+  static Optional<BazelPhaseDescription> getExecutionPhase(
+      SkymeldUsed skymeldUsed, BazelPhaseDescriptions bazelPhaseDescriptions) {
+    return skymeldUsed.isSkymeldUsed()
+        ? skymeldUsed.getExecutionPhase()
+        : bazelPhaseDescriptions.get(BazelProfilePhase.EXECUTE);
   }
 }

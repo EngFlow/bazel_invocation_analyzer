@@ -14,12 +14,19 @@
 
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfilePhase;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
+import java.time.Duration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,14 +48,63 @@ public class SkymeldUsedDataProviderTest extends DataProviderUnitTestBase {
   }
 
   @Test
-  public void shouldReturnSkymeldUsed() throws Exception {
+  public void shouldReturnSkymeldUsedWithoutExecutionPhase() throws Exception {
+    Timestamp analysisAndExecutionStart = Timestamp.ofSeconds(2);
+    Timestamp analysisAndExecutionEnd = Timestamp.ofSeconds(6);
     when(dataManager.getDatum(BazelPhaseDescriptions.class))
         .thenReturn(
             BazelPhaseDescriptions.newBuilder()
                 .add(
                     BazelProfilePhase.ANALYZE_AND_EXECUTE,
-                    new BazelPhaseDescription(Timestamp.ofSeconds(2), Timestamp.ofSeconds(3)))
+                    new BazelPhaseDescription(analysisAndExecutionStart, analysisAndExecutionEnd))
                 .build());
+    useProfile(metaData(), trace(mainThread()));
+
     assertThat(provider.getSkymeldUsed().isSkymeldUsed()).isTrue();
+    assertThat(provider.getSkymeldUsed().getAnalysisAndExecutionPhase().isPresent()).isTrue();
+    assertThat(provider.getSkymeldUsed().getAnalysisAndExecutionPhase().get().getStart())
+        .isEqualTo(analysisAndExecutionStart);
+    assertThat(provider.getSkymeldUsed().getAnalysisAndExecutionPhase().get().getEnd())
+        .isEqualTo(analysisAndExecutionEnd);
+    assertThat(provider.getSkymeldUsed().getExecutionPhase().isEmpty()).isTrue();
+  }
+
+  @Test
+  public void shouldReturnSkymeldUsedWithExecutionPhase() throws Exception {
+    Timestamp analysisAndExecutionStart = Timestamp.ofSeconds(2);
+    Timestamp executionStart = Timestamp.ofSeconds(3);
+    Timestamp analysisAndExecutionEnd = Timestamp.ofSeconds(6);
+    when(dataManager.getDatum(BazelPhaseDescriptions.class))
+        .thenReturn(
+            BazelPhaseDescriptions.newBuilder()
+                .add(
+                    BazelProfilePhase.ANALYZE_AND_EXECUTE,
+                    new BazelPhaseDescription(analysisAndExecutionStart, analysisAndExecutionEnd))
+                .build());
+    useProfile(
+        metaData(),
+        trace(
+            mainThread(),
+            thread(
+                10,
+                10,
+                String.format("thread-%d", 10),
+                complete(
+                    "some execution event",
+                    BazelProfileConstants.CAT_ACTION_PROCESSING,
+                    executionStart,
+                    Duration.ofSeconds(1)))));
+
+    assertThat(provider.getSkymeldUsed().isSkymeldUsed()).isTrue();
+    assertThat(provider.getSkymeldUsed().getAnalysisAndExecutionPhase().isPresent()).isTrue();
+    assertThat(provider.getSkymeldUsed().getAnalysisAndExecutionPhase().get().getStart())
+        .isEqualTo(analysisAndExecutionStart);
+    assertThat(provider.getSkymeldUsed().getAnalysisAndExecutionPhase().get().getEnd())
+        .isEqualTo(analysisAndExecutionEnd);
+    assertThat(provider.getSkymeldUsed().getExecutionPhase().isPresent()).isTrue();
+    assertThat(provider.getSkymeldUsed().getExecutionPhase().get().getStart())
+        .isEqualTo(executionStart);
+    assertThat(provider.getSkymeldUsed().getExecutionPhase().get().getEnd())
+        .isEqualTo(analysisAndExecutionEnd);
   }
 }

@@ -29,7 +29,8 @@ public class EstimatedCoresAvailable extends EstimatedCores {
 
   @Override
   public String getDescription() {
-    return "The estimated number of cores available, as well as how many numbers were skipped"
-        + " when naming skyframe-evaluators. Extracted from the Bazel profile.";
+    return "The estimated number of cores available on the machine that ran the Bazel client, as"
+        + " well as how many numbers were skipped when naming skyframe-evaluators. Extracted"
+        + " from the Bazel profile.";
   }
 }

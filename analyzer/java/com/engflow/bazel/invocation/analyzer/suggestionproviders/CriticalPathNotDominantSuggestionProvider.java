@@ -21,13 +21,16 @@ import com.engflow.bazel.invocation.analyzer.SuggestionCategory;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfilePhase;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
+import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
+import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.engflow.bazel.invocation.analyzer.core.SuggestionProvider;
 import com.engflow.bazel.invocation.analyzer.dataproviders.BazelPhaseDescription;
 import com.engflow.bazel.invocation.analyzer.dataproviders.BazelPhaseDescriptions;
 import com.engflow.bazel.invocation.analyzer.dataproviders.CriticalPathDuration;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresUsed;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedJobsFlagValue;
+import com.engflow.bazel.invocation.analyzer.dataproviders.SkymeldUsed;
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteExecutionUsed;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
@@ -59,10 +62,8 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
   @Override
   public SuggestionOutput getSuggestions(DataManager dataManager) {
     try {
-      BazelPhaseDescriptions phases = dataManager.getDatum(BazelPhaseDescriptions.class);
-      Optional<BazelPhaseDescription> optionalExecutionPhaseDescription =
-          phases.get(BazelProfilePhase.EXECUTE);
-      if (optionalExecutionPhaseDescription.isEmpty()) {
+      Optional<BazelPhaseDescription> optionalExecutionPhase = getExecutionPhase(dataManager);
+      if (optionalExecutionPhase.isEmpty()) {
         // No execution phase found, so critical path analysis not applicable.
         return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
             ANALYZER_CLASSNAME,
@@ -71,7 +72,7 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
                 + " is necessary for the analysis.");
       }
 
-      Duration executionDuration = optionalExecutionPhaseDescription.get().getDuration();
+      Duration executionDuration = optionalExecutionPhase.get().getDuration();
       if (executionDuration.compareTo(MIN_DURATION_FOR_EVALUATION) < 0) {
         Caveat caveat =
             SuggestionProviderUtil.createCaveat(
@@ -237,6 +238,19 @@ public class CriticalPathNotDominantSuggestionProvider extends SuggestionProvide
       return SuggestionProviderUtil.createSuggestionOutputForMissingInput(ANALYZER_CLASSNAME, e);
     } catch (Throwable t) {
       return SuggestionProviderUtil.createSuggestionOutputForFailure(ANALYZER_CLASSNAME, t);
+    }
+  }
+
+  @VisibleForTesting
+  static Optional<BazelPhaseDescription> getExecutionPhase(DataManager dataManager)
+      throws InvalidProfileException, MissingInputException, NullDatumException {
+    BazelPhaseDescriptions phases = dataManager.getDatum(BazelPhaseDescriptions.class);
+    SkymeldUsed skymeldUsed = dataManager.getDatum((SkymeldUsed.class));
+
+    if (skymeldUsed.isSkymeldUsed() && skymeldUsed.getExecutionPhase().isPresent()) {
+      return skymeldUsed.getExecutionPhase();
+    } else {
+      return phases.get(BazelProfilePhase.EXECUTE);
     }
   }
 }
