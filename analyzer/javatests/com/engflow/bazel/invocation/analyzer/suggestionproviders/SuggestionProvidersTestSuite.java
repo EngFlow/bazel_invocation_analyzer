@@ -24,6 +24,7 @@ import org.junit.runners.Suite;
   CriticalPathNotDominantSuggestionProviderTest.class,
   GarbageCollectionSuggestionProviderTest.class,
   IncompleteProfileSuggestionProviderTest.class,
+  InvestigateRemoteCacheMissesSuggestionProviderTest.class,
   JobsSuggestionProviderTest.class,
   LocalActionsWithRemoteExecutionSuggestionProviderTest.class,
   MergedEventsSuggestionProviderTest.class,

@@ -49,6 +49,9 @@ public class SuggestionProviderUtil {
         verbose
             ? LocalActionsWithRemoteExecutionSuggestionProvider.createVerbose()
             : LocalActionsWithRemoteExecutionSuggestionProvider.createDefault(),
+        verbose
+            ? InvestigateRemoteCacheMissesSuggestionProvider.createVerbose()
+            : InvestigateRemoteCacheMissesSuggestionProvider.createDefault(),
         new BuildWithoutTheBytesSuggestionProvider(),
         new CriticalPathNotDominantSuggestionProvider(),
         new GarbageCollectionSuggestionProvider(),
