@@ -1,19 +1,23 @@
 package com.engflow.bazel.invocation.analyzer;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.complete;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mnemonic;
+import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.property;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_ACTION_PROCESSING;
 
 import com.engflow.bazel.invocation.analyzer.WriteBazelProfile.Property;
 import com.engflow.bazel.invocation.analyzer.WriteBazelProfile.ThreadEvent;
 import com.engflow.bazel.invocation.analyzer.WriteBazelProfile.TraceEvent;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
 import com.google.common.collect.ImmutableMap;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import javax.annotation.Nullable;
 
 public class EventThreadBuilder {
 
@@ -33,7 +37,14 @@ public class EventThreadBuilder {
   }
 
   public CompleteEvent actionProcessingAction(
-      String name, String mnemonic, int start, int duration) {
+      String name, @Nullable String target, @Nullable String mnemonic, int start, int duration) {
+    Map<String, String> args = new HashMap<>();
+    if (mnemonic != null) {
+      args.put(BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_MNEMONIC, mnemonic);
+    }
+    if (target != null) {
+      args.put(BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_TARGET, target);
+    }
     CompleteEvent event =
         new CompleteEvent(
             name,
@@ -42,15 +53,20 @@ public class EventThreadBuilder {
             Duration.ofSeconds(duration),
             id,
             pid,
-            ImmutableMap.of("mnemonic", mnemonic));
+            ImmutableMap.copyOf(args));
     events.add(event);
     nextRelatedStart = start;
     nextActionStart = start + duration;
     return event;
   }
 
+  public CompleteEvent actionProcessingAction(
+      String name, String mnemonic, int start, int duration) {
+    return actionProcessingAction(name, null, mnemonic, start, duration);
+  }
+
   public CompleteEvent actionProcessingAction(String name, String mnemonic, int duration) {
-    return actionProcessingAction(name, mnemonic, nextActionStart, duration);
+    return actionProcessingAction(name, null, mnemonic, nextActionStart, duration);
   }
 
   public CompleteEvent related(int start, int duration, String category, String name) {
@@ -90,8 +106,7 @@ public class EventThreadBuilder {
                         event.start,
                         event.duration,
                         event.args.entrySet().stream()
-                            .filter(e -> "mnemonic".equals(e.getKey()))
-                            .map(e -> mnemonic(e.getValue()))
+                            .map(e -> property(e.getKey(), e.getValue()))
                             .toArray(Property[]::new)))
             .toArray(ThreadEvent[]::new));
   }

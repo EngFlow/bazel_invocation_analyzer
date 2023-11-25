@@ -26,6 +26,7 @@ import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.ActionStats;
 import com.engflow.bazel.invocation.analyzer.dataproviders.Bottleneck;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresUsed;
+import com.engflow.bazel.invocation.analyzer.dataproviders.FlagValueExperimentalProfileIncludeTargetLabel;
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
@@ -36,7 +37,10 @@ import org.junit.Test;
 
 public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTestBase {
   @Before
-  public void setup() {
+  public void setup() throws InvalidProfileException, MissingInputException, NullDatumException {
+    when(dataManager.getDatum(FlagValueExperimentalProfileIncludeTargetLabel.class))
+        .thenReturn(new FlagValueExperimentalProfileIncludeTargetLabel(true));
+
     suggestionProvider = BottleneckSuggestionProvider.createDefault();
   }
 
@@ -285,6 +289,52 @@ public class BottleneckSuggestionProviderTest extends SuggestionProviderUnitTest
             String.format(" %s ", DurationUtil.formatDuration(majorBottleneck.getDuration())));
     assertThat(suggestions.getCaveatList()).hasSize(1);
     assertThat(suggestions.getCaveat(0).getSuggestVerboseMode()).isTrue();
+    assertThat(suggestions.hasFailure()).isFalse();
+    assertThat(suggestions.getMissingInputList()).isEmpty();
+  }
+
+  @Test
+  public void doNotAddCaveatIfTargetNamesAreNotIncludedAndThereAreNoBottlenecks()
+      throws InvalidProfileException, MissingInputException, NullDatumException {
+    when(dataManager.getDatum(FlagValueExperimentalProfileIncludeTargetLabel.class))
+        .thenReturn(new FlagValueExperimentalProfileIncludeTargetLabel(true));
+    when(dataManager.getDatum(TotalDuration.class))
+        .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
+    when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
+    when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of()));
+
+    final var bottleneckSuggestionProvider =
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 0, 1.);
+    final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
+    assertThat(suggestions.getSuggestionList()).isEmpty();
+    assertThat(suggestions.getCaveatList()).isEmpty();
+    assertThat(suggestions.hasFailure()).isFalse();
+    assertThat(suggestions.getMissingInputList()).isEmpty();
+  }
+
+  @Test
+  public void addCaveatIfTargetNamesAreNotIncluded()
+      throws InvalidProfileException, MissingInputException, NullDatumException {
+    Bottleneck bottleneck =
+        Bottleneck.newBuilder(Timestamp.ofSeconds(0))
+            .setEnd(Timestamp.ofSeconds(10))
+            .addActionCountSample(1)
+            .build();
+
+    when(dataManager.getDatum(FlagValueExperimentalProfileIncludeTargetLabel.class))
+        .thenReturn(new FlagValueExperimentalProfileIncludeTargetLabel(false));
+    when(dataManager.getDatum(TotalDuration.class))
+        .thenReturn(new TotalDuration(Duration.ofSeconds(100)));
+    when(dataManager.getDatum(EstimatedCoresUsed.class)).thenReturn(new EstimatedCoresUsed(4, 0));
+    when(dataManager.getDatum(ActionStats.class)).thenReturn(new ActionStats(List.of(bottleneck)));
+
+    final var bottleneckSuggestionProvider =
+        new BottleneckSuggestionProvider(1, 1, Duration.ZERO, 0, 1.);
+    final var suggestions = bottleneckSuggestionProvider.getSuggestions(dataManager);
+    assertThat(suggestions.getSuggestionList()).hasSize(1);
+    assertThat(suggestions.getCaveatList()).hasSize(1);
+    assertThat(suggestions.getCaveat(0).getMessage())
+        .contains(FlagValueExperimentalProfileIncludeTargetLabel.FLAG_NAME);
     assertThat(suggestions.hasFailure()).isFalse();
     assertThat(suggestions.getMissingInputList()).isEmpty();
   }

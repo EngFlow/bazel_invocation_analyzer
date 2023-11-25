@@ -257,14 +257,10 @@ public class WriteBazelProfile {
             put(TraceEventFormatConstants.EVENT_ARGUMENTS, properties));
   }
 
-  /**
-   * A mnemonic to add to the args.
-   *
-   * @param name for the event
-   */
+  /** A property, e.g. to add to the args. */
   @CheckReturnValue
-  public static Property mnemonic(String name) {
-    return writer -> writer.put("mnemonic", name);
+  public static Property property(String key, String value) {
+    return writer -> writer.put(key, value);
   }
 
   /**

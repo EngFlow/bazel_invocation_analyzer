@@ -97,4 +97,14 @@ public class BazelProfileConstants {
   // See
   // https://github.com/bazelbuild/bazel/blob/aab19f75cd383c4b09a6ae720f9fa436bf89d271/src/main/java/com/google/devtools/build/lib/profiler/JsonTraceFileWriter.java#L179-L183
   public static final String OTHER_DATA_BAZEL_VERSION = "bazel_version";
+
+  // args names
+  // For "action processing" events, the target name is included in the args when setting the Bazel
+  // flag `--experimental_profile_include_target_label`
+  // See
+  // https://github.com/bazelbuild/bazel/blob/7d10999fc0357596824f2b6022bbbd895f245a3c/src/main/java/com/google/devtools/build/lib/profiler/Profiler.java#L206-L208
+  public static final String ARGS_CAT_ACTION_PROCESSING_TARGET = "target";
+  // See
+  // https://github.com/bazelbuild/bazel/blob/7d10999fc0357596824f2b6022bbbd895f245a3c/src/main/java/com/google/devtools/build/lib/profiler/Profiler.java#L209-L211
+  public static final String ARGS_CAT_ACTION_PROCESSING_MNEMONIC = "mnemonic";
 }
