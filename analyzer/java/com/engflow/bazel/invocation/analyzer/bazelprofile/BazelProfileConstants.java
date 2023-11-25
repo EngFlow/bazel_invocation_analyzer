@@ -61,6 +61,8 @@ public class BazelProfileConstants {
   static final String COUNTER_ACTION_COUNT_OLD = "action counters";
 
   // Category names
+  // See
+  // https://github.com/bazelbuild/bazel/blob/master/src/main/java/com/google/devtools/build/lib/profiler/ProfilerTask.java#L23-L101
   public static final String CAT_ACTION_PROCESSING = "action processing";
   public static final String CAT_BUILD_PHASE_MARKER = "build phase marker";
   public static final String CAT_CRITICAL_PATH_COMPONENT = "critical path component";

@@ -1,10 +1,20 @@
+/*
+ * Copyright 2022 EngFlow Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_GENERAL_INFORMATION;
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_LOCAL_ACTION_EXECUTION;
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK;
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_SUBPROCESS_RUN;
-
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelEventsUtil;
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions.LocalAction;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
@@ -93,6 +103,10 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
     return actions.iterator();
   }
 
+  public int size() {
+    return actions.size();
+  }
+
   public Stream<LocalAction> stream() {
     return actions.stream();
   }
@@ -109,13 +123,22 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
 
     private final boolean checksRemoteCache;
     private final boolean executedLocally;
+    private final boolean executedRemotely;
+    private final boolean remoteCacheHit;
 
     @VisibleForTesting
     public LocalAction(CompleteEvent action, List<CompleteEvent> relatedEvents) {
       this.action = action;
       this.relatedEvents = ImmutableList.copyOf(relatedEvents);
-      this.checksRemoteCache = relatedEvents.stream().anyMatch(e -> checksRemoteCache(e));
-      this.executedLocally = relatedEvents.stream().anyMatch(e -> indicatesLocalExecution(e));
+      this.checksRemoteCache =
+          relatedEvents.stream().anyMatch(BazelEventsUtil::indicatesRemoteCacheCheck);
+      this.executedLocally =
+          relatedEvents.stream().anyMatch(BazelEventsUtil::indicatesLocalExecution);
+      this.executedRemotely =
+          relatedEvents.stream().anyMatch(BazelEventsUtil::indicatesRemoteExecution);
+      this.remoteCacheHit =
+          !executedRemotely
+              && relatedEvents.stream().anyMatch(BazelEventsUtil::indicatesRemoteDownloadOutputs);
     }
 
     public CompleteEvent getAction() {
@@ -132,6 +155,14 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
 
     public boolean isExecutedLocally() {
       return executedLocally;
+    }
+
+    public boolean isExecutedRemotely() {
+      return executedRemotely;
+    }
+
+    public boolean isRemoteCacheHit() {
+      return remoteCacheHit;
     }
 
     @Override
@@ -173,16 +204,6 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
       i = Integer.compare(action.threadId, o.action.threadId);
       if (i != 0) return i;
       return action.start.compareTo(o.action.start);
-    }
-
-    public static boolean checksRemoteCache(CompleteEvent event) {
-      return CAT_REMOTE_ACTION_CACHE_CHECK.equals(event.category);
-    }
-
-    public static boolean indicatesLocalExecution(CompleteEvent event) {
-      return CAT_LOCAL_ACTION_EXECUTION.equals(event.category)
-          || CAT_GENERAL_INFORMATION.equals(event.category)
-              && COMPLETE_SUBPROCESS_RUN.equals(event.name);
     }
   }
 }
