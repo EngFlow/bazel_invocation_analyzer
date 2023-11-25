@@ -31,15 +31,14 @@ public class RemoteCacheMetricsDataProvider extends DataProvider {
   RemoteCacheMetrics derive()
       throws InvalidProfileException, MissingInputException, NullDatumException {
     var metrics =
-        getDataManager().getDatum(LocalActions.class).parallelStream()
+        getDataManager().getDatum(LocalActions.class).stream()
+            .filter(action -> action.hasRemoteCacheCheck())
+            .parallel()
             .map(this::coalesce)
             .collect(Collectors.toList());
     var summary = metrics.stream().reduce(RemoteCacheData.EMPTY, RemoteCacheData::plus);
     return new RemoteCacheMetrics(
-        summary.check,
-        summary.download,
-        summary.upload,
-        ((float) summary.uncached / metrics.size()) * 100f);
+        metrics.size(), summary.uncached, summary.check, summary.download, summary.upload);
   }
 
   RemoteCacheData coalesce(LocalAction action) {

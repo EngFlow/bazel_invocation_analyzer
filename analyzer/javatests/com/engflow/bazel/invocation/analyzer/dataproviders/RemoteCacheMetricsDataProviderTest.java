@@ -78,9 +78,10 @@ public class RemoteCacheMetricsDataProviderTest extends DataProviderUnitTestBase
     Truth.assertThat(provider.derive())
         .isEqualTo(
             new RemoteCacheMetrics(
+                3,
+                1,
                 Duration.ofSeconds(1 + 4 + 16),
                 Duration.ofSeconds(2 + 8),
-                Duration.ofSeconds(32),
-                25.0f));
+                Duration.ofSeconds(32)));
   }
 }
