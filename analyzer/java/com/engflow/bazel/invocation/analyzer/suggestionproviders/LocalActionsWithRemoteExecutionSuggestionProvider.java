@@ -69,39 +69,42 @@ public class LocalActionsWithRemoteExecutionSuggestionProvider extends Suggestio
                   .filter(action -> action.isExecutedLocally())
                   .sorted((a, b) -> b.getAction().duration.compareTo(a.getAction().duration))
                   .collect(Collectors.toList());
-          if (locallyExecuted.size() > maxActions) {
-            caveats.add(
-                SuggestionProviderUtil.createCaveat(
-                    String.format(
-                        "Only the %d longest, locally executed actions of the %d found were"
-                            + " listed.",
-                        maxActions, locallyExecuted.size()),
-                    true));
+          if (!locallyExecuted.isEmpty()) {
+            if (locallyExecuted.size() > maxActions) {
+              caveats.add(
+                  SuggestionProviderUtil.createCaveat(
+                      String.format(
+                          "Only the %d longest, locally executed actions of the %d found were"
+                              + " listed.",
+                          maxActions, locallyExecuted.size()),
+                      true));
+            }
+            StringBuilder recommendation = new StringBuilder();
+            recommendation.append(
+                "Although remote execution was used for this invocation, some actions were still"
+                    + " executed locally. Investigate whether you can migrate these actions to"
+                    + " remote execution to speed up future builds and improve hermeticity:");
+            locallyExecuted.stream()
+                .limit(maxActions)
+                .forEachOrdered(
+                    action -> {
+                      recommendation.append("\n\t- ");
+                      recommendation.append(action.getAction().name);
+                      recommendation.append(" (");
+                      recommendation.append(
+                          DurationUtil.formatDuration(action.getAction().duration));
+                      recommendation.append(")");
+                    });
+            suggestions.add(
+                SuggestionProviderUtil.createSuggestion(
+                    SuggestionCategory.OTHER,
+                    createSuggestionId(SUGGESTION_ID_LOCAL_ACTIONS_WITH_REMOTE_EXECUTION),
+                    "Migrate locally executed actions to remote execution",
+                    recommendation.toString(),
+                    null,
+                    null,
+                    caveats));
           }
-          StringBuilder recommendation = new StringBuilder();
-          recommendation.append(
-              "Although remote execution was used for this invocation, some actions were still"
-                  + " executed locally. Investigate whether you can migrate these actions to remote"
-                  + " execution to speed up future builds and improve hermeticity:\n");
-          locallyExecuted.stream()
-              .limit(maxActions)
-              .forEachOrdered(
-                  action -> {
-                    recommendation.append("\t- ");
-                    recommendation.append(action.getAction().name);
-                    recommendation.append(" (");
-                    recommendation.append(DurationUtil.formatDuration(action.getAction().duration));
-                    recommendation.append(")\n");
-                  });
-          suggestions.add(
-              SuggestionProviderUtil.createSuggestion(
-                  SuggestionCategory.OTHER,
-                  createSuggestionId(SUGGESTION_ID_LOCAL_ACTIONS_WITH_REMOTE_EXECUTION),
-                  "Migrate locally executed actions to remote execution",
-                  recommendation.toString(),
-                  null,
-                  null,
-                  caveats));
         }
       }
       return SuggestionProviderUtil.createSuggestionOutput(ANALYZER_CLASSNAME, suggestions, null);
