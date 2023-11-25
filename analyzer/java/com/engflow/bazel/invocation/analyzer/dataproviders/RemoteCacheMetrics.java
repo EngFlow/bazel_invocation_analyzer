@@ -10,6 +10,9 @@ import java.time.Duration;
 /**
  * Metrics on remote caching, namely how much time was spent on cache checks, downloading outputs,
  * uploading outputs, and what percentage of actions were cached remotely.
+ *
+ * <p>Note that Bazel does not differentiate between a remote cache configured via `--disk_cache` or
+ * `--remote_cache`.
  */
 public class RemoteCacheMetrics implements Datum {
 
@@ -30,30 +33,29 @@ public class RemoteCacheMetrics implements Datum {
       int cacheMisses,
       Duration totalCacheCheckDuration,
       Duration downloadOutputsDuration,
-      Duration totalUploadOutputs) {
+      Duration uploadOutputsDuration) {
     this.cacheChecks = cacheChecks;
     this.cacheMisses = cacheMisses;
     this.percentCachedRemotely = 100f * (cacheChecks - cacheMisses) / cacheChecks;
     this.cacheCheckDuration = Preconditions.checkNotNull(totalCacheCheckDuration);
     this.downloadOutputsDuration = Preconditions.checkNotNull(downloadOutputsDuration);
-    this.uploadOutputsDuration = Preconditions.checkNotNull(totalUploadOutputs);
+    this.uploadOutputsDuration = Preconditions.checkNotNull(uploadOutputsDuration);
   }
 
   @Override
   public boolean isEmpty() {
-    return cacheCheckDuration.isZero()
-        && downloadOutputsDuration.isZero()
-        && uploadOutputsDuration.isZero();
+    return cacheChecks == 0;
   }
 
   @Override
   public String getEmptyReason() {
-    return isEmpty() ? "No remote cache operations available." : null;
+    return isEmpty() ? "Could not find any remote cache checks." : null;
   }
 
   @Override
   public String getDescription() {
-    return "Collection of remote cache related metrics.";
+    return "Metrics on the remote caching used. This includes both the use of `--remote_cache` and"
+        + " `--disk_cache`.";
   }
 
   @Override

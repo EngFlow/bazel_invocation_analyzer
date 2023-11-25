@@ -6,6 +6,9 @@ import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_EXECUTION_UPLOAD_TIME;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_OUTPUT_DOWNLOAD;
+import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD;
+import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD_MISSING_INPUTS;
+import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD_OUTPUTS;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -62,26 +65,36 @@ public class RemoteCacheMetricsDataProviderTest extends DataProviderUnitTestBase
                             thread.related(1, CAT_REMOTE_ACTION_CACHE_CHECK),
                             thread.related(2, CAT_REMOTE_OUTPUT_DOWNLOAD))),
                     new LocalActions.LocalAction(
-                        thread.actionProcessingAction("More Cached Work", "WorkC", 5),
-                        List.of(
-                            thread.related(4, CAT_REMOTE_ACTION_CACHE_CHECK),
-                            thread.related(8, CAT_REMOTE_OUTPUT_DOWNLOAD))),
-                    new LocalActions.LocalAction(
                         thread.actionProcessingAction("Cache Miss Work", "WorkC", 5),
                         List.of(
-                            thread.related(16, CAT_REMOTE_ACTION_CACHE_CHECK),
-                            thread.related(32, CAT_REMOTE_EXECUTION_UPLOAD_TIME))),
+                            thread.related(4, CAT_REMOTE_ACTION_CACHE_CHECK),
+                            thread.related(
+                                3,
+                                CAT_REMOTE_EXECUTION_UPLOAD_TIME,
+                                COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD_OUTPUTS))),
                     new LocalActions.LocalAction(
-                        thread.actionProcessingAction("UnCached Work", "LocalWorkC", 5),
+                        thread.actionProcessingAction("Cache Miss Work RE", "WorkC", 5),
+                        List.of(
+                            thread.related(8, CAT_REMOTE_ACTION_CACHE_CHECK),
+                            thread.related(
+                                5,
+                                CAT_REMOTE_EXECUTION_UPLOAD_TIME,
+                                COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD_MISSING_INPUTS),
+                            thread.related(
+                                7,
+                                CAT_REMOTE_EXECUTION_UPLOAD_TIME,
+                                COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD))),
+                    new LocalActions.LocalAction(
+                        thread.actionProcessingAction("Work without cache check", "LocalWorkC", 5),
                         List.of()))));
 
     Truth.assertThat(provider.derive())
         .isEqualTo(
             new RemoteCacheMetrics(
                 3,
-                1,
-                Duration.ofSeconds(1 + 4 + 16),
-                Duration.ofSeconds(2 + 8),
-                Duration.ofSeconds(32)));
+                2,
+                Duration.ofSeconds(1 + 4 + 8),
+                Duration.ofSeconds(2),
+                Duration.ofSeconds(3 + 7)));
   }
 }

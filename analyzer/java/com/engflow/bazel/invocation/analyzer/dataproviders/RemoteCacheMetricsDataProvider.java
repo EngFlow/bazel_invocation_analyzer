@@ -3,6 +3,8 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_EXECUTION_UPLOAD_TIME;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_OUTPUT_DOWNLOAD;
+import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD;
+import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD_OUTPUTS;
 
 import com.engflow.bazel.invocation.analyzer.core.DataProvider;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplier;
@@ -17,7 +19,10 @@ import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/** A {@link DataProvider} that supplies data on remote caching. */
+/**
+ * A {@link DataProvider} that supplies data on remote caching. Note that `disk_cache` is also a
+ * remote cache, even though it interacts with the local disk.
+ */
 public class RemoteCacheMetricsDataProvider extends DataProvider {
 
   @Override
@@ -38,7 +43,7 @@ public class RemoteCacheMetricsDataProvider extends DataProvider {
             .collect(Collectors.toList());
     var summary = metrics.stream().reduce(RemoteCacheData.EMPTY, RemoteCacheData::plus);
     return new RemoteCacheMetrics(
-        metrics.size(), summary.uncached, summary.check, summary.download, summary.upload);
+        metrics.size(), summary.cacheMisses, summary.check, summary.download, summary.upload);
   }
 
   RemoteCacheData coalesce(LocalAction action) {
@@ -59,13 +64,13 @@ public class RemoteCacheMetricsDataProvider extends DataProvider {
     public final Duration check;
     public final Duration download;
     private final Duration upload;
-    private final int uncached;
+    private final int cacheMisses;
 
-    RemoteCacheData(Duration check, Duration download, Duration upload, int uncached) {
+    RemoteCacheData(Duration check, Duration download, Duration upload, int cacheMisses) {
       this.check = check;
       this.download = download;
       this.upload = upload;
-      this.uncached = uncached;
+      this.cacheMisses = cacheMisses;
     }
 
     RemoteCacheData plus(RemoteCacheData other) {
@@ -73,7 +78,7 @@ public class RemoteCacheMetricsDataProvider extends DataProvider {
           check.plus(other.check),
           download.plus(other.download),
           upload.plus(other.upload),
-          uncached + other.uncached);
+          cacheMisses + other.cacheMisses);
     }
 
     RemoteCacheData calculateCacheState() {
@@ -86,14 +91,23 @@ public class RemoteCacheMetricsDataProvider extends DataProvider {
     }
 
     RemoteCacheData plus(CompleteEvent event) {
+      // The event documents a remote cache check.
       if (CAT_REMOTE_ACTION_CACHE_CHECK.equals(event.category)) {
-        return new RemoteCacheData(check.plus(event.duration), download, upload, uncached);
+        return new RemoteCacheData(check.plus(event.duration), download, upload, cacheMisses);
       }
+      // The event documents downloading outputs from a remote cache.
       if (CAT_REMOTE_OUTPUT_DOWNLOAD.equals(event.category)) {
-        return new RemoteCacheData(check, download.plus(event.duration), upload, uncached);
+        return new RemoteCacheData(check, download.plus(event.duration), upload, cacheMisses);
       }
-      if (CAT_REMOTE_EXECUTION_UPLOAD_TIME.equals(event.category)) {
-        return new RemoteCacheData(check, download, upload.plus(event.duration), uncached);
+      // The event documents uploading outputs to a remote cache.
+      // See
+      // https://github.com/bazelbuild/bazel/blob/7d10999fc0357596824f2b6022bbbd895f245a3c/src/main/java/com/google/devtools/build/lib/remote/RemoteExecutionService.java#L1417
+      // and
+      // https://github.com/bazelbuild/bazel/blob/7d10999fc0357596824f2b6022bbbd895f245a3c/src/main/java/com/google/devtools/build/lib/remote/RemoteSpawnRunner.java#L359
+      if (CAT_REMOTE_EXECUTION_UPLOAD_TIME.equals(event.category)
+          && (COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD_OUTPUTS.equals(event.name)
+              || COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD.equals(event.name))) {
+        return new RemoteCacheData(check, download, upload.plus(event.duration), cacheMisses);
       }
       return this;
     }

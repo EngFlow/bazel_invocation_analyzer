@@ -76,6 +76,10 @@ public class EventThreadBuilder {
     return related(nextRelatedStart, duration, category);
   }
 
+  public CompleteEvent related(int duration, String category, String name) {
+    return related(nextRelatedStart, duration, category, name);
+  }
+
   public TraceEvent asEvent() {
     return thread(
         id,
