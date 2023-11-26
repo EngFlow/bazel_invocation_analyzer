@@ -134,7 +134,8 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
       final List<Caveat> caveats = new ArrayList<>();
       var flagForTargetInclusionEnabled =
           dataManager.getDatum(FlagValueExperimentalProfileIncludeTargetLabel.class);
-      if (!flagForTargetInclusionEnabled.isProfileIncludeTargetLabelEnabled()) {
+      if (suggestions.size() > 0
+          && !flagForTargetInclusionEnabled.isProfileIncludeTargetLabelEnabled()) {
         caveats.add(
             SuggestionProviderUtil.createCaveat(
                 String.format(
@@ -274,11 +275,9 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
               }
               sb.append("\t\tAction duration: ");
               sb.append(formatDuration(event.completeEvent.duration));
-              sb.append("\n");
               if (event.isCropped()) {
-                sb.append("\t\tDuration within bottleneck: ");
+                sb.append("\n\t\tDuration within bottleneck: ");
                 sb.append(formatDuration(event.croppedDuration));
-                sb.append("\n");
               }
               return sb.toString();
             })
