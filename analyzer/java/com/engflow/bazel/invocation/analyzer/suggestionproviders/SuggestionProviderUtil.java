@@ -56,6 +56,7 @@ public class SuggestionProviderUtil {
         new UseSkymeldSuggestionProvider(),
         new NegligiblePhaseSuggestionProvider(),
         new QueuingSuggestionProvider(),
+        new UseRemoteCachingSuggestionProvider(),
         new IncompleteProfileSuggestionProvider(),
         // Consciously put this suggestion last, as it's not about the invocation itself,
         // but guidance on how to potentially get a better analysis using this tool.
