@@ -90,6 +90,30 @@ public class BazelProfileConstants {
   public static final String COMPLETE_SUBPROCESS_RUN = "subprocess.run";
   public static final String COMPLETE_EXECUTE_REMOTELY = "execute remotely";
 
+  // https://github.com/bazelbuild/bazel/blob/7d10999fc0357596824f2b6022bbbd895f245a3c/src/main/java/com/google/devtools/build/lib/remote/RemoteRepositoryRemoteExecutor.java#L160
+  /**
+   * For complete events of category {@link #CAT_REMOTE_EXECUTION_UPLOAD_TIME}, this name indicates
+   * that missing inputs were uploaded to a remote execution service.
+   */
+  public static final String COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD_MISSING_INPUTS =
+      "upload missing inputs";
+
+  // https://github.com/bazelbuild/bazel/blob/7d10999fc0357596824f2b6022bbbd895f245a3c/src/main/java/com/google/devtools/build/lib/remote/RemoteExecutionService.java#L1417
+  /**
+   * For complete events of category {@link #CAT_REMOTE_EXECUTION_UPLOAD_TIME}, this name indicates
+   * that outputs were uploaded to a remote cache. This includes local "uploads" when using
+   * `disk_cache`.
+   */
+  public static final String COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD_OUTPUTS =
+      "upload outputs";
+
+  // https://github.com/bazelbuild/bazel/blob/7d10999fc0357596824f2b6022bbbd895f245a3c/src/main/java/com/google/devtools/build/lib/remote/RemoteSpawnRunner.java#L359
+  /**
+   * For complete events of category {@link #CAT_REMOTE_EXECUTION_UPLOAD_TIME}, this name indicates
+   * that outputs were uploaded to a remote cache while using a remote execution service.
+   */
+  public static final String COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD = "upload";
+
   // InstantEvent names
   public static final String INSTANT_FINISHING = "Finishing";
 

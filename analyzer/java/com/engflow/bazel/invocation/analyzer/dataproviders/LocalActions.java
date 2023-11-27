@@ -2,6 +2,7 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_GENERAL_INFORMATION;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_LOCAL_ACTION_EXECUTION;
+import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_SUBPROCESS_RUN;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
@@ -105,12 +106,15 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
 
     private final CompleteEvent action;
     private final ImmutableList<CompleteEvent> relatedEvents;
+
+    private final boolean checksRemoteCache;
     private final boolean executedLocally;
 
     @VisibleForTesting
     public LocalAction(CompleteEvent action, List<CompleteEvent> relatedEvents) {
       this.action = action;
       this.relatedEvents = ImmutableList.copyOf(relatedEvents);
+      this.checksRemoteCache = relatedEvents.stream().anyMatch(e -> checksRemoteCache(e));
       this.executedLocally = relatedEvents.stream().anyMatch(e -> indicatesLocalExecution(e));
     }
 
@@ -120,6 +124,10 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
 
     public List<CompleteEvent> getRelatedEvents() {
       return relatedEvents;
+    }
+
+    public boolean hasRemoteCacheCheck() {
+      return checksRemoteCache;
     }
 
     public boolean isExecutedLocally() {
@@ -165,6 +173,10 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
       i = Integer.compare(action.threadId, o.action.threadId);
       if (i != 0) return i;
       return action.start.compareTo(o.action.start);
+    }
+
+    public static boolean checksRemoteCache(CompleteEvent event) {
+      return CAT_REMOTE_ACTION_CACHE_CHECK.equals(event.category);
     }
 
     public static boolean indicatesLocalExecution(CompleteEvent event) {
