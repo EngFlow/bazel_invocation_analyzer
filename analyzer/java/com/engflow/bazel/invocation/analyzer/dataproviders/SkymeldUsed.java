@@ -44,6 +44,7 @@ public class SkymeldUsed implements Datum {
       Optional<Timestamp> executionStart) {
     this.skymeldUsed = skymeldUsed;
     this.analysisAndExecutionPhase = Preconditions.checkNotNull(analysisAndExecutionPhase);
+    Preconditions.checkNotNull(executionStart);
     if (skymeldUsed && executionStart.isPresent()) {
       Preconditions.checkArgument(analysisAndExecutionPhase.isPresent());
       this.executionPhase =

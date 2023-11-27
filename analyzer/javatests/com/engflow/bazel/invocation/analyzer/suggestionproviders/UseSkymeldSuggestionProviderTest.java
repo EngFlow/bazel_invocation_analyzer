@@ -18,8 +18,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
+import com.engflow.bazel.invocation.analyzer.dataproviders.BazelPhaseDescription;
 import com.engflow.bazel.invocation.analyzer.dataproviders.BazelVersion;
 import com.engflow.bazel.invocation.analyzer.dataproviders.SkymeldUsed;
+import com.engflow.bazel.invocation.analyzer.time.Timestamp;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +47,7 @@ public class UseSkymeldSuggestionProviderTest extends SuggestionProviderUnitTest
   @Test
   public void shouldReturnSuggestionForNoSkymeldUsedOnUnknownVersion() {
     bazelVersion = BazelVersion.parse(null);
-    skymeldUsed = new SkymeldUsed(false);
+    skymeldUsed = new SkymeldUsed();
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
@@ -58,7 +61,7 @@ public class UseSkymeldSuggestionProviderTest extends SuggestionProviderUnitTest
   @Test
   public void shouldReturnSuggestionForNoSkymeldUsedOnKnownOldVersion() {
     bazelVersion = BazelVersion.parse("release 5.3.1");
-    skymeldUsed = new SkymeldUsed(false);
+    skymeldUsed = new SkymeldUsed();
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
@@ -72,7 +75,7 @@ public class UseSkymeldSuggestionProviderTest extends SuggestionProviderUnitTest
   @Test
   public void shouldReturnSuggestionForNoSkymeldUsedOnKnownNewVersion() {
     bazelVersion = BazelVersion.parse("release 7.0.0");
-    skymeldUsed = new SkymeldUsed(false);
+    skymeldUsed = new SkymeldUsed();
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
@@ -85,7 +88,10 @@ public class UseSkymeldSuggestionProviderTest extends SuggestionProviderUnitTest
 
   @Test
   public void shouldReturnNoSuggestionForSkymeldUsed() {
-    skymeldUsed = new SkymeldUsed(true);
+    skymeldUsed =
+        new SkymeldUsed(
+            new BazelPhaseDescription(Timestamp.ofSeconds(1), Timestamp.ofSeconds(5)),
+            Optional.empty());
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
