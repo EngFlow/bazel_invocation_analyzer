@@ -20,5 +20,6 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
   BazelProfileTest.class,
+  BazelEventsUtilTest.class,
 })
 public class BazelProfileTestSuite {}

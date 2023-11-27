@@ -8,7 +8,7 @@ java_library(
     name = "bazelprofile",
     srcs = glob(
         ["*.java"],
-        exclude = TYPES,
+        exclude = TYPES + ["BazelEventsUtil.java"],
     ),
     visibility = ["//visibility:public"],
     deps = [
@@ -29,5 +29,15 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//third_party/guava",
+    ],
+)
+
+java_library(
+    name = "util",
+    srcs = ["BazelEventsUtil.java"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":types",
+        "//analyzer/java/com/engflow/bazel/invocation/analyzer/traceeventformat",
     ],
 )

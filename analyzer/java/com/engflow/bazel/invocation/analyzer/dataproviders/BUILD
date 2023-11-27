@@ -31,6 +31,7 @@ java_library(
         ":types",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/bazelprofile",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/bazelprofile:types",
+        "//analyzer/java/com/engflow/bazel/invocation/analyzer/bazelprofile:util",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/core",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/time",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/traceeventformat",
@@ -56,6 +57,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/bazelprofile:types",
+        "//analyzer/java/com/engflow/bazel/invocation/analyzer/bazelprofile:util",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/core",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/time",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/traceeventformat",

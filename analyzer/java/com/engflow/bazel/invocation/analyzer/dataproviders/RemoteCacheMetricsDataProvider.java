@@ -1,11 +1,20 @@
+/*
+ * Copyright 2022 EngFlow Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK;
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_EXECUTION_UPLOAD_TIME;
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_OUTPUT_DOWNLOAD;
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD;
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD_OUTPUTS;
-
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelEventsUtil;
 import com.engflow.bazel.invocation.analyzer.core.DataProvider;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplier;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
@@ -91,22 +100,13 @@ public class RemoteCacheMetricsDataProvider extends DataProvider {
     }
 
     RemoteCacheData plus(CompleteEvent event) {
-      // The event documents a remote cache check.
-      if (CAT_REMOTE_ACTION_CACHE_CHECK.equals(event.category)) {
+      if (BazelEventsUtil.indicatesRemoteCacheCheck(event)) {
         return new RemoteCacheData(check.plus(event.duration), download, upload, cacheMisses);
       }
-      // The event documents downloading outputs from a remote cache.
-      if (CAT_REMOTE_OUTPUT_DOWNLOAD.equals(event.category)) {
+      if (BazelEventsUtil.indicatesRemoteDownloadOutputs(event)) {
         return new RemoteCacheData(check, download.plus(event.duration), upload, cacheMisses);
       }
-      // The event documents uploading outputs to a remote cache.
-      // See
-      // https://github.com/bazelbuild/bazel/blob/7d10999fc0357596824f2b6022bbbd895f245a3c/src/main/java/com/google/devtools/build/lib/remote/RemoteExecutionService.java#L1417
-      // and
-      // https://github.com/bazelbuild/bazel/blob/7d10999fc0357596824f2b6022bbbd895f245a3c/src/main/java/com/google/devtools/build/lib/remote/RemoteSpawnRunner.java#L359
-      if (CAT_REMOTE_EXECUTION_UPLOAD_TIME.equals(event.category)
-          && (COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD_OUTPUTS.equals(event.name)
-              || COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD.equals(event.name))) {
+      if (BazelEventsUtil.indicatesRemoteUploadOutputs(event)) {
         return new RemoteCacheData(check, download, upload.plus(event.duration), cacheMisses);
       }
       return this;
