@@ -4,6 +4,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/bazelprofile:types",
+        "//analyzer/java/com/engflow/bazel/invocation/analyzer/bazelprofile:util",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/core",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/dataproviders:types",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/dataproviders/remoteexecution:types",

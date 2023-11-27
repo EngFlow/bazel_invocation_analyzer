@@ -18,12 +18,13 @@ import com.engflow.bazel.invocation.analyzer.Caveat;
 import com.engflow.bazel.invocation.analyzer.Suggestion;
 import com.engflow.bazel.invocation.analyzer.SuggestionCategory;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelEventsUtil;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.SuggestionProvider;
+import com.engflow.bazel.invocation.analyzer.dataproviders.FlagValueExperimentalProfileIncludeTargetLabel;
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteExecutionUsed;
-import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +71,16 @@ public class LocalActionsWithRemoteExecutionSuggestionProvider extends Suggestio
                   .sorted((a, b) -> b.getAction().duration.compareTo(a.getAction().duration))
                   .collect(Collectors.toList());
           if (!locallyExecuted.isEmpty()) {
+            var targetLabelIncluded =
+                dataManager.getDatum(FlagValueExperimentalProfileIncludeTargetLabel.class);
+            if (!targetLabelIncluded.isProfileIncludeTargetLabelEnabled()) {
+              caveats.add(
+                  SuggestionProviderUtil.createCaveat(
+                      FlagValueExperimentalProfileIncludeTargetLabel.getNotSetButUsefulForStatement(
+                          "migrating locally executed actions to remote execution"),
+                      false));
+            }
+
             if (locallyExecuted.size() > maxActions) {
               caveats.add(
                   SuggestionProviderUtil.createCaveat(
@@ -87,14 +98,9 @@ public class LocalActionsWithRemoteExecutionSuggestionProvider extends Suggestio
             locallyExecuted.stream()
                 .limit(maxActions)
                 .forEachOrdered(
-                    action -> {
-                      recommendation.append("\n\t- ");
-                      recommendation.append(action.getAction().name);
-                      recommendation.append(" (");
-                      recommendation.append(
-                          DurationUtil.formatDuration(action.getAction().duration));
-                      recommendation.append(")");
-                    });
+                    action ->
+                        recommendation.append(
+                            "\n" + BazelEventsUtil.summarizeCompleteEvent(action.getAction())));
             suggestions.add(
                 SuggestionProviderUtil.createSuggestion(
                     SuggestionCategory.OTHER,

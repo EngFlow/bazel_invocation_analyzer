@@ -23,8 +23,10 @@ import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileCon
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD_OUTPUTS;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_SUBPROCESS_RUN;
+import static com.engflow.bazel.invocation.analyzer.time.DurationUtil.formatDuration;
 
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
+import com.google.common.base.Strings;
 
 public final class BazelEventsUtil {
   private BazelEventsUtil() {}
@@ -66,5 +68,21 @@ public final class BazelEventsUtil {
     return CAT_REMOTE_EXECUTION_UPLOAD_TIME.equals(event.category)
         && (COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD_OUTPUTS.equals(event.name)
             || COMPLETE_REMOTE_EXECUTION_UPLOAD_TIME_UPLOAD.equals(event.name));
+  }
+
+  public static String summarizeCompleteEvent(CompleteEvent event) {
+    var summary = new StringBuilder();
+    summary.append("\t- Action: \"");
+    summary.append(event.name);
+    summary.append("\"\n");
+    var forTarget = event.args.get(BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_TARGET);
+    if (!Strings.isNullOrEmpty(forTarget)) {
+      summary.append("\t\tTarget: \"");
+      summary.append(forTarget);
+      summary.append("\"\n");
+    }
+    summary.append("\t\tAction duration: ");
+    summary.append(formatDuration(event.duration));
+    return summary.toString();
   }
 }

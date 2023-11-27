@@ -14,12 +14,10 @@
 
 package com.engflow.bazel.invocation.analyzer.suggestionproviders;
 
-import static com.engflow.bazel.invocation.analyzer.time.DurationUtil.formatDuration;
-
 import com.engflow.bazel.invocation.analyzer.Caveat;
 import com.engflow.bazel.invocation.analyzer.SuggestionCategory;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
-import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelEventsUtil;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.SuggestionProvider;
@@ -27,7 +25,6 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.FlagValueExperimental
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteCachingUsed;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -77,30 +74,15 @@ public class InvestigateRemoteCacheMissesSuggestionProvider extends SuggestionPr
 
       String title = "Investigate remote cache misses";
       StringBuilder recommendation = new StringBuilder();
-      recommendation.append(
-          "The following actions with cache misses took the longest to execute:\n");
+      recommendation.append("The following actions with cache misses took the longest to execute:");
       cacheMisses.stream()
           .limit(maxActions)
           .forEachOrdered(
-              action -> {
-                var completeAction = action.getAction();
-                recommendation.append("\t- Action: \"");
-                recommendation.append(completeAction.name);
-                recommendation.append("\"\n");
-                var forTarget =
-                    completeAction.args.get(
-                        BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_TARGET);
-                if (!Strings.isNullOrEmpty(forTarget)) {
-                  recommendation.append("\t\tTarget: \"");
-                  recommendation.append(forTarget);
-                  recommendation.append("\"\n");
-                }
-                recommendation.append("\t\tAction duration: ");
-                recommendation.append(formatDuration(completeAction.duration));
-                recommendation.append("\n");
-              });
+              action ->
+                  recommendation.append(
+                      "\n" + BazelEventsUtil.summarizeCompleteEvent(action.getAction())));
       recommendation.append(
-          "Check https://bazel.build/remote/cache-remote#troubleshooting-cache-hits to learn more"
+          "\nCheck https://bazel.build/remote/cache-remote#troubleshooting-cache-hits to learn more"
               + " about how to debug remote cache misses. Increasing the cache hit rate can"
               + " significantly speed up builds.");
       var caveats = new ArrayList<Caveat>();
@@ -109,12 +91,8 @@ public class InvestigateRemoteCacheMissesSuggestionProvider extends SuggestionPr
       if (!targetLabelIncluded.isProfileIncludeTargetLabelEnabled()) {
         caveats.add(
             SuggestionProviderUtil.createCaveat(
-                String.format(
-                    "The profile does not include which target each action was processed for,"
-                        + " although that data can help with investigating remote cache misses. It"
-                        + " is added to the profile by using the Bazel flag `%s`. Also see %s",
-                    FlagValueExperimentalProfileIncludeTargetLabel.FLAG_NAME,
-                    FlagValueExperimentalProfileIncludeTargetLabel.COMMAND_LINE_REFERENCE_URL),
+                FlagValueExperimentalProfileIncludeTargetLabel.getNotSetButUsefulForStatement(
+                    "investigating remote cache misses"),
                 false));
       }
       if (cacheMisses.size() > maxActions) {

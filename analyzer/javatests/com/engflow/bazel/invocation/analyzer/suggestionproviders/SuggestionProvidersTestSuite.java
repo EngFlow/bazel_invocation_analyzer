@@ -29,6 +29,7 @@ import org.junit.runners.Suite;
   LocalActionsWithRemoteExecutionSuggestionProviderTest.class,
   MergedEventsSuggestionProviderTest.class,
   NegligiblePhaseSuggestionProviderTest.class,
+  NoCacheActionsSuggestionProviderTest.class,
   QueuingSuggestionProviderTest.class,
   UseSkymeldSuggestionProviderTest.class,
 })

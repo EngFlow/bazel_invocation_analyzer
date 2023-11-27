@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import com.engflow.bazel.invocation.analyzer.EventThreadBuilder;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
+import com.engflow.bazel.invocation.analyzer.dataproviders.FlagValueExperimentalProfileIncludeTargetLabel;
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteExecutionUsed;
 import java.util.List;
@@ -37,13 +38,17 @@ public class LocalActionsWithRemoteExecutionSuggestionProviderTest
   // re-initialize the mocking).
   private RemoteExecutionUsed remoteExecutionUsed;
   private LocalActions localActions;
+  private FlagValueExperimentalProfileIncludeTargetLabel actionsIncludeTargetName;
 
   @Before
   public void setup() throws Exception {
     // Create reasonable defaults and set up to return the class-variables when the associated types
     // are requested.
+    actionsIncludeTargetName = new FlagValueExperimentalProfileIncludeTargetLabel(true);
     when(dataManager.getDatum(RemoteExecutionUsed.class)).thenAnswer(i -> remoteExecutionUsed);
     when(dataManager.getDatum(LocalActions.class)).thenAnswer(i -> localActions);
+    when(dataManager.getDatum(FlagValueExperimentalProfileIncludeTargetLabel.class))
+        .thenAnswer(i -> actionsIncludeTargetName);
 
     suggestionProvider = LocalActionsWithRemoteExecutionSuggestionProvider.createDefault();
   }
@@ -151,5 +156,31 @@ public class LocalActionsWithRemoteExecutionSuggestionProviderTest
     assertThat(suggestion.getRecommendation()).doesNotContain(remoteAction1.getAction().name);
     assertThat(suggestion.getCaveatCount()).isEqualTo(1);
     assertThat(suggestion.getCaveat(0).getSuggestVerboseMode()).isTrue();
+  }
+
+  @Test
+  public void shouldReturnSuggestionForRemoteExecutionInvocationWithTargetNameCaveat() {
+    actionsIncludeTargetName = new FlagValueExperimentalProfileIncludeTargetLabel(false);
+    remoteExecutionUsed = new RemoteExecutionUsed(true);
+    var thread = new EventThreadBuilder(1, 1);
+    var matchingAction =
+        new LocalActions.LocalAction(
+            thread.actionProcessingAction("a local action", "a", 10, 10),
+            List.of(thread.related(10, 2, CAT_GENERAL_INFORMATION, COMPLETE_SUBPROCESS_RUN)));
+
+    localActions = LocalActions.create(List.of(matchingAction));
+
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(LocalActionsWithRemoteExecutionSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getSuggestionList().size()).isEqualTo(1);
+    var suggestion = suggestionOutput.getSuggestion(0);
+    assertThat(suggestion.getRecommendation()).contains(matchingAction.getAction().name);
+    assertThat(suggestion.getCaveatCount()).isEqualTo(1);
+    assertThat(suggestion.getCaveat(0).getSuggestVerboseMode()).isFalse();
+    assertThat(suggestion.getCaveat(0).getMessage())
+        .contains(FlagValueExperimentalProfileIncludeTargetLabel.FLAG_NAME);
   }
 }

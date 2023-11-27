@@ -21,7 +21,7 @@ import com.engflow.bazel.invocation.analyzer.PotentialImprovement;
 import com.engflow.bazel.invocation.analyzer.Suggestion;
 import com.engflow.bazel.invocation.analyzer.SuggestionCategory;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
-import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelEventsUtil;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.ActionStats;
@@ -32,7 +32,6 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.PartialCompleteEvent;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -138,12 +137,8 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
           && !flagForTargetInclusionEnabled.isProfileIncludeTargetLabelEnabled()) {
         caveats.add(
             SuggestionProviderUtil.createCaveat(
-                String.format(
-                    "The profile does not include which target each action was processed for,"
-                        + " although that data can help with breaking down bottlenecks. It is added"
-                        + " to the profile by using the Bazel flag `%s`. Also see %s",
-                    FlagValueExperimentalProfileIncludeTargetLabel.FLAG_NAME,
-                    FlagValueExperimentalProfileIncludeTargetLabel.COMMAND_LINE_REFERENCE_URL),
+                FlagValueExperimentalProfileIncludeTargetLabel.getNotSetButUsefulForStatement(
+                    "breaking down bottlenecks"),
                 false));
       }
       if (suggestions.size() < bottlenecks.size()) {
@@ -184,7 +179,7 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
     StringBuilder recommendation =
         new StringBuilder(
             String.format(
-                "These actions are involved in a bottleneck preventing parallelization:\n" + "%s",
+                "These actions are involved in a bottleneck preventing parallelization:\n%s",
                 this.suggestTargetsOrActions(bottleneck)));
     final List<String> rationale = new ArrayList<>();
     rationale.add(
@@ -262,19 +257,7 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
         .map(
             event -> {
               StringBuilder sb = new StringBuilder();
-              sb.append("\t- Action: \"");
-              sb.append(event.completeEvent.name);
-              sb.append("\"\n");
-              var forTarget =
-                  event.completeEvent.args.get(
-                      BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_TARGET);
-              if (!Strings.isNullOrEmpty(forTarget)) {
-                sb.append("\t\tTarget: \"");
-                sb.append(forTarget);
-                sb.append("\"\n");
-              }
-              sb.append("\t\tAction duration: ");
-              sb.append(formatDuration(event.completeEvent.duration));
+              sb.append(BazelEventsUtil.summarizeCompleteEvent(event.completeEvent));
               if (event.isCropped()) {
                 sb.append("\n\t\tDuration within bottleneck: ");
                 sb.append(formatDuration(event.croppedDuration));
