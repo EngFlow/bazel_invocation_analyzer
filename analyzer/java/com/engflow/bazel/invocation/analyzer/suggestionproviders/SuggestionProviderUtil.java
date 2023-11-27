@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 
 public class SuggestionProviderUtil {
   private static final Logger logger = Logger.getLogger(SuggestionProviderUtil.class.getName());
+
   /**
    * Convenience method for retrieving all available {@link SuggestionProvider}s. When adding a new
    * SuggestionProvider, also add it to the list returned by this method.
