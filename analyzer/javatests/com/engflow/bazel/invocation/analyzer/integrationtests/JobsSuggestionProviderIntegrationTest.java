@@ -23,6 +23,7 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresAvailab
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresDataProvider;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresUsed;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedJobsFlagValue;
+import com.engflow.bazel.invocation.analyzer.dataproviders.SkymeldUsedDataProvider;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteCachingUsedDataProvider;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteExecutionUsedDataProvider;
 import com.engflow.bazel.invocation.analyzer.suggestionproviders.JobsSuggestionProvider;
@@ -40,6 +41,7 @@ public class JobsSuggestionProviderIntegrationTest extends IntegerationTestBase 
     new EstimatedCoresDataProvider().register(dataManager);
     new RemoteCachingUsedDataProvider().register(dataManager);
     new RemoteExecutionUsedDataProvider().register(dataManager);
+    new SkymeldUsedDataProvider().register(dataManager);
   }
 
   public void withProfile(String filename) throws Exception {

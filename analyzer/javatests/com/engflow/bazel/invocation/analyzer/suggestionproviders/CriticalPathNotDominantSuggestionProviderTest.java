@@ -26,18 +26,31 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.BazelPhaseDescription
 import com.engflow.bazel.invocation.analyzer.dataproviders.CriticalPathDuration;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresUsed;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedJobsFlagValue;
+import com.engflow.bazel.invocation.analyzer.dataproviders.SkymeldUsed;
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteExecutionUsed;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import java.time.Duration;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
 public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionProviderUnitTestBase {
+  private static SkymeldUsed NO_SKYMELD = new SkymeldUsed();
+  private static SkymeldUsed WITH_SKYMELD_NO_EXECUTION =
+      new SkymeldUsed(
+          new BazelPhaseDescription(Timestamp.ofSeconds(1), Timestamp.ofSeconds(4)),
+          Optional.empty());
+  private static SkymeldUsed WITH_SKYMELD_WITH_EXECUTION =
+      new SkymeldUsed(
+          new BazelPhaseDescription(Timestamp.ofSeconds(1), Timestamp.ofSeconds(4)),
+          Optional.of(Timestamp.ofSeconds(2)));
+
   // These variables are returned from calls to DataManager.getDatum for the associated types. They
   // are set up with reasonable defaults before each test is run, but can be overridden within the
   // tests when custom values are desired for the testing being conducted (without the need to
   // re-initialize the mocking).
+  private SkymeldUsed skymeldUsed = NO_SKYMELD;
   private BazelPhaseDescriptions.Builder phases;
   private CriticalPathDuration criticalPathDuration;
   private TotalDuration totalDuration;
@@ -52,6 +65,7 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
     // Create reasonable defaults and set up to return the class-variables when the associated types
     // are requested.
     phases = BazelPhaseDescriptions.newBuilder();
+    when(dataManager.getDatum(SkymeldUsed.class)).thenAnswer(i -> skymeldUsed);
     when(dataManager.getDatum(BazelPhaseDescriptions.class)).thenAnswer(i -> phases.build());
     criticalPathDuration = new CriticalPathDuration(Duration.ofSeconds(10));
     when(dataManager.getDatum(CriticalPathDuration.class)).thenAnswer(i -> criticalPathDuration);
@@ -215,5 +229,38 @@ public class CriticalPathNotDominantSuggestionProviderTest extends SuggestionPro
     assertThat(suggestionOutput.hasFailure()).isFalse();
     assertThat(suggestionOutput.getMissingInputList()).isEmpty();
     assertThat(suggestionOutput.getCaveatList()).isEmpty();
+  }
+
+  @Test
+  public void getExecutionPhaseEmptyWithoutSkymeld() throws Exception {
+    assertThat(CriticalPathNotDominantSuggestionProvider.getExecutionPhase(dataManager).isEmpty())
+        .isTrue();
+  }
+
+  @Test
+  public void getExecutionPhasePresentWithoutSkymeld() throws Exception {
+    BazelPhaseDescription executionPhase =
+        new BazelPhaseDescription(Timestamp.ofSeconds(1), Timestamp.ofSeconds(2));
+    phases.add(BazelProfilePhase.EXECUTE, executionPhase);
+    assertThat(CriticalPathNotDominantSuggestionProvider.getExecutionPhase(dataManager).isPresent())
+        .isTrue();
+    assertThat(CriticalPathNotDominantSuggestionProvider.getExecutionPhase(dataManager).get())
+        .isEqualTo(executionPhase);
+  }
+
+  @Test
+  public void getExecutionPhaseEmptyWithSkymeld() throws Exception {
+    skymeldUsed = WITH_SKYMELD_NO_EXECUTION;
+    assertThat(CriticalPathNotDominantSuggestionProvider.getExecutionPhase(dataManager).isEmpty())
+        .isTrue();
+  }
+
+  @Test
+  public void getExecutionPhasePresentWithSkymeld() throws Exception {
+    skymeldUsed = WITH_SKYMELD_WITH_EXECUTION;
+    assertThat(CriticalPathNotDominantSuggestionProvider.getExecutionPhase(dataManager).isPresent())
+        .isTrue();
+    assertThat(CriticalPathNotDominantSuggestionProvider.getExecutionPhase(dataManager))
+        .isEqualTo(WITH_SKYMELD_WITH_EXECUTION.getExecutionPhase());
   }
 }

@@ -14,6 +14,8 @@
 
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfile;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfilePhase;
 import com.engflow.bazel.invocation.analyzer.core.DataProvider;
 import com.engflow.bazel.invocation.analyzer.core.DatumSupplier;
@@ -21,6 +23,7 @@ import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
+import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 
@@ -31,7 +34,6 @@ import java.util.List;
  * @see <a href="https://github.com/bazelbuild/bazel/issues/14057">Project Skymeld GitHub issue</a>
  */
 public class SkymeldUsedDataProvider extends DataProvider {
-
   @Override
   public List<DatumSupplierSpecification<?>> getSuppliers() {
     return List.of(
@@ -44,7 +46,20 @@ public class SkymeldUsedDataProvider extends DataProvider {
       throws InvalidProfileException, MissingInputException, NullDatumException {
     BazelPhaseDescriptions bazelPhaseDescriptions =
         getDataManager().getDatum(BazelPhaseDescriptions.class);
-    return new SkymeldUsed(
-        bazelPhaseDescriptions.get(BazelProfilePhase.ANALYZE_AND_EXECUTE).isPresent());
+    var interleavedAnalysisAndExecutionPhase =
+        bazelPhaseDescriptions.get(BazelProfilePhase.ANALYZE_AND_EXECUTE);
+    if (!interleavedAnalysisAndExecutionPhase.isPresent()) {
+      return new SkymeldUsed();
+    }
+    BazelProfile bazelProfile = getDataManager().getDatum(BazelProfile.class);
+    var firstActionProcessing =
+        bazelProfile
+            .getThreads()
+            // Find the first action processing event.
+            .flatMap(thread -> thread.getCompleteEvents().stream())
+            .filter(event -> BazelProfileConstants.CAT_ACTION_PROCESSING.equals(event.category))
+            .map(event -> event.start)
+            .min(Timestamp::compareTo);
+    return new SkymeldUsed(interleavedAnalysisAndExecutionPhase.get(), firstActionProcessing);
   }
 }

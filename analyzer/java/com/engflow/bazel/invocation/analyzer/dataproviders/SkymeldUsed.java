@@ -15,6 +15,9 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
+import com.engflow.bazel.invocation.analyzer.time.Timestamp;
+import com.google.common.base.Preconditions;
+import java.util.Optional;
 
 /**
  * Whether evidence was found that Skymeld was used.
@@ -23,13 +26,45 @@ import com.engflow.bazel.invocation.analyzer.core.Datum;
  */
 public class SkymeldUsed implements Datum {
   private final boolean skymeldUsed;
+  private final Optional<BazelPhaseDescription> analysisAndExecutionPhase;
+  private final Optional<BazelPhaseDescription> executionPhase;
 
-  public SkymeldUsed(boolean skymeldUsed) {
+  public SkymeldUsed() {
+    this(false, Optional.empty(), Optional.empty());
+  }
+
+  public SkymeldUsed(
+      BazelPhaseDescription analysisAndExecutionPhase, Optional<Timestamp> executionStart) {
+    this(true, Optional.of(analysisAndExecutionPhase), executionStart);
+  }
+
+  private SkymeldUsed(
+      boolean skymeldUsed,
+      Optional<BazelPhaseDescription> analysisAndExecutionPhase,
+      Optional<Timestamp> executionStart) {
     this.skymeldUsed = skymeldUsed;
+    this.analysisAndExecutionPhase = Preconditions.checkNotNull(analysisAndExecutionPhase);
+    if (skymeldUsed && executionStart.isPresent()) {
+      Preconditions.checkArgument(analysisAndExecutionPhase.isPresent());
+      this.executionPhase =
+          Optional.of(
+              new BazelPhaseDescription(
+                  executionStart.get(), analysisAndExecutionPhase.get().getEnd()));
+    } else {
+      this.executionPhase = Optional.empty();
+    }
   }
 
   public boolean isSkymeldUsed() {
     return skymeldUsed;
+  }
+
+  public Optional<BazelPhaseDescription> getAnalysisAndExecutionPhase() {
+    return analysisAndExecutionPhase;
+  }
+
+  public Optional<BazelPhaseDescription> getExecutionPhase() {
+    return executionPhase;
   }
 
   @Override
@@ -49,6 +84,13 @@ public class SkymeldUsed implements Datum {
 
   @Override
   public String getSummary() {
-    return String.valueOf(skymeldUsed);
+    if (skymeldUsed) {
+      return String.format(
+          "%b (analysis started: %s, execution started: %s)",
+          true,
+          analysisAndExecutionPhase.get().getStart(),
+          executionPhase.isPresent() ? executionPhase.get().getStart() : "n/a");
+    }
+    return String.valueOf(false);
   }
 }
