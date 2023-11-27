@@ -60,8 +60,24 @@ public class LocalActionsWithRemoteExecutionSuggestionProviderTest
 
   @Test
   public void shouldNotReturnSuggestionForRemoteExecutionInvocationWithoutLocalActions() {
-    remoteExecutionUsed = new RemoteExecutionUsed(false);
+    remoteExecutionUsed = new RemoteExecutionUsed(true);
     localActions = LocalActions.create(List.of());
+
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+
+    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+  }
+
+  @Test
+  public void shouldNotReturnSuggestionForRemoteExecutionInvocationWithoutLocallyExecutedActions() {
+    remoteExecutionUsed = new RemoteExecutionUsed(true);
+    var thread = new EventThreadBuilder(1, 1);
+    var remoteAction =
+        new LocalActions.LocalAction(
+            thread.actionProcessingAction("some remote action", "b", 20, 10),
+            List.of(thread.related(20, 2, CAT_REMOTE_ACTION_EXECUTION, "bar")));
+    localActions = LocalActions.create(List.of(remoteAction));
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
