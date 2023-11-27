@@ -18,8 +18,8 @@ import com.engflow.bazel.invocation.analyzer.core.Datum;
 import java.util.Objects;
 
 /**
- * Whether the Bazel flag `--experimental_profile_include_target_label` was enabled when the Bazel
- * profile was generated.
+ * Whether the Bazel flag {@code --experimental_profile_include_target_label} was enabled when the
+ * Bazel profile was generated.
  *
  * @see <a
  *     href="https://bazel.build/reference/command-line-reference#flag--experimental_profile_include_target_label">Bazel
@@ -64,7 +64,7 @@ public class FlagValueExperimentalProfileIncludeTargetLabel implements Datum {
     if (this == o) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(o instanceof FlagValueExperimentalProfileIncludeTargetLabel)) {
       return false;
     }
     FlagValueExperimentalProfileIncludeTargetLabel that =
@@ -79,6 +79,7 @@ public class FlagValueExperimentalProfileIncludeTargetLabel implements Datum {
 
   @Override
   public String toString() {
-    return String.valueOf(profileIncludeTargetLabelEnabled);
+    return String.format(
+        "FlagValueExperimentalProfileIncludeTargetLabel{%b}", profileIncludeTargetLabelEnabled);
   }
 }

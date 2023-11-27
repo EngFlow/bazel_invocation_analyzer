@@ -23,6 +23,7 @@ import com.engflow.bazel.invocation.analyzer.core.DatumSupplierSpecification;
 import com.engflow.bazel.invocation.analyzer.core.InvalidProfileException;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.NullDatumException;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 
 /**
@@ -32,7 +33,7 @@ import java.util.List;
 public class FlagValueDataProvider extends DataProvider {
   @Override
   public List<DatumSupplierSpecification<?>> getSuppliers() {
-    return List.of(
+    return ImmutableList.of(
         DatumSupplierSpecification.of(
             FlagValueExperimentalProfileIncludeTargetLabel.class,
             memoized(this::getExperimentalProfileIncludeTargetLabel)));
