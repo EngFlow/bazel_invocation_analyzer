@@ -57,6 +57,9 @@ public class SuggestionProviderUtil {
         new GarbageCollectionSuggestionProvider(),
         new JobsSuggestionProvider(),
         new UseSkymeldSuggestionProvider(),
+        verbose
+            ? NoCacheActionsSuggestionProvider.createVerbose()
+            : NoCacheActionsSuggestionProvider.createDefault(),
         new NegligiblePhaseSuggestionProvider(),
         new QueuingSuggestionProvider(),
         new UseRemoteCachingSuggestionProvider(),
