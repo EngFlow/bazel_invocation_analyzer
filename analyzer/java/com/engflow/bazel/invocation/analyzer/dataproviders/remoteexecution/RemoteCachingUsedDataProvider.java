@@ -41,6 +41,14 @@ public class RemoteCachingUsedDataProvider extends DataProvider {
   @VisibleForTesting
   RemoteCachingUsed getRemoteCachingUsed()
       throws InvalidProfileException, MissingInputException, NullDatumException {
+    RemoteExecutionUsed remoteExecutionUsed = getDataManager().getDatum(RemoteExecutionUsed.class);
+    if (remoteExecutionUsed.isRemoteExecutionUsed()) {
+      // While in principle it is possible to use remote execution without remote caching, this is
+      // a highly unusual setup. Return `true` here to avoid false negatives.
+      // For example, if RE is enabled and only targets with tag `no-remote-cache` or `no-cache`
+      // were built, the code farther down may not correctly detect that RC was used.
+      return new RemoteCachingUsed(true);
+    }
     BazelProfile profile = getDataManager().getDatum(BazelProfile.class);
     return new RemoteCachingUsed(
         profile
