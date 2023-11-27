@@ -36,6 +36,7 @@ public class DataProviderUtil {
         new BazelVersionDataProvider(),
         new CriticalPathDurationDataProvider(),
         new EstimatedCoresDataProvider(),
+        new FlagValueDataProvider(),
         new GarbageCollectionStatsDataProvider(),
         new LocalActionsDataProvider(),
         new MergedEventsPresentDataProvider(),

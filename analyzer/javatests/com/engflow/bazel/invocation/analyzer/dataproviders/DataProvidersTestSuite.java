@@ -27,6 +27,7 @@ import org.junit.runners.Suite;
   BazelProfilePhaseTest.class,
   CriticalPathDurationDataProviderTest.class,
   EstimatedCoresDataProviderTest.class,
+  FlagValueDataProviderTest.class,
   GarbageCollectionStatsDataProviderTest.class,
   LocalActionsDataProviderTest.class,
   MergedEventsPresentDataProviderTest.class,

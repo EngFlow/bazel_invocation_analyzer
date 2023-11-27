@@ -21,15 +21,18 @@ import com.engflow.bazel.invocation.analyzer.PotentialImprovement;
 import com.engflow.bazel.invocation.analyzer.Suggestion;
 import com.engflow.bazel.invocation.analyzer.SuggestionCategory;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.dataproviders.ActionStats;
 import com.engflow.bazel.invocation.analyzer.dataproviders.Bottleneck;
 import com.engflow.bazel.invocation.analyzer.dataproviders.EstimatedCoresUsed;
+import com.engflow.bazel.invocation.analyzer.dataproviders.FlagValueExperimentalProfileIncludeTargetLabel;
 import com.engflow.bazel.invocation.analyzer.dataproviders.TotalDuration;
 import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.PartialCompleteEvent;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -106,7 +109,6 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
       }
       final var totalDuration = totalDurationDatum.getTotalDuration().get();
 
-      final List<Caveat> caveats = new ArrayList<>();
       final var suggestions =
           bottlenecks.stream()
               // Only consider bottlenecks with sufficiently fewer actions than cores used.
@@ -129,6 +131,21 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
               .map(bottleneckStats -> generateSuggestion(bottleneckStats, totalDuration))
               .collect(Collectors.toList());
 
+      final List<Caveat> caveats = new ArrayList<>();
+      var flagForTargetInclusionEnabled =
+          dataManager.getDatum(FlagValueExperimentalProfileIncludeTargetLabel.class);
+      if (suggestions.size() > 0
+          && !flagForTargetInclusionEnabled.isProfileIncludeTargetLabelEnabled()) {
+        caveats.add(
+            SuggestionProviderUtil.createCaveat(
+                String.format(
+                    "The profile does not include which target each action was processed for,"
+                        + " although that data can help with breaking down bottlenecks. It is added"
+                        + " to the profile by using the Bazel flag `%s`. Also see %s",
+                    FlagValueExperimentalProfileIncludeTargetLabel.FLAG_NAME,
+                    FlagValueExperimentalProfileIncludeTargetLabel.COMMAND_LINE_REFERENCE_URL),
+                false));
+      }
       if (suggestions.size() < bottlenecks.size()) {
         String caveat;
         switch (suggestions.size()) {
@@ -244,17 +261,25 @@ public class BottleneckSuggestionProvider extends SuggestionProviderBase {
         .limit(maxActionsPerBottleneck)
         .map(
             event -> {
-              if (event.isCropped()) {
-                return String.format(
-                    "\t- %s (partially: %s of %s)",
-                    event.completeEvent.name,
-                    formatDuration(event.croppedDuration),
-                    formatDuration(event.completeEvent.duration));
-              } else {
-                return String.format(
-                    "\t- %s (%s)",
-                    event.completeEvent.name, formatDuration(event.completeEvent.duration));
+              StringBuilder sb = new StringBuilder();
+              sb.append("\t- Action: \"");
+              sb.append(event.completeEvent.name);
+              sb.append("\"\n");
+              var forTarget =
+                  event.completeEvent.args.get(
+                      BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_TARGET);
+              if (!Strings.isNullOrEmpty(forTarget)) {
+                sb.append("\t\tTarget: \"");
+                sb.append(forTarget);
+                sb.append("\"\n");
               }
+              sb.append("\t\tAction duration: ");
+              sb.append(formatDuration(event.completeEvent.duration));
+              if (event.isCropped()) {
+                sb.append("\n\t\tDuration within bottleneck: ");
+                sb.append(formatDuration(event.croppedDuration));
+              }
+              return sb.toString();
             })
         .collect(Collectors.joining("\n"));
   }
