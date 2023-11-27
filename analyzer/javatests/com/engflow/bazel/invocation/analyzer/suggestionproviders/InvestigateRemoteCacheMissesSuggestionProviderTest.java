@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 
 import com.engflow.bazel.invocation.analyzer.EventThreadBuilder;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
+import com.engflow.bazel.invocation.analyzer.dataproviders.FlagValueExperimentalProfileIncludeTargetLabel;
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteCachingUsed;
 import java.util.List;
@@ -38,13 +39,18 @@ public class InvestigateRemoteCacheMissesSuggestionProviderTest
   // re-initialize the mocking).
   private RemoteCachingUsed remoteCachingUsed;
   private LocalActions localActions;
+  private FlagValueExperimentalProfileIncludeTargetLabel experimentalProfileIncludeTargetLabel;
 
   @Before
   public void setup() throws Exception {
     // Create reasonable defaults and set up to return the class-variables when the associated types
     // are requested.
+    experimentalProfileIncludeTargetLabel =
+        new FlagValueExperimentalProfileIncludeTargetLabel(true);
     when(dataManager.getDatum(RemoteCachingUsed.class)).thenAnswer(i -> remoteCachingUsed);
     when(dataManager.getDatum(LocalActions.class)).thenAnswer(i -> localActions);
+    when(dataManager.getDatum(FlagValueExperimentalProfileIncludeTargetLabel.class))
+        .thenAnswer(i -> experimentalProfileIncludeTargetLabel);
 
     suggestionProvider = InvestigateRemoteCacheMissesSuggestionProvider.createDefault();
   }
@@ -151,5 +157,33 @@ public class InvestigateRemoteCacheMissesSuggestionProviderTest
     assertThat(suggestion.getRecommendation()).doesNotContain(cacheHit.getAction().name);
     assertThat(suggestion.getCaveatCount()).isEqualTo(1);
     assertThat(suggestion.getCaveat(0).getSuggestVerboseMode()).isTrue();
+  }
+
+  @Test
+  public void shouldReturnSuggestionWithCaveatIfTheTargetNamesAreMissing() {
+    remoteCachingUsed = new RemoteCachingUsed(true);
+    experimentalProfileIncludeTargetLabel =
+        new FlagValueExperimentalProfileIncludeTargetLabel(false);
+    var thread = new EventThreadBuilder(1, 1);
+    var cacheMissWithLocalExec =
+        new LocalActions.LocalAction(
+            thread.actionProcessingAction("cache miss action with local execution", "a", 10, 10),
+            List.of(
+                thread.related(10, 1, CAT_REMOTE_ACTION_CACHE_CHECK),
+                thread.related(12, 2, CAT_GENERAL_INFORMATION, COMPLETE_SUBPROCESS_RUN)));
+    localActions = LocalActions.create(List.of(cacheMissWithLocalExec));
+
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(InvestigateRemoteCacheMissesSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getSuggestionList().size()).isEqualTo(1);
+    var suggestion = suggestionOutput.getSuggestion(0);
+    assertThat(suggestion.getRecommendation()).contains(cacheMissWithLocalExec.getAction().name);
+    assertThat(suggestion.getCaveatCount()).isEqualTo(1);
+    assertThat(suggestion.getCaveat(0).getMessage())
+        .contains(FlagValueExperimentalProfileIncludeTargetLabel.FLAG_NAME);
+    assertThat(suggestion.getCaveat(0).getSuggestVerboseMode()).isFalse();
   }
 }

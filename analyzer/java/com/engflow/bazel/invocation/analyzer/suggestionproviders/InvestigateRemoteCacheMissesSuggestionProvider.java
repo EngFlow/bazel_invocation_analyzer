@@ -19,9 +19,11 @@ import static com.engflow.bazel.invocation.analyzer.time.DurationUtil.formatDura
 import com.engflow.bazel.invocation.analyzer.Caveat;
 import com.engflow.bazel.invocation.analyzer.SuggestionCategory;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DataManager;
 import com.engflow.bazel.invocation.analyzer.core.MissingInputException;
 import com.engflow.bazel.invocation.analyzer.core.SuggestionProvider;
+import com.engflow.bazel.invocation.analyzer.dataproviders.FlagValueExperimentalProfileIncludeTargetLabel;
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteCachingUsed;
 import com.google.common.annotations.VisibleForTesting;
@@ -85,8 +87,9 @@ public class InvestigateRemoteCacheMissesSuggestionProvider extends SuggestionPr
                 recommendation.append("\t- Action: \"");
                 recommendation.append(completeAction.name);
                 recommendation.append("\"\n");
-                // TODO: Use constant once #122 is merged.
-                var forTarget = completeAction.args.get("target");
+                var forTarget =
+                    completeAction.args.get(
+                        BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_TARGET);
                 if (!Strings.isNullOrEmpty(forTarget)) {
                   recommendation.append("\t\tTarget: \"");
                   recommendation.append(forTarget);
@@ -101,6 +104,19 @@ public class InvestigateRemoteCacheMissesSuggestionProvider extends SuggestionPr
               + " about how to debug remote cache misses. Increasing the cache hit rate can"
               + " significantly speed up builds.");
       var caveats = new ArrayList<Caveat>();
+      var targetLabelIncluded =
+          dataManager.getDatum(FlagValueExperimentalProfileIncludeTargetLabel.class);
+      if (!targetLabelIncluded.isProfileIncludeTargetLabelEnabled()) {
+        caveats.add(
+            SuggestionProviderUtil.createCaveat(
+                String.format(
+                    "The profile does not include which target each action was processed for,"
+                        + " although that data can help with investigating remote cache misses. It"
+                        + " is added to the profile by using the Bazel flag `%s`. Also see %s",
+                    FlagValueExperimentalProfileIncludeTargetLabel.FLAG_NAME,
+                    FlagValueExperimentalProfileIncludeTargetLabel.COMMAND_LINE_REFERENCE_URL),
+                false));
+      }
       if (cacheMisses.size() > maxActions) {
         caveats.add(
             SuggestionProviderUtil.createCaveat(
@@ -109,8 +125,6 @@ public class InvestigateRemoteCacheMissesSuggestionProvider extends SuggestionPr
                     maxActions, cacheMisses.size()),
                 true));
       }
-      // TODO: Once #122 is merged, add caveat if target name is not present and suggest using
-      // `--experimental_profile_include_target_label`.
       var suggestion =
           SuggestionProviderUtil.createSuggestion(
               SuggestionCategory.OTHER,
