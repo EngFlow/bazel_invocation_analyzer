@@ -26,7 +26,7 @@ import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileCon
 
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
 
-public class BazelEventsUtil {
+public final class BazelEventsUtil {
   private BazelEventsUtil() {}
 
   /** The event indicates that an action was executed locally. */
@@ -43,7 +43,7 @@ public class BazelEventsUtil {
 
   /**
    * The event documents a remote cache check. This includes cache checks against remote caches
-   * configured by `--remote_cache` or `--disk_cache`.
+   * configured by {@code --remote_cache} or {@code --disk_cache}.
    */
   public static boolean indicatesRemoteCacheCheck(CompleteEvent event) {
     return CAT_REMOTE_ACTION_CACHE_CHECK.equals(event.category);

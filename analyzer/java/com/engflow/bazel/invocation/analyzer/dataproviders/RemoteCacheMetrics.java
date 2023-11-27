@@ -25,8 +25,8 @@ import java.time.Duration;
  * Metrics on remote caching, namely how much time was spent on cache checks, downloading outputs,
  * uploading outputs, and what percentage of actions were cached remotely.
  *
- * <p>Note that Bazel does not differentiate between a remote cache configured via `--disk_cache` or
- * `--remote_cache`.
+ * <p>Note that Bazel does not differentiate between a remote cache configured via {@code
+ * --disk_cache} or {@code --remote_cache}.
  */
 public class RemoteCacheMetrics implements Datum {
 
