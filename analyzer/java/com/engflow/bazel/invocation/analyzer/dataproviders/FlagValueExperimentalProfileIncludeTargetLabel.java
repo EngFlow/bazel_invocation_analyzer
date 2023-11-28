@@ -52,7 +52,7 @@ public class FlagValueExperimentalProfileIncludeTargetLabel implements Datum {
   }
 
   /**
-   * Returns a st to enable this flag, given the cause.
+   * Returns a statement to enable this flag, given the cause.
    *
    * <p>The {@param useCase} should be of the shape, so that it fits into: {@code String.format("It
    * can help with %s.", useCase)}
