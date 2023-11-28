@@ -16,7 +16,6 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
-import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
 
