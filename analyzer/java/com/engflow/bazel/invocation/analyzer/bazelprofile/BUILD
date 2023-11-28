@@ -38,6 +38,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         ":types",
+        "//analyzer/java/com/engflow/bazel/invocation/analyzer/time",
         "//analyzer/java/com/engflow/bazel/invocation/analyzer/traceeventformat",
+        "//third_party/guava",
     ],
 )

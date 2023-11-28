@@ -9,6 +9,7 @@ import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileCon
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_OUTPUT_DOWNLOAD;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
 import com.google.common.collect.ImmutableMap;
@@ -122,6 +123,54 @@ public class BazelEventsUtilTest {
             BazelEventsUtil.indicatesRemoteUploadOutputs(
                 completeEvent("random name", CAT_REMOTE_EXECUTION_UPLOAD_TIME)))
         .isFalse();
+  }
+
+  @Test
+  public void summarizeCompleteActionWithoutArgs() {
+    var eventName = "some random name";
+    var eventCategory = "that specific category";
+    var eventDuration = Duration.ofSeconds(1234);
+    var event =
+        new CompleteEvent(
+            eventName,
+            eventCategory,
+            Timestamp.ofSeconds(0),
+            eventDuration,
+            1,
+            1,
+            ImmutableMap.of());
+    var summary = BazelEventsUtil.summarizeCompleteEvent(event);
+    assertThat(summary).contains(eventName);
+    assertThat(summary).contains(DurationUtil.formatDuration(eventDuration));
+    assertThat(summary).doesNotContain(eventCategory);
+  }
+
+  @Test
+  public void summarizeCompleteActionWithArgs() {
+    var eventName = "some random name";
+    var eventCategory = "that specific category";
+    var eventDuration = Duration.ofSeconds(1234);
+    var mnemonic = "indicative stuff";
+    var targetName = "for //target:foo";
+    var event =
+        new CompleteEvent(
+            eventName,
+            eventCategory,
+            Timestamp.ofSeconds(0),
+            eventDuration,
+            1,
+            1,
+            ImmutableMap.of(
+                BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_MNEMONIC,
+                mnemonic,
+                BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_TARGET,
+                targetName));
+    var summary = BazelEventsUtil.summarizeCompleteEvent(event);
+    assertThat(summary).contains(eventName);
+    assertThat(summary).contains(DurationUtil.formatDuration(eventDuration));
+    assertThat(summary).contains(mnemonic);
+    assertThat(summary).contains(targetName);
+    assertThat(summary).doesNotContain(eventCategory);
   }
 
   private static CompleteEvent completeEvent(String name, String category) {

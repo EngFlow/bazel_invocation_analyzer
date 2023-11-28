@@ -15,6 +15,8 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.core.Datum;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import java.util.Objects;
 
 /**
@@ -47,6 +49,21 @@ public class FlagValueExperimentalProfileIncludeTargetLabel implements Datum {
 
   public boolean isProfileIncludeTargetLabelEnabled() {
     return profileIncludeTargetLabelEnabled;
+  }
+
+  /**
+   * Returns a statement to enable this flag, given the cause.
+   *
+   * <p>The {@param useCase} should be of the shape, so that it fits into: {@code String.format("It
+   * can help with %s.", useCase)}
+   */
+  public static String getNotSetButUsefulForStatement(String useCase) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(useCase));
+    return String.format(
+        "The profile does not include which target each action was processed for,"
+            + " although that data can help with %s. It is added to the profile by using the"
+            + " Bazel flag `%s`. Also see %s",
+        useCase, FLAG_NAME, COMMAND_LINE_REFERENCE_URL);
   }
 
   @Override
