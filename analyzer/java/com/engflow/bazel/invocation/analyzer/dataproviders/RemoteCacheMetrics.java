@@ -56,6 +56,26 @@ public class RemoteCacheMetrics implements Datum {
     this.uploadOutputsDuration = Preconditions.checkNotNull(uploadOutputsDuration);
   }
 
+  public int getCacheChecks() {
+    return cacheChecks;
+  }
+
+  public int getCacheMisses() {
+    return cacheMisses;
+  }
+
+  public Duration getCacheCheckDuration() {
+    return cacheCheckDuration;
+  }
+
+  public Duration getDownloadOutputsDuration() {
+    return downloadOutputsDuration;
+  }
+
+  public Duration getUploadOutputsDuration() {
+    return uploadOutputsDuration;
+  }
+
   @Override
   public boolean isEmpty() {
     return cacheChecks == 0;

@@ -25,6 +25,7 @@ import org.junit.runners.Suite;
   BazelVersionTest.class,
   BazelVersionDataProviderTest.class,
   BazelProfilePhaseTest.class,
+  CachingAndExecutionMetricsDataProviderTest.class,
   CriticalPathDurationDataProviderTest.class,
   EstimatedCoresDataProviderTest.class,
   FlagValueDataProviderTest.class,
