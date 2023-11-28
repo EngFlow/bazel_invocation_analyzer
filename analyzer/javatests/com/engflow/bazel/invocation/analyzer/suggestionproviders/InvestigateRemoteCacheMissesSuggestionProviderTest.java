@@ -70,7 +70,7 @@ public class InvestigateRemoteCacheMissesSuggestionProviderTest
   public void shouldNotReturnSuggestionWithoutCacheMisses() {
     remoteCachingUsed = new RemoteCachingUsed(true);
     var thread = new EventThreadBuilder(1, 1);
-    var actionWitRemoteCacheHit =
+    var actionWithRemoteCacheHit =
         new LocalActions.LocalAction(
             thread.actionProcessingAction("action with cache hit", "a", 10, 10),
             List.of(
@@ -81,7 +81,7 @@ public class InvestigateRemoteCacheMissesSuggestionProviderTest
             thread.actionProcessingAction("action without a cache check", "a", 10, 10),
             List.of(thread.related(12, 2, CAT_LOCAL_ACTION_EXECUTION)));
     localActions =
-        LocalActions.create(List.of(actionWitRemoteCacheHit, actionWithoutRemoteCaching));
+        LocalActions.create(List.of(actionWithRemoteCacheHit, actionWithoutRemoteCaching));
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 
