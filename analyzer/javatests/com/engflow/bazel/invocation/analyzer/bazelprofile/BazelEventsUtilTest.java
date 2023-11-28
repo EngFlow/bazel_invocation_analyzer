@@ -86,6 +86,10 @@ public class BazelEventsUtilTest {
             BazelEventsUtil.indicatesRemoteDownloadOutputs(
                 completeEvent("Remote.download", CAT_GENERAL_INFORMATION)))
         .isTrue();
+    assertThat(
+            BazelEventsUtil.indicatesRemoteDownloadOutputs(
+                completeEvent("NoRemote.download", CAT_GENERAL_INFORMATION)))
+        .isFalse();
   }
 
   @Test
