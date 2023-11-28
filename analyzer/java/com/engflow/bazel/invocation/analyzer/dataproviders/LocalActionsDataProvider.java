@@ -14,9 +14,6 @@
 
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK;
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_EXECUTION_UPLOAD_TIME;
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_OUTPUT_DOWNLOAD;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.ProfileThread.ofCategoryTypes;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelEventsUtil;
@@ -37,17 +34,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class LocalActionsDataProvider extends DataProvider {
-  private static final Set<String> RELATED_EVENTS_CATEGORIES =
-      Set.of(
-          CAT_REMOTE_ACTION_CACHE_CHECK,
-          CAT_REMOTE_OUTPUT_DOWNLOAD,
-          CAT_REMOTE_EXECUTION_UPLOAD_TIME);
-
   @Override
   public List<DatumSupplierSpecification<?>> getSuppliers() {
     return List.of(
@@ -66,8 +56,11 @@ public class LocalActionsDataProvider extends DataProvider {
   }
 
   private static boolean isRelatedEvent(CompleteEvent event) {
-    return RELATED_EVENTS_CATEGORIES.contains(event.category)
-        || BazelEventsUtil.indicatesLocalExecution(event);
+    return BazelEventsUtil.indicatesRemoteCacheCheck(event)
+        || BazelEventsUtil.indicatesRemoteUploadOutputs(event)
+        || BazelEventsUtil.indicatesRemoteDownloadOutputs(event)
+        || BazelEventsUtil.indicatesLocalExecution(event)
+        || BazelEventsUtil.indicatesRemoteExecution(event);
   }
 
   Stream<LocalAction> coalesce(ProfileThread thread) {

@@ -93,6 +93,10 @@ public class BazelProfileConstants {
   public static final String COMPLETE_SUBPROCESS_RUN = "subprocess.run";
   public static final String COMPLETE_EXECUTE_REMOTELY = "execute remotely";
 
+  // May be written when downloading the outputs of a remotely executed action, see
+  // https://github.com/bazelbuild/bazel/blob/b2cca31705419ba1cd3744c23be4b1d9bdb5c467/src/main/java/com/google/devtools/build/lib/remote/RemoteExecutionService.java#L1211C79-L1211C79
+  public static final String COMPLETE_REMOTE_DOWNLOAD = "Remote.download";
+
   // https://github.com/bazelbuild/bazel/blob/7d10999fc0357596824f2b6022bbbd895f245a3c/src/main/java/com/google/devtools/build/lib/remote/RemoteRepositoryRemoteExecutor.java#L160
   /**
    * For complete events of category {@link #CAT_REMOTE_EXECUTION_UPLOAD_TIME}, this name indicates

@@ -1,6 +1,7 @@
 package com.engflow.bazel.invocation.analyzer.bazelprofile;
 
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_ACTION_PROCESSING;
+import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_GENERAL_INFORMATION;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_LOCAL_ACTION_EXECUTION;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_EXECUTION;
@@ -72,10 +73,18 @@ public class BazelEventsUtilTest {
   }
 
   @Test
-  public void indicatesRemoteDownloadOutputs() {
+  public void indicatesRemoteDownloadOutputsCat() {
     assertThat(
             BazelEventsUtil.indicatesRemoteDownloadOutputs(
                 completeEvent("random name", CAT_REMOTE_OUTPUT_DOWNLOAD)))
+        .isTrue();
+  }
+
+  @Test
+  public void indicatesRemoteDownloadOutputsName() {
+    assertThat(
+            BazelEventsUtil.indicatesRemoteDownloadOutputs(
+                completeEvent("Remote.download", CAT_GENERAL_INFORMATION)))
         .isTrue();
   }
 

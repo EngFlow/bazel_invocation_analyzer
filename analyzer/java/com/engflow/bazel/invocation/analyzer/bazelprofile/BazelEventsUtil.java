@@ -54,7 +54,13 @@ public final class BazelEventsUtil {
    * after an action was executed remotely.
    */
   public static boolean indicatesRemoteDownloadOutputs(CompleteEvent event) {
-    return CAT_REMOTE_OUTPUT_DOWNLOAD.equals(event.category);
+    // See
+    // https://github.com/bazelbuild/bazel/blob/4a29f0851d1cde0240793cdc7a2e2cab926d31b7/src/main/java/com/google/devtools/build/lib/profiler/ProfilerTask.java#L88
+    // and
+    // https://github.com/bazelbuild/bazel/blob/b2cca31705419ba1cd3744c23be4b1d9bdb5c467/src/main/java/com/google/devtools/build/lib/remote/RemoteExecutionService.java#L1211C79-L1211C79
+    return CAT_REMOTE_OUTPUT_DOWNLOAD.equals(event.category)
+        || CAT_GENERAL_INFORMATION.equals(event.category)
+            && BazelProfileConstants.COMPLETE_REMOTE_DOWNLOAD.equals(event.name);
   }
 
   /** The event documents uploading outputs to a remote cache. */
