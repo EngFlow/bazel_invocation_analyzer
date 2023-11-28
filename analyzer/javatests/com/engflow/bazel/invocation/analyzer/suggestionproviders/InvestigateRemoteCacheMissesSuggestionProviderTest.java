@@ -15,6 +15,7 @@
 package com.engflow.bazel.invocation.analyzer.suggestionproviders;
 
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_GENERAL_INFORMATION;
+import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_LOCAL_ACTION_EXECUTION;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_EXECUTION;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_OUTPUT_DOWNLOAD;
@@ -68,7 +69,19 @@ public class InvestigateRemoteCacheMissesSuggestionProviderTest
   @Test
   public void shouldNotReturnSuggestionWithoutCacheMisses() {
     remoteCachingUsed = new RemoteCachingUsed(true);
-    localActions = LocalActions.create(List.of());
+    var thread = new EventThreadBuilder(1, 1);
+    var actionWithRemoteCacheHit =
+        new LocalActions.LocalAction(
+            thread.actionProcessingAction("action with cache hit", "a", 10, 10),
+            List.of(
+                thread.related(10, 1, CAT_REMOTE_ACTION_CACHE_CHECK),
+                thread.related(12, 2, CAT_REMOTE_OUTPUT_DOWNLOAD)));
+    var actionWithoutRemoteCaching =
+        new LocalActions.LocalAction(
+            thread.actionProcessingAction("action without a cache check", "a", 10, 10),
+            List.of(thread.related(12, 2, CAT_LOCAL_ACTION_EXECUTION)));
+    localActions =
+        LocalActions.create(List.of(actionWithRemoteCacheHit, actionWithoutRemoteCaching));
 
     SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
 

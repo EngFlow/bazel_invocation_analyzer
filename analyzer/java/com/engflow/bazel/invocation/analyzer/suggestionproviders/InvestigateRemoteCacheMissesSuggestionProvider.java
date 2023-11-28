@@ -64,7 +64,7 @@ public class InvestigateRemoteCacheMissesSuggestionProvider extends SuggestionPr
       LocalActions localActions = dataManager.getDatum(LocalActions.class);
       var cacheMisses =
           localActions.stream()
-              .filter(action -> !action.isRemoteCacheHit())
+              .filter(action -> action.hasRemoteCacheCheck() && !action.isRemoteCacheHit())
               .sorted((a, b) -> b.getAction().duration.compareTo(a.getAction().duration))
               .collect(Collectors.toList());
       if (cacheMisses.isEmpty()) {
