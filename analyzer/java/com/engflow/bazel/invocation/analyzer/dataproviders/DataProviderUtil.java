@@ -34,6 +34,7 @@ public class DataProviderUtil {
         new ActionStatsDataProvider(),
         new BazelPhasesDataProvider(),
         new BazelVersionDataProvider(),
+        new CachingAndExecutionMetricsDataProvider(),
         new CriticalPathDurationDataProvider(),
         new EstimatedCoresDataProvider(),
         new FlagValueDataProvider(),
