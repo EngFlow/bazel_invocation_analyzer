@@ -20,6 +20,7 @@ import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.thread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.when;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
@@ -40,7 +41,29 @@ public class RemoteCachingUsedDataProviderTest extends DataProviderUnitTestBase 
   }
 
   @Test
-  public void shouldReturnRemoteCachingUsed() throws Exception {
+  public void shouldReturnRemoteCachingUsedIfRemoteExecutionIsUsed() throws Exception {
+    when(dataManager.getDatum(RemoteExecutionUsed.class)).thenReturn(new RemoteExecutionUsed(true));
+    useProfile(
+        metaData(),
+        trace(
+            mainThread(),
+            thread(
+                0,
+                0,
+                "foo",
+                complete(
+                    "bar",
+                    BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK,
+                    Timestamp.ofMicros(123),
+                    Duration.ZERO))));
+
+    assertThat(provider.getRemoteCachingUsed().isRemoteCachingUsed()).isTrue();
+  }
+
+  @Test
+  public void shouldReturnRemoteCachingUsedOnRemoteCacheCheck() throws Exception {
+    when(dataManager.getDatum(RemoteExecutionUsed.class))
+        .thenReturn(new RemoteExecutionUsed(false));
     useProfile(
         metaData(),
         trace(
@@ -60,6 +83,8 @@ public class RemoteCachingUsedDataProviderTest extends DataProviderUnitTestBase 
 
   @Test
   public void shouldReturnRemoteCachingNotUsed() throws Exception {
+    when(dataManager.getDatum(RemoteExecutionUsed.class))
+        .thenReturn(new RemoteExecutionUsed(false));
     useProfile(metaData(), trace(mainThread()));
 
     assertThat(provider.getRemoteCachingUsed().isRemoteCachingUsed()).isFalse();
