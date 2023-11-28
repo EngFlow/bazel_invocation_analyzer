@@ -81,6 +81,12 @@ public final class BazelEventsUtil {
       summary.append(forTarget);
       summary.append("\"\n");
     }
+    var mnemonic = event.args.get(BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_MNEMONIC);
+    if (!Strings.isNullOrEmpty(mnemonic)) {
+      summary.append("\t\tMnemonic: \"");
+      summary.append(mnemonic);
+      summary.append("\"\n");
+    }
     summary.append("\t\tAction duration: ");
     summary.append(formatDuration(event.duration));
     return summary.toString();

@@ -113,7 +113,7 @@ public class BazelEventsUtilTest {
   }
 
   @Test
-  public void summarizeCompleteActionWithoutTargetName() {
+  public void summarizeCompleteActionWithoutArgs() {
     var eventName = "some random name";
     var eventCategory = "that specific category";
     var eventDuration = Duration.ofSeconds(1234);
@@ -133,10 +133,11 @@ public class BazelEventsUtilTest {
   }
 
   @Test
-  public void summarizeCompleteActionWithTargetName() {
+  public void summarizeCompleteActionWithArgs() {
     var eventName = "some random name";
     var eventCategory = "that specific category";
     var eventDuration = Duration.ofSeconds(1234);
+    var mnemonic = "indicative stuff";
     var targetName = "for //target:foo";
     var event =
         new CompleteEvent(
@@ -146,10 +147,15 @@ public class BazelEventsUtilTest {
             eventDuration,
             1,
             1,
-            ImmutableMap.of(BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_TARGET, targetName));
+            ImmutableMap.of(
+                BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_MNEMONIC,
+                mnemonic,
+                BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_TARGET,
+                targetName));
     var summary = BazelEventsUtil.summarizeCompleteEvent(event);
     assertThat(summary).contains(eventName);
     assertThat(summary).contains(DurationUtil.formatDuration(eventDuration));
+    assertThat(summary).contains(mnemonic);
     assertThat(summary).contains(targetName);
     assertThat(summary).doesNotContain(eventCategory);
   }
