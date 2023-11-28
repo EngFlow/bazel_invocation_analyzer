@@ -156,7 +156,7 @@ public class CachingAndExecutionMetrics implements Datum {
     return String.format(
         "%" + padTo + "d    %,6.2f%%%s",
         part,
-        100f * part / total,
+        total == 0 ? 0 : 100f * part / total,
         suffix == null ? "" : " " + suffix);
   }
 
