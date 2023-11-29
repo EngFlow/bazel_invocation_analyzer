@@ -31,6 +31,7 @@ import org.junit.runners.Suite;
   FlagValueDataProviderTest.class,
   GarbageCollectionStatsDataProviderTest.class,
   LocalActionsDataProviderTest.class,
+  LocalActionsTest.class,
   MergedEventsPresentDataProviderTest.class,
   RemoteCacheMetricsDataProviderTest.class,
   SkymeldUsedDataProviderTest.class

@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -143,6 +144,15 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
 
     public CompleteEvent getAction() {
       return action;
+    }
+
+    public Duration getDurationWithoutCacheCheck() {
+      var cacheCheckDuration =
+          relatedEvents.stream()
+              .filter(BazelEventsUtil::indicatesRemoteCacheCheck)
+              .map(e -> e.duration)
+              .reduce(Duration.ZERO, Duration::plus);
+      return action.duration.minus(cacheCheckDuration);
     }
 
     public List<CompleteEvent> getRelatedEvents() {
