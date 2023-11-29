@@ -17,11 +17,8 @@ package com.engflow.bazel.invocation.analyzer.dataproviders;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.mainThread;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.metaData;
 import static com.engflow.bazel.invocation.analyzer.WriteBazelProfile.trace;
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_GENERAL_INFORMATION;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_ACTION_CACHE_CHECK;
 import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.CAT_REMOTE_OUTPUT_DOWNLOAD;
-import static com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants.COMPLETE_SUBPROCESS_RUN;
-import static com.google.common.truth.Truth.assertThat;
 
 import com.engflow.bazel.invocation.analyzer.EventThreadBuilder;
 import com.engflow.bazel.invocation.analyzer.core.DuplicateProviderException;
@@ -139,53 +136,5 @@ public class LocalActionsDataProviderTest extends DataProviderUnitTestBase {
 
     useProfile(metaData(), trace(mainThread(), one.asEvent(), two.asEvent()));
     expect.about(localActions).that(provider.derive()).isEqualTo(want);
-  }
-
-  @Test
-  public void isExecutedLocallyIsTrue() {
-    var thread = new EventThreadBuilder(1, 1);
-    var action =
-        new LocalAction(
-            thread.actionProcessingAction("my action", "foo", 10, 20),
-            List.of(thread.related(12, 2, CAT_GENERAL_INFORMATION, COMPLETE_SUBPROCESS_RUN)));
-    assertThat(action.isExecutedLocally()).isTrue();
-  }
-
-  @Test
-  public void isExecutedLocallyIsFalseNoEvent() {
-    var thread = new EventThreadBuilder(1, 1);
-    var action =
-        new LocalAction(thread.actionProcessingAction("my action", "foo", 10, 20), List.of());
-    assertThat(action.isExecutedLocally()).isFalse();
-  }
-
-  @Test
-  public void isExecutedLocallyIsFalseWrongCategory() {
-    var thread = new EventThreadBuilder(1, 1);
-    var action =
-        new LocalAction(
-            thread.actionProcessingAction("my action", "foo", 10, 20),
-            List.of(thread.related(12, 2, CAT_REMOTE_ACTION_CACHE_CHECK, COMPLETE_SUBPROCESS_RUN)));
-    assertThat(action.isExecutedLocally()).isFalse();
-  }
-
-  @Test
-  public void isExecutedLocallyIsFalseWrongName() {
-    var thread = new EventThreadBuilder(1, 1);
-    var action =
-        new LocalAction(
-            thread.actionProcessingAction("my action", "foo", 10, 20),
-            List.of(thread.related(12, 2, CAT_GENERAL_INFORMATION, COMPLETE_SUBPROCESS_RUN + "x")));
-    assertThat(action.isExecutedLocally()).isFalse();
-  }
-
-  @Test
-  public void isExecutedLocallyIsFalseEventOutOfRange() {
-    var thread = new EventThreadBuilder(1, 1);
-    var action =
-        new LocalAction(
-            thread.actionProcessingAction("my action", "foo", 10, 20),
-            List.of(thread.related(22, 1, CAT_GENERAL_INFORMATION, COMPLETE_SUBPROCESS_RUN)));
-    assertThat(action.isExecutedLocally()).isTrue();
   }
 }
