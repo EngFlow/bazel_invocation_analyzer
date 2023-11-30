@@ -26,6 +26,7 @@ import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteCachingUsed;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,18 +39,24 @@ public class NoCacheActionsSuggestionProvider extends SuggestionProviderBase {
   private static final String ANALYZER_CLASSNAME = NoCacheActionsSuggestionProvider.class.getName();
   private static final String SUGGESTION_ID_NO_CACHE_ACTIONS = "NoCacheActions";
 
+  /** The default minimum duration actions need to take to be included in the suggestions. */
+  @VisibleForTesting static final Duration MIN_DURATION = Duration.ofSeconds(5);
+
   public static NoCacheActionsSuggestionProvider createDefault() {
-    return new NoCacheActionsSuggestionProvider(5);
+    return new NoCacheActionsSuggestionProvider(MIN_DURATION, 5);
   }
 
   public static NoCacheActionsSuggestionProvider createVerbose() {
-    return new NoCacheActionsSuggestionProvider(Integer.MAX_VALUE);
+    return new NoCacheActionsSuggestionProvider(Duration.ZERO, Integer.MAX_VALUE);
   }
+
+  private final Duration minDuration;
 
   private final int maxActions;
 
   @VisibleForTesting
-  NoCacheActionsSuggestionProvider(int maxActions) {
+  NoCacheActionsSuggestionProvider(Duration minDuration, int maxActions) {
+    this.minDuration = minDuration;
     this.maxActions = maxActions;
   }
 
@@ -73,6 +80,23 @@ public class NoCacheActionsSuggestionProvider extends SuggestionProviderBase {
       if (actionsWithoutRemoteCacheCheck.isEmpty()) {
         return noSuggestions();
       }
+      var longEnoughActions =
+          actionsWithoutRemoteCacheCheck.stream()
+              .filter(action -> minDuration.compareTo(action.getAction().duration) <= 0)
+              .collect(Collectors.toList());
+      if (longEnoughActions.isEmpty()) {
+        return SuggestionProviderUtil.createSuggestionOutput(
+            ANALYZER_CLASSNAME,
+            null,
+            ImmutableList.of(
+                SuggestionProviderUtil.createCaveat(
+                    String.format(
+                        "No actions that are not using remote caching were highlighted. None of the"
+                            + " %d actions that do not check the remote cache took sufficiently"
+                            + " long.",
+                        actionsWithoutRemoteCacheCheck.size()),
+                    true)));
+      }
       List<Caveat> caveats = new ArrayList<>();
       var targetLabelIncluded =
           dataManager.getDatum(FlagValueExperimentalProfileIncludeTargetLabel.class);
@@ -83,7 +107,7 @@ public class NoCacheActionsSuggestionProvider extends SuggestionProviderBase {
                     "investigating actions that are not using remote caching"),
                 false));
       }
-      if (actionsWithoutRemoteCacheCheck.size() > maxActions) {
+      if (longEnoughActions.size() > maxActions) {
         caveats.add(
             SuggestionProviderUtil.createCaveat(
                 String.format(
@@ -91,13 +115,20 @@ public class NoCacheActionsSuggestionProvider extends SuggestionProviderBase {
                         + " %d found were listed.",
                     maxActions, actionsWithoutRemoteCacheCheck.size()),
                 true));
+      } else if (longEnoughActions.size() < actionsWithoutRemoteCacheCheck.size()) {
+        caveats.add(
+            SuggestionProviderUtil.createCaveat(
+                String.format(
+                    "%d actions did not take long enough to be listed.",
+                    actionsWithoutRemoteCacheCheck.size() - longEnoughActions.size()),
+                true));
       }
       StringBuilder recommendation = new StringBuilder();
       recommendation.append(
           "Some actions did not check the remote cache. Likely the targets the actions were"
               + " executed for include the tag `no-cache` or `no-remote-cache`. Investigate"
               + " whether these tags can be removed:");
-      actionsWithoutRemoteCacheCheck.stream()
+      longEnoughActions.stream()
           .limit(maxActions)
           .forEachOrdered(
               action ->

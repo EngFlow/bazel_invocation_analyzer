@@ -25,11 +25,16 @@ import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
 import com.engflow.bazel.invocation.analyzer.dataproviders.FlagValueExperimentalProfileIncludeTargetLabel;
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteCachingUsed;
+import java.time.Duration;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
 public class NoCacheActionsSuggestionProviderTest extends SuggestionProviderUnitTestBase {
+  private static final int MIN_DURATION_IN_SECONDS = 5;
+  private static final int DURATION_FOR_INCLUSION = MIN_DURATION_IN_SECONDS;
+  private static final int DURATION_FOR_EXCLUSION = MIN_DURATION_IN_SECONDS - 1;
+
   // These variables are returned from calls to DataManager.getDatum for the associated types. They
   // are set up with reasonable defaults before each test is run, but can be overridden within the
   // tests when custom values are desired for the testing being conducted (without the need to
@@ -48,7 +53,9 @@ public class NoCacheActionsSuggestionProviderTest extends SuggestionProviderUnit
     when(dataManager.getDatum(FlagValueExperimentalProfileIncludeTargetLabel.class))
         .thenAnswer(i -> actionsIncludeTargetName);
 
-    suggestionProvider = NoCacheActionsSuggestionProvider.createDefault();
+    suggestionProvider =
+        new NoCacheActionsSuggestionProvider(
+            Duration.ofSeconds(MIN_DURATION_IN_SECONDS), Integer.MAX_VALUE);
   }
 
   @Test
@@ -78,7 +85,7 @@ public class NoCacheActionsSuggestionProviderTest extends SuggestionProviderUnit
     var thread = new EventThreadBuilder(1, 1);
     var actionWithCacheCheck =
         new LocalActions.LocalAction(
-            thread.actionProcessingAction("some remote action", "b", 20, 10),
+            thread.actionProcessingAction("some remote action", "b", 20, DURATION_FOR_INCLUSION),
             List.of(thread.related(20, 2, CAT_REMOTE_ACTION_CACHE_CHECK)));
     localActions = LocalActions.create(List.of(actionWithCacheCheck));
 
@@ -94,15 +101,17 @@ public class NoCacheActionsSuggestionProviderTest extends SuggestionProviderUnit
     var thread = new EventThreadBuilder(1, 1);
     var actionWithRemoteCacheCheck =
         new LocalActions.LocalAction(
-            thread.actionProcessingAction("action with RC check", "a", 10, 10),
+            thread.actionProcessingAction("action with RC check", "a", 10, DURATION_FOR_INCLUSION),
             List.of(thread.related(10, 2, CAT_REMOTE_ACTION_CACHE_CHECK)));
     var actionWithoutRemoteCacheCheckLocal =
         new LocalActions.LocalAction(
-            thread.actionProcessingAction("no RC check, local exec", "b", 20, 10),
+            thread.actionProcessingAction(
+                "no RC check, local exec", "b", 20, DURATION_FOR_INCLUSION),
             List.of(thread.related(20, 2, CAT_LOCAL_ACTION_EXECUTION)));
     var actionWithoutRemoteCacheCheckRemote =
         new LocalActions.LocalAction(
-            thread.actionProcessingAction("no RC check, remote exec", "c", 30, 10),
+            thread.actionProcessingAction(
+                "no RC check, remote exec", "c", 30, DURATION_FOR_INCLUSION),
             List.of(thread.related(30, 2, CAT_REMOTE_ACTION_EXECUTION)));
 
     localActions =
@@ -129,21 +138,75 @@ public class NoCacheActionsSuggestionProviderTest extends SuggestionProviderUnit
   }
 
   @Test
+  public void shouldNotReturnSuggestionForTooShortActions() {
+    remoteCachingUsed = new RemoteCachingUsed(true);
+    var thread = new EventThreadBuilder(1, 1);
+    var excludedAction =
+        new LocalActions.LocalAction(
+            thread.actionProcessingAction(
+                "foo action that is too short", "b", 20, DURATION_FOR_EXCLUSION),
+            List.of(thread.related(2, CAT_LOCAL_ACTION_EXECUTION)));
+
+    localActions = LocalActions.create(List.of(excludedAction));
+
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(NoCacheActionsSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getSuggestionList()).isEmpty();
+    assertThat(suggestionOutput.getCaveatCount()).isEqualTo(1);
+    assertThat(suggestionOutput.getCaveat(0).getSuggestVerboseMode()).isTrue();
+  }
+
+  @Test
+  public void shouldIncludeSuggestionCaveatIfShortActionsWereNot() {
+    remoteCachingUsed = new RemoteCachingUsed(true);
+    var thread = new EventThreadBuilder(1, 1);
+    var includedAction =
+        new LocalActions.LocalAction(
+            thread.actionProcessingAction(
+                "no RC check, local exec", "b", 10, DURATION_FOR_INCLUSION),
+            List.of(thread.related(2, CAT_LOCAL_ACTION_EXECUTION)));
+    var excludedAction =
+        new LocalActions.LocalAction(
+            thread.actionProcessingAction(
+                "foo action that is too short", "b", 20, DURATION_FOR_EXCLUSION),
+            List.of(thread.related(2, CAT_LOCAL_ACTION_EXECUTION)));
+
+    localActions = LocalActions.create(List.of(includedAction, excludedAction));
+
+    SuggestionOutput suggestionOutput = suggestionProvider.getSuggestions(dataManager);
+
+    assertThat(suggestionOutput.getAnalyzerClassname())
+        .isEqualTo(NoCacheActionsSuggestionProvider.class.getName());
+    assertThat(suggestionOutput.hasFailure()).isFalse();
+    assertThat(suggestionOutput.getSuggestionList().size()).isEqualTo(1);
+    var suggestion = suggestionOutput.getSuggestion(0);
+    assertThat(suggestion.getRecommendation()).contains(includedAction.getAction().name);
+    assertThat(suggestion.getRecommendation()).doesNotContain(excludedAction.getAction().name);
+    assertThat(suggestion.getCaveatCount()).isEqualTo(1);
+    assertThat(suggestion.getCaveat(0).getSuggestVerboseMode()).isTrue();
+  }
+
+  @Test
   public void shouldReturnSuggestionForRemoteCachingInvocationWithTooManyMatches() {
-    suggestionProvider = new NoCacheActionsSuggestionProvider(1);
+    suggestionProvider = new NoCacheActionsSuggestionProvider(Duration.ofSeconds(1), 1);
     remoteCachingUsed = new RemoteCachingUsed(true);
     var thread = new EventThreadBuilder(1, 1);
     var actionWithRemoteCacheCheck =
         new LocalActions.LocalAction(
-            thread.actionProcessingAction("action with RC check", "a", 10, 10),
+            thread.actionProcessingAction("action with RC check", "a", 10, DURATION_FOR_INCLUSION),
             List.of(thread.related(10, 2, CAT_REMOTE_ACTION_CACHE_CHECK)));
     var actionWithoutRemoteCacheCheckLocal =
         new LocalActions.LocalAction(
-            thread.actionProcessingAction("no RC check, local exec", "b", 20, 10),
+            thread.actionProcessingAction(
+                "no RC check, local exec", "b", 20, DURATION_FOR_INCLUSION),
             List.of(thread.related(20, 2, CAT_LOCAL_ACTION_EXECUTION)));
     var actionWithoutRemoteCacheCheckRemote =
         new LocalActions.LocalAction(
-            thread.actionProcessingAction("no RC check, remote exec", "c", 30, 100),
+            thread.actionProcessingAction(
+                "no RC check, remote exec", "c", 30, 10 * DURATION_FOR_INCLUSION),
             List.of(thread.related(30, 2, CAT_REMOTE_ACTION_EXECUTION)));
 
     localActions =
@@ -179,7 +242,8 @@ public class NoCacheActionsSuggestionProviderTest extends SuggestionProviderUnit
     var thread = new EventThreadBuilder(1, 1);
     var matchingAction =
         new LocalActions.LocalAction(
-            thread.actionProcessingAction("no RC check", "b", 20, 10), List.of());
+            thread.actionProcessingAction("no RC check", "b", 20, DURATION_FOR_INCLUSION),
+            List.of());
 
     localActions = LocalActions.create(List.of(matchingAction));
 
