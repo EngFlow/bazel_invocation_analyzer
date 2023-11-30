@@ -24,6 +24,7 @@ import com.engflow.bazel.invocation.analyzer.core.SuggestionProvider;
 import com.engflow.bazel.invocation.analyzer.dataproviders.FlagValueExperimentalProfileIncludeTargetLabel;
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteCachingUsed;
+import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
@@ -91,10 +92,10 @@ public class NoCacheActionsSuggestionProvider extends SuggestionProviderBase {
             ImmutableList.of(
                 SuggestionProviderUtil.createCaveat(
                     String.format(
-                        "No actions that are not using remote caching were highlighted. None of the"
-                            + " %d actions that do not check the remote cache took sufficiently"
-                            + " long.",
-                        actionsWithoutRemoteCacheCheck.size()),
+                        "%d actions do not check the remote cache, but none of them took longer"
+                            + " than %s.",
+                        actionsWithoutRemoteCacheCheck.size(),
+                        DurationUtil.formatDuration(minDuration)),
                     true)));
       }
       List<Caveat> caveats = new ArrayList<>();
