@@ -73,16 +73,16 @@ public class NoCacheActionsSuggestionProvider extends SuggestionProviderBase {
       if (localActions.isEmpty()) {
         return noSuggestions();
       }
-      var actionsWithoutRemoteCacheCheck =
+      var nonInternalActionsWithoutRemoteCacheCheck =
           localActions.stream()
-              .filter(action -> !action.hasRemoteCacheCheck())
+              .filter(action -> !action.hasRemoteCacheCheck() && !action.isInternal().orElse(false))
               .sorted((a, b) -> b.getAction().duration.compareTo(a.getAction().duration))
               .collect(Collectors.toList());
-      if (actionsWithoutRemoteCacheCheck.isEmpty()) {
+      if (nonInternalActionsWithoutRemoteCacheCheck.isEmpty()) {
         return noSuggestions();
       }
       var longEnoughActions =
-          actionsWithoutRemoteCacheCheck.stream()
+          nonInternalActionsWithoutRemoteCacheCheck.stream()
               .filter(action -> minDuration.compareTo(action.getAction().duration) <= 0)
               .collect(Collectors.toList());
       if (longEnoughActions.isEmpty()) {
@@ -94,7 +94,7 @@ public class NoCacheActionsSuggestionProvider extends SuggestionProviderBase {
                     String.format(
                         "%d actions do not check the remote cache, but none of them took longer"
                             + " than %s.",
-                        actionsWithoutRemoteCacheCheck.size(),
+                        nonInternalActionsWithoutRemoteCacheCheck.size(),
                         DurationUtil.formatDuration(minDuration)),
                     true)));
       }
@@ -114,14 +114,14 @@ public class NoCacheActionsSuggestionProvider extends SuggestionProviderBase {
                 String.format(
                     "Only the %d longest actions that did not check the remote cache of the"
                         + " %d found were listed.",
-                    maxActions, actionsWithoutRemoteCacheCheck.size()),
+                    maxActions, nonInternalActionsWithoutRemoteCacheCheck.size()),
                 true));
-      } else if (longEnoughActions.size() < actionsWithoutRemoteCacheCheck.size()) {
+      } else if (longEnoughActions.size() < nonInternalActionsWithoutRemoteCacheCheck.size()) {
         caveats.add(
             SuggestionProviderUtil.createCaveat(
                 String.format(
                     "%d actions did not take long enough to be listed.",
-                    actionsWithoutRemoteCacheCheck.size() - longEnoughActions.size()),
+                    nonInternalActionsWithoutRemoteCacheCheck.size() - longEnoughActions.size()),
                 true));
       }
       StringBuilder recommendation = new StringBuilder();

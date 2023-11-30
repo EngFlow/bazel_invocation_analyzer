@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.engflow.bazel.invocation.analyzer.EventThreadBuilder;
 import com.engflow.bazel.invocation.analyzer.SuggestionOutput;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.dataproviders.FlagValueExperimentalProfileIncludeTargetLabel;
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions;
 import com.engflow.bazel.invocation.analyzer.dataproviders.remoteexecution.RemoteCachingUsed;
@@ -108,6 +109,14 @@ public class NoCacheActionsSuggestionProviderTest extends SuggestionProviderUnit
             thread.actionProcessingAction(
                 "no RC check, local exec", "b", 20, DURATION_FOR_INCLUSION),
             List.of(thread.related(20, 2, CAT_LOCAL_ACTION_EXECUTION)));
+    var internalAction =
+        new LocalActions.LocalAction(
+            thread.actionProcessingAction(
+                "internal action, do not include",
+                BazelProfileConstants.MNEMONIC_BAZEL_WORKSPACE_STATUS_ACTION,
+                20,
+                10),
+            List.of());
     var actionWithoutRemoteCacheCheckRemote =
         new LocalActions.LocalAction(
             thread.actionProcessingAction(
@@ -118,6 +127,7 @@ public class NoCacheActionsSuggestionProviderTest extends SuggestionProviderUnit
         LocalActions.create(
             List.of(
                 actionWithRemoteCacheCheck,
+                internalAction,
                 actionWithoutRemoteCacheCheckLocal,
                 actionWithoutRemoteCacheCheckRemote));
 
@@ -132,6 +142,7 @@ public class NoCacheActionsSuggestionProviderTest extends SuggestionProviderUnit
         .contains(actionWithoutRemoteCacheCheckLocal.getAction().name);
     assertThat(suggestion.getRecommendation())
         .contains(actionWithoutRemoteCacheCheckRemote.getAction().name);
+    assertThat(suggestion.getRecommendation()).doesNotContain(internalAction.getAction().name);
     assertThat(suggestion.getRecommendation())
         .doesNotContain(actionWithRemoteCacheCheck.getAction().name);
     assertThat(suggestion.getCaveatList()).isEmpty();

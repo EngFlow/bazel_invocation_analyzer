@@ -50,6 +50,7 @@ public class CachingAndExecutionMetricsDataProvider extends DataProvider {
     AtomicLong cacheMissExecNotReported = new AtomicLong();
     AtomicLong nocacheLocalExec = new AtomicLong();
     AtomicLong nocacheRemoteExec = new AtomicLong();
+    AtomicLong nocacheInternal = new AtomicLong();
     AtomicLong nocacheExecNotReported = new AtomicLong();
     localActions.parallelStream()
         .forEach(
@@ -73,9 +74,13 @@ public class CachingAndExecutionMetricsDataProvider extends DataProvider {
                   nocacheLocalExec.getAndIncrement();
                 } else if (remoteExec) {
                   nocacheRemoteExec.getAndIncrement();
+
                 } else {
-                  // TODO: Can we separate out Bazel "internal" actions?
-                  nocacheExecNotReported.getAndIncrement();
+                  if (action.isInternal().orElse(false)) {
+                    nocacheInternal.getAndIncrement();
+                  } else {
+                    nocacheExecNotReported.getAndIncrement();
+                  }
                 }
               }
             });
@@ -87,6 +92,7 @@ public class CachingAndExecutionMetricsDataProvider extends DataProvider {
         cacheMissExecNotReported.get(),
         nocacheLocalExec.get(),
         nocacheRemoteExec.get(),
+        nocacheInternal.get(),
         nocacheExecNotReported.get());
   }
 }

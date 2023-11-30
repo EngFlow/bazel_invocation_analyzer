@@ -36,6 +36,7 @@ public class CachingAndExecutionMetrics implements Datum {
   private final long actionsWithRcMissExecNotReported;
   private final long actionsWithoutRcLocallyExecuted;
   private final long actionsWithoutRcRemotelyExecuted;
+  private final long actionsWithoutRcInternal;
   private final long actionsWithoutRcExecNotReported;
 
   public CachingAndExecutionMetrics(
@@ -46,6 +47,7 @@ public class CachingAndExecutionMetrics implements Datum {
       long actionsWithRcMissExecNotReported,
       long actionsWithoutRcLocallyExecuted,
       long actionsWithoutRcRemotelyExecuted,
+      long actionsWithoutRcInternal,
       long actionsWithoutRcExecNotReported) {
     this.actions = actions;
     this.actionsWithRcHit = actionsWithRcHit;
@@ -54,6 +56,7 @@ public class CachingAndExecutionMetrics implements Datum {
     this.actionsWithRcMissExecNotReported = actionsWithRcMissExecNotReported;
     this.actionsWithoutRcLocallyExecuted = actionsWithoutRcLocallyExecuted;
     this.actionsWithoutRcRemotelyExecuted = actionsWithoutRcRemotelyExecuted;
+    this.actionsWithoutRcInternal = actionsWithoutRcInternal;
     this.actionsWithoutRcExecNotReported = actionsWithoutRcExecNotReported;
   }
 
@@ -117,6 +120,16 @@ public class CachingAndExecutionMetrics implements Datum {
    */
   public long getActionsWithoutRcRemotelyExecuted() {
     return actionsWithoutRcRemotelyExecuted;
+  }
+
+  /**
+   * The number of actions processed that are likely internal actions.
+   *
+   * <p>{@link #getActionsWithoutRcExecNotReported()} equals out errors in the classification: False
+   * negatives are included there, and false positives should have been included there.
+   */
+  public long getActionsWithoutRcInternal() {
+    return actionsWithoutRcInternal;
   }
 
   /**
@@ -201,7 +214,10 @@ public class CachingAndExecutionMetrics implements Datum {
     sb.append(
         summarize(
             width, actionsWithoutRcRemotelyExecuted, getActionsWithoutRc(), "of all cache skips"));
-    sb.append("\n        Not reported (e.g. internal): ");
+    sb.append("\n        Internal (not exhaustive):    ");
+    sb.append(
+        summarize(width, actionsWithoutRcInternal, getActionsWithoutRc(), "of all cache skips"));
+    sb.append("\n        Not reported                  ");
     sb.append(
         summarize(
             width, actionsWithoutRcExecNotReported, getActionsWithoutRc(), "of all cache skips"));
