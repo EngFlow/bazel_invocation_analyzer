@@ -15,6 +15,7 @@
 package com.engflow.bazel.invocation.analyzer.dataproviders;
 
 import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelEventsUtil;
+import com.engflow.bazel.invocation.analyzer.bazelprofile.BazelProfileConstants;
 import com.engflow.bazel.invocation.analyzer.core.Datum;
 import com.engflow.bazel.invocation.analyzer.dataproviders.LocalActions.LocalAction;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
@@ -22,15 +23,26 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 /** Organizes events into {@link LocalAction} by category and time period */
 public class LocalActions implements Datum, Iterable<LocalAction> {
+  @VisibleForTesting
+  static final Set<String> INTERNAL_ACTION_MNEMONICS =
+      ImmutableSet.of(
+          BazelProfileConstants.MNEMONIC_BAZEL_WORKSPACE_STATUS_ACTION,
+          BazelProfileConstants.MNEMONIC_EXECUTABLE_SYMLINK,
+          BazelProfileConstants.MNEMONIC_SYMLINK);
+
   private final ImmutableList<LocalAction> actions;
 
   private LocalActions(List<LocalAction> actions) {
@@ -173,6 +185,24 @@ public class LocalActions implements Datum, Iterable<LocalAction> {
 
     public boolean isRemoteCacheHit() {
       return remoteCacheHit;
+    }
+
+    /**
+     * Returns whether the action looks like it is Bazel-internal.
+     *
+     * @return true if it is likely internal, false if it is not, and empty if it is unclear
+     */
+    @Nullable
+    public Optional<Boolean> isInternal() {
+      if (hasRemoteCacheCheck() || isExecutedLocally() || isExecutedRemotely()) {
+        return Optional.of(false);
+      }
+      var mnemonic = action.args.get(BazelProfileConstants.ARGS_CAT_ACTION_PROCESSING_MNEMONIC);
+      if (mnemonic == null) {
+        return Optional.empty();
+      }
+      // TODO: Find other strong signals for internal actions.
+      return INTERNAL_ACTION_MNEMONICS.contains(mnemonic) ? Optional.of(true) : Optional.empty();
     }
 
     @Override

@@ -138,4 +138,43 @@ public class BazelProfileConstants {
   // See
   // https://github.com/bazelbuild/bazel/blob/7d10999fc0357596824f2b6022bbbd895f245a3c/src/main/java/com/google/devtools/build/lib/profiler/Profiler.java#L209-L211
   public static final String ARGS_CAT_ACTION_PROCESSING_MNEMONIC = "mnemonic";
+
+  // mnemonic names
+  // Some well-known mnemonic names that are included in the Bazel codebase itself.
+
+  // See
+  // https://github.com/bazelbuild/bazel/blob/c3ed4b5ab526405df336af94cf91145b682d1d04/src/main/java/com/google/devtools/build/lib/bazel/BazelWorkspaceStatusModule.java#L253
+  /** For an action that creates a manifest file describing a symlink tree. */
+  public static final String MNEMONIC_BAZEL_WORKSPACE_STATUS_ACTION = "BazelWorkspaceStatusAction";
+
+  // See
+  // https://github.com/bazelbuild/bazel/blob/c3ed4b5ab526405df336af94cf91145b682d1d04/src/main/java/com/google/devtools/build/lib/analysis/actions/SymlinkAction.java#L318
+  /** For an action that created an executable symlink. */
+  public static final String MNEMONIC_EXECUTABLE_SYMLINK = "ExecutableSymlink";
+  /** For an action that created a non-executable symlink. */
+  public static final String MNEMONIC_SYMLINK = "Symlink";
+
+  // See
+  // https://github.com/bazelbuild/bazel/blob/c3ed4b5ab526405df336af94cf91145b682d1d04/src/main/java/com/google/devtools/build/lib/analysis/actions/AbstractFileWriteAction.java#L94
+
+  /** For an action that successfully wrote a file to disk. */
+  public static final String MNEMONIC_FILE_WRITE = "FileWrite";
+
+  // See
+  // https://github.com/bazelbuild/bazel/blob/c3ed4b5ab526405df336af94cf91145b682d1d04/src/main/java/com/google/devtools/build/lib/analysis/RepoMappingManifestAction.java#L119
+  /**
+   * For an action that creates a manifest file describing the repos and mappings relevant for a
+   * runfile tree.
+   */
+  public static final String MNEMONIC_REPO_MAPPING_MANIFEST = "RepoMappingManifest";
+
+  // See
+  // https://github.com/bazelbuild/bazel/blob/c3ed4b5ab526405df336af94cf91145b682d1d04/src/main/java/com/google/devtools/build/lib/analysis/SourceManifestAction.java#L306
+  /** For an action that creates a manifest file describing a symlink tree. */
+  public static final String MNEMONIC_SOURCE_SYMLINK_MANIFEST = "SourceSymlinkManifest";
+
+  // See
+  // https://github.com/bazelbuild/bazel/blob/c3ed4b5ab526405df336af94cf91145b682d1d04/src/main/java/com/google/devtools/build/lib/analysis/actions/TemplateExpansionAction.java#L200
+  /** For an action that expands a template and writes the expanded content to a file. */
+  public static final String MNEMONIC_TEMPLATE_EXPAND = "TemplateExpand";
 }

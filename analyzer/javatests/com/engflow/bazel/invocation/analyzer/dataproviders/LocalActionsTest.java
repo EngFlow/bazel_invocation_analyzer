@@ -109,4 +109,89 @@ public class LocalActionsTest {
             List.of(thread.related(22, 1, CAT_GENERAL_INFORMATION, COMPLETE_SUBPROCESS_RUN)));
     assertThat(action.isExecutedLocally()).isTrue();
   }
+
+  @Test
+  public void isInternalBazelWorkspaceStatusAction() {
+    var thread = new EventThreadBuilder(1, 1);
+    var action =
+        new LocalAction(
+            thread.actionProcessingAction(
+                "BazelWorkspaceStatusAction stable-status.txt",
+                "BazelWorkspaceStatusAction",
+                10,
+                20),
+            List.of());
+    assertThat(action.isInternal().isPresent()).isTrue();
+    assertThat(action.isInternal().get()).isTrue();
+  }
+
+  @Test
+  public void isInternalSymlink() {
+    var thread = new EventThreadBuilder(1, 1);
+    var action =
+        new LocalAction(
+            thread.actionProcessingAction("Symlinking [...]", "Symlink", 10, 20), List.of());
+    assertThat(action.isInternal().isPresent()).isTrue();
+    assertThat(action.isInternal().get()).isTrue();
+  }
+
+  @Test
+  public void isInternalExecutableSymlink() {
+    var thread = new EventThreadBuilder(1, 1);
+    var action =
+        new LocalAction(
+            thread.actionProcessingAction("Creating symlink [...]", "ExecutableSymlink", 10, 20),
+            List.of());
+    assertThat(action.isInternal().isPresent()).isTrue();
+    assertThat(action.isInternal().get()).isTrue();
+  }
+
+  @Test
+  public void isUnknownInternalNoMnemonic() {
+    var thread = new EventThreadBuilder(1, 1);
+    var action =
+        new LocalAction(thread.actionProcessingAction("action name", null, 10, 20), List.of());
+    assertThat(action.isInternal().isEmpty()).isTrue();
+  }
+
+  @Test
+  public void isUnknownInternalNoRecognizedMnemonic() {
+    var thread = new EventThreadBuilder(1, 1);
+    var action =
+        new LocalAction(thread.actionProcessingAction("action name", "foo", 10, 20), List.of());
+    assertThat(action.isInternal().isEmpty()).isTrue();
+  }
+
+  @Test
+  public void isNotInternalChecksRemoteCache() {
+    var thread = new EventThreadBuilder(1, 1);
+    var action =
+        new LocalAction(
+            thread.actionProcessingAction("Creating symlink [...]", "ExecutableSymlink", 10, 20),
+            List.of(thread.related(1, CAT_REMOTE_ACTION_CACHE_CHECK)));
+    assertThat(action.isInternal().isPresent()).isTrue();
+    assertThat(action.isInternal().get()).isFalse();
+  }
+
+  @Test
+  public void isNotInternalLocallyExecuted() {
+    var thread = new EventThreadBuilder(1, 1);
+    var action =
+        new LocalAction(
+            thread.actionProcessingAction("Creating symlink [...]", "ExecutableSymlink", 10, 20),
+            List.of(thread.related(1, CAT_GENERAL_INFORMATION, COMPLETE_SUBPROCESS_RUN)));
+    assertThat(action.isInternal().isPresent()).isTrue();
+    assertThat(action.isInternal().get()).isFalse();
+  }
+
+  @Test
+  public void isNotInternalRemotelyExecuted() {
+    var thread = new EventThreadBuilder(1, 1);
+    var action =
+        new LocalAction(
+            thread.actionProcessingAction("Creating symlink [...]", "ExecutableSymlink", 10, 20),
+            List.of(thread.related(1, CAT_REMOTE_ACTION_EXECUTION)));
+    assertThat(action.isInternal().isPresent()).isTrue();
+    assertThat(action.isInternal().get()).isFalse();
+  }
 }
