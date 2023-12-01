@@ -6,14 +6,8 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file", "http_jar")
 
 http_jar(
     name = "byte_buddy",
-    sha256 = "30e6e0446437a67db37e2b7f7d33f50787ddfd970359319dfd05469daa2dcbce",
-    url = "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy/1.14.10/byte-buddy-1.14.10.jar",
-)
-
-http_jar(
-    name = "byte_buddy_agent",
-    sha256 = "67993a89d47ca58ff868802a4448ddd150e5fe4e5a5645ded990d7b4d557a6b9",
-    url = "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.14.10/byte-buddy-agent-1.14.10.jar",
+    sha256 = "6a688bff5b0da4f4f26a672be6623efef94837f1dd49ef2d1f5f6fe07c06699c",
+    url = "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy/1.12.13/byte-buddy-1.12.13.jar",
 )
 
 http_jar(
@@ -72,15 +66,9 @@ http_jar(
 
 http_jar(
     name = "mockito",
-    sha256 = "dbad5e746654910a11a59ecb4d01e38461f3e5d16161689dc2588d5554432521",
-    url = "https://repo1.maven.org/maven2/org/mockito/mockito-core/5.7.0/mockito-core-5.7.0.jar",
+    sha256 = "ee3b91cdf4c23cff92960c32364371c683ee6415f1ec4678317bcea79c9f9819",
+    url = "https://repo1.maven.org/maven2/org/mockito/mockito-core/4.6.1/mockito-core-4.6.1.jar",
 )
-
-#http_jar(
-#    name = "mockito",
-#    sha256 = "ee3b91cdf4c23cff92960c32364371c683ee6415f1ec4678317bcea79c9f9819",
-#    url = "https://repo1.maven.org/maven2/org/mockito/mockito-core/4.6.1/mockito-core-4.6.1.jar",
-#)
 
 http_jar(
     name = "objenesis",
