@@ -29,6 +29,7 @@ import com.engflow.bazel.invocation.analyzer.core.TestDatum.DoubleDatum;
 import com.engflow.bazel.invocation.analyzer.core.TestDatum.IntegerDatum;
 import com.engflow.bazel.invocation.analyzer.core.TestDatum.StringDatum;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -212,26 +213,16 @@ public class ConsoleOutputTest {
     var myEmptyString = new StringDatum(null);
 
     var data =
-        new HashMap<Class<? extends DataProvider>, Map<Class<? extends Datum>, Datum>>() {
-          {
-            put(
+        new HashMap<Class<? extends DataProvider>, Map<Class<? extends Datum>, Datum>>(
+            ImmutableMap.of(
                 TestDataProvider.class,
-                new HashMap<>() {
-                  {
-                    put(IntegerDatum.class, myInt);
-                    put(DoubleDatum.class, myDouble);
-                    put(StringDatum.class, myEmptyString);
-                  }
-                });
-            put(
+                new HashMap<>(
+                    ImmutableMap.of(
+                        IntegerDatum.class, myInt,
+                        DoubleDatum.class, myDouble,
+                        StringDatum.class, myEmptyString)),
                 TestDataProvider2.class,
-                new HashMap<>() {
-                  {
-                    put(CharDatum.class, myChar);
-                  }
-                });
-          }
-        };
+                new HashMap<>(ImmutableMap.of(CharDatum.class, myChar))));
 
     ConsoleOutput consoleOutput = new ConsoleOutput(false, false);
 
@@ -260,26 +251,19 @@ public class ConsoleOutputTest {
     var myEmptyString = new StringDatum(null);
 
     var data =
-        new HashMap<Class<? extends DataProvider>, Map<Class<? extends Datum>, Datum>>() {
-          {
-            put(
+        new HashMap<Class<? extends DataProvider>, Map<Class<? extends Datum>, Datum>>(
+            ImmutableMap.of(
                 TestDataProvider.class,
-                new HashMap<>() {
-                  {
-                    put(IntegerDatum.class, myInt);
-                    put(DoubleDatum.class, myDouble);
-                    put(StringDatum.class, myEmptyString);
-                  }
-                });
-            put(
+                new HashMap<>(
+                    ImmutableMap.of(
+                        IntegerDatum.class,
+                        myInt,
+                        DoubleDatum.class,
+                        myDouble,
+                        StringDatum.class,
+                        myEmptyString)),
                 TestDataProvider2.class,
-                new HashMap<>() {
-                  {
-                    put(CharDatum.class, myChar);
-                  }
-                });
-          }
-        };
+                new HashMap<>(ImmutableMap.of(CharDatum.class, myChar))));
 
     ConsoleOutput consoleOutput = new ConsoleOutput(false, true);
 
