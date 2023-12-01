@@ -3,7 +3,7 @@ java_library(
     testonly = 1,
     visibility = ["//visibility:public"],
     exports = [
-        "@hamcrest//jar",
-        "@junit//jar",
+        "@maven//:junit_junit",
+        "@maven//:org_hamcrest_hamcrest_core",
     ],
 )

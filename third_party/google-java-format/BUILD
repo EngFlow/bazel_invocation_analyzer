@@ -10,5 +10,5 @@ java_binary(
         "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
     ],
     main_class = "com.google.googlejavaformat.java.Main",
-    runtime_deps = ["@google_java_format//jar"],
+    runtime_deps = ["@maven//:com_google_googlejavaformat_google_java_format"],
 )

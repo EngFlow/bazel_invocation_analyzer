@@ -2,6 +2,6 @@ java_library(
     name = "gson",
     visibility = ["//visibility:public"],
     exports = [
-        "@gson//jar",
+        "@maven//:com_google_code_gson_gson",
     ],
 )
