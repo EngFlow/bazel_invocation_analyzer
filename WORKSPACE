@@ -173,10 +173,10 @@ http_file(
 ## Java files
 http_jar(
     name = "google_java_format",
-    sha256 = "82819a2c5f7067712e0233661b864c1c034f6657d63b8e718b4a50e39ab028f6",
+    sha256 = "bed3bad433f7df427700648f24b798db3c338d6dcb2cc5c08bc542b55610f910",
     urls = [
-        "https://storage.googleapis.com/engflow-tools-public/github.com/google/google-java-format/releases/download/v1.16.0/google-java-format-1.16.0-all-deps.jar",
-        "https://github.com/google/google-java-format/releases/download/v1.16.0/google-java-format-1.16.0-all-deps.jar",
+        "https://storage.googleapis.com/engflow-tools-public/github.com/google/google-java-format/releases/download/v1.18.1/google-java-format-1.18.1-all-deps.jar",
+        "https://github.com/google/google-java-format/releases/download/v1.18.1/google-java-format-1.18.1-all-deps.jar",
     ],
 )
 
