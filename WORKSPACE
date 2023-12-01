@@ -18,26 +18,26 @@ http_jar(
 
 http_jar(
     name = "error_prone_annotations",
-    sha256 = "067047714349e7789a5bdbfad9d1c0af9f3a1eb28c55a0ee3f68e682f905c4eb",
-    url = "https://repo1.maven.org/maven2/com/google/errorprone/error_prone_annotations/2.15.0/error_prone_annotations-2.15.0.jar",
+    sha256 = "ec6f39f068b6ff9ac323c68e28b9299f8c0a80ca512dccb1d4a70f40ac3ec054",
+    url = "https://repo1.maven.org/maven2/com/google/errorprone/error_prone_annotations/2.23.0/error_prone_annotations-2.23.0.jar",
 )
 
 http_jar(
     name = "failureaccess",
-    sha256 = "a171ee4c734dd2da837e4b16be9df4661afab72a41adaf31eb84dfdaf936ca26",
-    url = "https://repo1.maven.org/maven2/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar",
+    sha256 = "8a8f81cf9b359e3f6dfa691a1e776985c061ef2f223c9b2c80753e1b458e8064",
+    url = "https://repo1.maven.org/maven2/com/google/guava/failureaccess/1.0.2/failureaccess-1.0.2.jar",
 )
 
 http_jar(
     name = "gson",
-    sha256 = "378534e339e6e6d50b1736fb3abb76f1c15d1be3f4c13cec6d536412e23da603",
-    url = "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.9.1/gson-2.9.1.jar",
+    sha256 = "4241c14a7727c34feea6507ec801318a3d4a90f070e4525681079fb94ee4c593",
+    url = "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar",
 )
 
 http_jar(
     name = "guava",
-    sha256 = "a42edc9cab792e39fe39bb94f3fca655ed157ff87a8af78e1d6ba5b07c4a00ab",
-    url = "https://repo1.maven.org/maven2/com/google/guava/guava/31.1-jre/guava-31.1-jre.jar",
+    sha256 = "6d4e2b5a118aab62e6e5e29d185a0224eed82c85c40ac3d33cf04a270c3b3744",
+    url = "https://repo1.maven.org/maven2/com/google/guava/guava/32.1.3-jre/guava-32.1.3-jre.jar",
 )
 
 http_jar(
@@ -48,8 +48,8 @@ http_jar(
 
 http_jar(
     name = "j2objc_annotations",
-    sha256 = "21af30c92267bd6122c0e0b4d20cccb6641a37eaf956c6540ec471d584e64a7b",
-    url = "https://repo1.maven.org/maven2/com/google/j2objc/j2objc-annotations/1.3/j2objc-annotations-1.3.jar",
+    sha256 = "f02a95fa1a5e95edb3ed859fd0fb7df709d121a35290eff8b74dce2ab7f4d6ed",
+    url = "https://repo1.maven.org/maven2/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8.jar",
 )
 
 http_jar(
@@ -78,14 +78,14 @@ http_jar(
 
 http_jar(
     name = "truth",
-    sha256 = "fc0b67782289a2aabfddfdf99eff1dcd5edc890d49143fcd489214b107b8f4f3",
-    url = "https://repo1.maven.org/maven2/com/google/truth/truth/1.1.3/truth-1.1.3.jar",
+    sha256 = "7f6d50d6f43a102942ef2c5a05f37a84f77788bb448cf33cceebf86d34e575c0",
+    url = "https://repo1.maven.org/maven2/com/google/truth/truth/1.1.5/truth-1.1.5.jar",
 )
 
 http_jar(
     name = "truth_java8_extension",
-    sha256 = "2bbd32dd2fa9470d17f1bbda4f52b33b60bce4574052c1d46610a0aa371fc446",
-    url = "https://repo1.maven.org/maven2/com/google/truth/extensions/truth-java8-extension/1.1.3/truth-java8-extension-1.1.3.jar",
+    sha256 = "9e3c437ef76c0028d1c87d9f81d599301459333cfb3b50e5bf815ed712745140",
+    url = "https://repo1.maven.org/maven2/com/google/truth/extensions/truth-java8-extension/1.1.5/truth-java8-extension-1.1.5.jar",
 )
 
 # Dependencies required for linting
