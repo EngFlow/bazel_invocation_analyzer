@@ -151,6 +151,7 @@ public class BazelProfileConstants {
   // https://github.com/bazelbuild/bazel/blob/c3ed4b5ab526405df336af94cf91145b682d1d04/src/main/java/com/google/devtools/build/lib/analysis/actions/SymlinkAction.java#L318
   /** For an action that created an executable symlink. */
   public static final String MNEMONIC_EXECUTABLE_SYMLINK = "ExecutableSymlink";
+
   /** For an action that created a non-executable symlink. */
   public static final String MNEMONIC_SYMLINK = "Symlink";
 
