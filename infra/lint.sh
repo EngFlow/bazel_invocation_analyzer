@@ -49,7 +49,7 @@ EOT
 }
 
 JAVA_FORMATTER="$(rlocation com_engflow_bazel_invocation_analyzer/third_party/google-java-format/google-java-format)"
-STARLARK_FORMATTER="$(rlocation com_engflow_bazel_invocation_analyzer/third_party/buildifier/buildifier.exe)"
+STARLARK_FORMATTER="$(rlocation com_engflow_bazel_invocation_analyzer/third_party/buildifier/buildifier)"
 POSITIONAL_ARGS=()
 FIX=
 
