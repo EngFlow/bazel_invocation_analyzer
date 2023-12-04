@@ -1,3 +1,7 @@
+module(
+    name = "com_engflow_bazel_invocation_analyzer",
+)
+
 """Bazel build and test dependencies."""
 
 # =========================================
