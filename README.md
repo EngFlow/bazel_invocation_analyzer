@@ -18,7 +18,7 @@ You can also view this tool's documentation on <https://docs.engflow.com/bia/ind
 
 ## Dependencies
 
-[Bazel](https://bazel.build/) version 4.0+
+[Bazel](https://bazel.build/) version 6.3+
 
 ## CLI
 
