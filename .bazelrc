@@ -1,6 +1,7 @@
 # TODO: Remove once using Bazel 7
 common --enable_bzlmod
 build --incompatible_sandbox_hermetic_tmp
+build --lockfile_mode=update
 
 common --enable_platform_specific_config
 common --experimental_announce_profile_path
