@@ -56,8 +56,9 @@ public class RemoteCacheMetricsDataProviderTest extends DataProviderUnitTestBase
     useProfile(metaData(), trace(mainThread()));
     when(dataManager.getDatum(LocalActions.class)).thenReturn(LocalActions.create(List.of()));
 
-    assertThat(provider.derive().isEmpty()).isTrue();
-    assertThat(provider.derive().getEmptyReason()).isNotNull();
+    assertThat(provider.derive().getCacheCheckDuration()).isEqualTo(Duration.ZERO);
+    assertThat(provider.derive().getDownloadOutputsDuration()).isEqualTo(Duration.ZERO);
+    assertThat(provider.derive().getUploadOutputsDuration()).isEqualTo(Duration.ZERO);
   }
 
   @Test
@@ -105,10 +106,6 @@ public class RemoteCacheMetricsDataProviderTest extends DataProviderUnitTestBase
     Truth.assertThat(provider.derive())
         .isEqualTo(
             new RemoteCacheMetrics(
-                3,
-                2,
-                Duration.ofSeconds(1 + 4 + 8),
-                Duration.ofSeconds(2),
-                Duration.ofSeconds(3 + 7)));
+                Duration.ofSeconds(1 + 4 + 8), Duration.ofSeconds(2), Duration.ofSeconds(3 + 7)));
   }
 }
