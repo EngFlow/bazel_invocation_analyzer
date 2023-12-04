@@ -48,8 +48,8 @@ Examples:
 EOT
 }
 
-JAVA_FORMATTER="$(rlocation com_engflow_bazel_invocation_analyzer/third_party/google-java-format/google-java-format)"
-STARLARK_FORMATTER="$(rlocation com_engflow_bazel_invocation_analyzer/third_party/buildifier/buildifier.exe)"
+JAVA_FORMATTER="$(rlocation "${JAVA_FORMATTER}")"
+STARLARK_FORMATTER="$(rlocation "${STARLARK_FORMATTER}")"
 POSITIONAL_ARGS=()
 FIX=
 
