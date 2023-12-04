@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 3,
-  "moduleFileHash": "6d4778a56445bc125aa0080d729e663f8b30fb5cfad5173fdeb09f2961384276",
+  "moduleFileHash": "95269b4d2bd030b7378f9b71aa96155f5790f87843a00c2c29f003eb50cfdf5b",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -45,20 +45,14 @@
                 "artifacts": [
                   "com.google.code.findbugs:jsr305:3.0.2",
                   "com.google.code.gson:gson:2.10.1",
-                  "com.google.errorprone:error_prone_annotations:2.23.0",
                   "com.google.guava:failureaccess:1.0.2",
                   "com.google.guava:guava:32.1.3-jre",
-                  "com.google.j2objc:j2objc-annotations:2.8",
                   "commons-cli:commons-cli:1.6.0",
                   "com.google.googlejavaformat:google-java-format:1.18.1",
                   "com.google.truth:truth:1.1.5",
                   "com.google.truth.extensions:truth-java8-extension:1.1.5",
                   "junit:junit:4.13.2",
-                  "net.bytebuddy:byte-buddy-agent:1.14.10",
-                  "net.bytebuddy:byte-buddy:1.14.10",
-                  "org.hamcrest:hamcrest-core:2.2",
-                  "org.mockito:mockito-core:5.7.0",
-                  "org.objenesis:objenesis:3.3"
+                  "org.mockito:mockito-core:5.7.0"
                 ],
                 "fail_if_repin_required": true,
                 "lock_file": "//:maven_install.json",
@@ -1634,7 +1628,7 @@
       "general": {
         "bzlTransitiveDigest": "sFLB4h0EYwq5r+zPf3smCrNkZbu/ZZQn3CXcRM/lHRw=",
         "accumulatedFileDigests": {
-          "@@//:maven_install.json": "b53fb02dec0ca835ba48753b125c9481c59162be431192336fd7ba4b6c3a5a89",
+          "@@//:maven_install.json": "dbc42a0711464ea2ad808fad926c6a4e5e3abdc1e5f90780acec0393464e551a",
           "@@rules_jvm_external~5.3//:rules_jvm_external_deps_install.json": "741ab2ef3843a43eaacb45d1448835c9deb99c95162279f513096eface8acd44"
         },
         "envVariables": {},
@@ -1701,18 +1695,6 @@
                 "https://maven.google.com/io/perfmark/perfmark-api/0.26.0/perfmark-api-0.26.0.jar"
               ],
               "downloaded_file_path": "io/perfmark/perfmark-api/0.26.0/perfmark-api-0.26.0.jar"
-            }
-          },
-          "net_bytebuddy_byte_buddy_agent_jar_sources_1_14_10": {
-            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-            "ruleClassName": "http_file",
-            "attributes": {
-              "name": "rules_jvm_external~5.3~maven~net_bytebuddy_byte_buddy_agent_jar_sources_1_14_10",
-              "sha256": "aebd1ea7ef0cf57d7ce3dfcf7ab73479c5a8158144a4d2bece6dd2587674b3ea",
-              "urls": [
-                "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.14.10/byte-buddy-agent-1.14.10-sources.jar"
-              ],
-              "downloaded_file_path": "net/bytebuddy/byte-buddy-agent/1.14.10/byte-buddy-agent-1.14.10-sources.jar"
             }
           },
           "io_netty_netty_codec_http2_4_1_86_Final": {
@@ -1893,18 +1875,6 @@
               "downloaded_file_path": "org/codehaus/mojo/animal-sniffer-annotations/1.23/animal-sniffer-annotations-1.23.jar"
             }
           },
-          "com_google_errorprone_error_prone_annotations_2_23_0": {
-            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-            "ruleClassName": "http_file",
-            "attributes": {
-              "name": "rules_jvm_external~5.3~maven~com_google_errorprone_error_prone_annotations_2_23_0",
-              "sha256": "ec6f39f068b6ff9ac323c68e28b9299f8c0a80ca512dccb1d4a70f40ac3ec054",
-              "urls": [
-                "https://repo1.maven.org/maven2/com/google/errorprone/error_prone_annotations/2.23.0/error_prone_annotations-2.23.0.jar"
-              ],
-              "downloaded_file_path": "com/google/errorprone/error_prone_annotations/2.23.0/error_prone_annotations-2.23.0.jar"
-            }
-          },
           "software_amazon_eventstream_eventstream_1_0_1": {
             "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
             "ruleClassName": "http_file",
@@ -1931,30 +1901,6 @@
               "downloaded_file_path": "io/grpc/grpc-core/1.55.1/grpc-core-1.55.1.jar"
             }
           },
-          "net_bytebuddy_byte_buddy_agent_1_14_10": {
-            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-            "ruleClassName": "http_file",
-            "attributes": {
-              "name": "rules_jvm_external~5.3~maven~net_bytebuddy_byte_buddy_agent_1_14_10",
-              "sha256": "67993a89d47ca58ff868802a4448ddd150e5fe4e5a5645ded990d7b4d557a6b9",
-              "urls": [
-                "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.14.10/byte-buddy-agent-1.14.10.jar"
-              ],
-              "downloaded_file_path": "net/bytebuddy/byte-buddy-agent/1.14.10/byte-buddy-agent-1.14.10.jar"
-            }
-          },
-          "org_hamcrest_hamcrest_jar_sources_2_2": {
-            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-            "ruleClassName": "http_file",
-            "attributes": {
-              "name": "rules_jvm_external~5.3~maven~org_hamcrest_hamcrest_jar_sources_2_2",
-              "sha256": "f49e697dbc70591f91a90dd7f741f5780f53f63f34a416d6a9879499d4d666af",
-              "urls": [
-                "https://repo1.maven.org/maven2/org/hamcrest/hamcrest/2.2/hamcrest-2.2-sources.jar"
-              ],
-              "downloaded_file_path": "org/hamcrest/hamcrest/2.2/hamcrest-2.2-sources.jar"
-            }
-          },
           "com_google_code_gson_gson_2_10_1": {
             "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
             "ruleClassName": "http_file",
@@ -1978,18 +1924,6 @@
                 "https://maven.google.com/com/google/api/grpc/grpc-google-cloud-storage-v2/2.22.3-alpha/grpc-google-cloud-storage-v2-2.22.3-alpha.jar"
               ],
               "downloaded_file_path": "com/google/api/grpc/grpc-google-cloud-storage-v2/2.22.3-alpha/grpc-google-cloud-storage-v2-2.22.3-alpha.jar"
-            }
-          },
-          "org_hamcrest_hamcrest_2_2": {
-            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-            "ruleClassName": "http_file",
-            "attributes": {
-              "name": "rules_jvm_external~5.3~maven~org_hamcrest_hamcrest_2_2",
-              "sha256": "5e62846a89f05cd78cd9c1a553f340d002458380c320455dd1f8fc5497a8a1c1",
-              "urls": [
-                "https://repo1.maven.org/maven2/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar"
-              ],
-              "downloaded_file_path": "org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar"
             }
           },
           "com_google_truth_extensions_truth_java8_extension_jar_sources_1_1_5": {
@@ -2129,20 +2063,14 @@
               "artifacts": [
                 "{ \"group\": \"com.google.code.findbugs\", \"artifact\": \"jsr305\", \"version\": \"3.0.2\" }",
                 "{ \"group\": \"com.google.code.gson\", \"artifact\": \"gson\", \"version\": \"2.10.1\" }",
-                "{ \"group\": \"com.google.errorprone\", \"artifact\": \"error_prone_annotations\", \"version\": \"2.23.0\" }",
                 "{ \"group\": \"com.google.guava\", \"artifact\": \"failureaccess\", \"version\": \"1.0.2\" }",
                 "{ \"group\": \"com.google.guava\", \"artifact\": \"guava\", \"version\": \"32.1.3-jre\" }",
-                "{ \"group\": \"com.google.j2objc\", \"artifact\": \"j2objc-annotations\", \"version\": \"2.8\" }",
                 "{ \"group\": \"commons-cli\", \"artifact\": \"commons-cli\", \"version\": \"1.6.0\" }",
                 "{ \"group\": \"com.google.googlejavaformat\", \"artifact\": \"google-java-format\", \"version\": \"1.18.1\" }",
                 "{ \"group\": \"com.google.truth\", \"artifact\": \"truth\", \"version\": \"1.1.5\" }",
                 "{ \"group\": \"com.google.truth.extensions\", \"artifact\": \"truth-java8-extension\", \"version\": \"1.1.5\" }",
                 "{ \"group\": \"junit\", \"artifact\": \"junit\", \"version\": \"4.13.2\" }",
-                "{ \"group\": \"net.bytebuddy\", \"artifact\": \"byte-buddy-agent\", \"version\": \"1.14.10\" }",
-                "{ \"group\": \"net.bytebuddy\", \"artifact\": \"byte-buddy\", \"version\": \"1.14.10\" }",
-                "{ \"group\": \"org.hamcrest\", \"artifact\": \"hamcrest-core\", \"version\": \"2.2\" }",
                 "{ \"group\": \"org.mockito\", \"artifact\": \"mockito-core\", \"version\": \"5.7.0\" }",
-                "{ \"group\": \"org.objenesis\", \"artifact\": \"objenesis\", \"version\": \"3.3\" }",
                 "{ \"group\": \"com.google.code.findbugs\", \"artifact\": \"jsr305\", \"version\": \"3.0.2\" }",
                 "{ \"group\": \"com.google.code.gson\", \"artifact\": \"gson\", \"version\": \"2.8.9\" }",
                 "{ \"group\": \"com.google.errorprone\", \"artifact\": \"error_prone_annotations\", \"version\": \"2.3.2\" }",
@@ -2340,6 +2268,18 @@
               "downloaded_file_path": "org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14.jar"
             }
           },
+          "com_google_errorprone_error_prone_annotations_jar_sources_2_21_1": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_file",
+            "attributes": {
+              "name": "rules_jvm_external~5.3~maven~com_google_errorprone_error_prone_annotations_jar_sources_2_21_1",
+              "sha256": "29012a51bb8d7d7bdd7db882f46dec8cccb36b40f34b6e5de2ec7dd647b372ca",
+              "urls": [
+                "https://repo1.maven.org/maven2/com/google/errorprone/error_prone_annotations/2.21.1/error_prone_annotations-2.21.1-sources.jar"
+              ],
+              "downloaded_file_path": "com/google/errorprone/error_prone_annotations/2.21.1/error_prone_annotations-2.21.1-sources.jar"
+            }
+          },
           "io_grpc_grpc_auth_1_55_1": {
             "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
             "ruleClassName": "http_file",
@@ -2390,18 +2330,6 @@
                 "https://maven.google.com/com/google/cloud/google-cloud-storage/2.22.3/google-cloud-storage-2.22.3.jar"
               ],
               "downloaded_file_path": "com/google/cloud/google-cloud-storage/2.22.3/google-cloud-storage-2.22.3.jar"
-            }
-          },
-          "org_hamcrest_hamcrest_core_jar_sources_2_2": {
-            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-            "ruleClassName": "http_file",
-            "attributes": {
-              "name": "rules_jvm_external~5.3~maven~org_hamcrest_hamcrest_core_jar_sources_2_2",
-              "sha256": "35e1bf1710a410384209b4448073747454e3320afac1cc1de73e5d30b0136c7a",
-              "urls": [
-                "https://repo1.maven.org/maven2/org/hamcrest/hamcrest-core/2.2/hamcrest-core-2.2-sources.jar"
-              ],
-              "downloaded_file_path": "org/hamcrest/hamcrest-core/2.2/hamcrest-core-2.2-sources.jar"
             }
           },
           "org_codehaus_plexus_plexus_utils_3_5_1": {
@@ -2816,6 +2744,18 @@
               "downloaded_file_path": "software/amazon/awssdk/aws-xml-protocol/2.20.78/aws-xml-protocol-2.20.78.jar"
             }
           },
+          "com_google_errorprone_error_prone_annotations_2_21_1": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_file",
+            "attributes": {
+              "name": "rules_jvm_external~5.3~maven~com_google_errorprone_error_prone_annotations_2_21_1",
+              "sha256": "d1f3c66aa91ac52549e00ae3b208ba4b9af7d72d68f230643553beb38e6118ac",
+              "urls": [
+                "https://repo1.maven.org/maven2/com/google/errorprone/error_prone_annotations/2.21.1/error_prone_annotations-2.21.1.jar"
+              ],
+              "downloaded_file_path": "com/google/errorprone/error_prone_annotations/2.21.1/error_prone_annotations-2.21.1.jar"
+            }
+          },
           "com_google_http_client_google_http_client_appengine_1_43_1": {
             "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
             "ruleClassName": "http_file",
@@ -2829,6 +2769,18 @@
               "downloaded_file_path": "com/google/http-client/google-http-client-appengine/1.43.1/google-http-client-appengine-1.43.1.jar"
             }
           },
+          "net_bytebuddy_byte_buddy_jar_sources_1_14_9": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_file",
+            "attributes": {
+              "name": "rules_jvm_external~5.3~maven~net_bytebuddy_byte_buddy_jar_sources_1_14_9",
+              "sha256": "4039b20d06895bf0449161dd5f1cbbc2e81004af196d5b42c5536b91db8e0315",
+              "urls": [
+                "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy/1.14.9/byte-buddy-1.14.9-sources.jar"
+              ],
+              "downloaded_file_path": "net/bytebuddy/byte-buddy/1.14.9/byte-buddy-1.14.9-sources.jar"
+            }
+          },
           "maven": {
             "bzlFile": "@@rules_jvm_external~5.3//:coursier.bzl",
             "ruleClassName": "pinned_coursier_fetch",
@@ -2840,20 +2792,14 @@
               "artifacts": [
                 "{ \"group\": \"com.google.code.findbugs\", \"artifact\": \"jsr305\", \"version\": \"3.0.2\" }",
                 "{ \"group\": \"com.google.code.gson\", \"artifact\": \"gson\", \"version\": \"2.10.1\" }",
-                "{ \"group\": \"com.google.errorprone\", \"artifact\": \"error_prone_annotations\", \"version\": \"2.23.0\" }",
                 "{ \"group\": \"com.google.guava\", \"artifact\": \"failureaccess\", \"version\": \"1.0.2\" }",
                 "{ \"group\": \"com.google.guava\", \"artifact\": \"guava\", \"version\": \"32.1.3-jre\" }",
-                "{ \"group\": \"com.google.j2objc\", \"artifact\": \"j2objc-annotations\", \"version\": \"2.8\" }",
                 "{ \"group\": \"commons-cli\", \"artifact\": \"commons-cli\", \"version\": \"1.6.0\" }",
                 "{ \"group\": \"com.google.googlejavaformat\", \"artifact\": \"google-java-format\", \"version\": \"1.18.1\" }",
                 "{ \"group\": \"com.google.truth\", \"artifact\": \"truth\", \"version\": \"1.1.5\" }",
                 "{ \"group\": \"com.google.truth.extensions\", \"artifact\": \"truth-java8-extension\", \"version\": \"1.1.5\" }",
                 "{ \"group\": \"junit\", \"artifact\": \"junit\", \"version\": \"4.13.2\" }",
-                "{ \"group\": \"net.bytebuddy\", \"artifact\": \"byte-buddy-agent\", \"version\": \"1.14.10\" }",
-                "{ \"group\": \"net.bytebuddy\", \"artifact\": \"byte-buddy\", \"version\": \"1.14.10\" }",
-                "{ \"group\": \"org.hamcrest\", \"artifact\": \"hamcrest-core\", \"version\": \"2.2\" }",
                 "{ \"group\": \"org.mockito\", \"artifact\": \"mockito-core\", \"version\": \"5.7.0\" }",
-                "{ \"group\": \"org.objenesis\", \"artifact\": \"objenesis\", \"version\": \"3.3\" }",
                 "{ \"group\": \"com.google.code.findbugs\", \"artifact\": \"jsr305\", \"version\": \"3.0.2\" }",
                 "{ \"group\": \"com.google.code.gson\", \"artifact\": \"gson\", \"version\": \"2.8.9\" }",
                 "{ \"group\": \"com.google.errorprone\", \"artifact\": \"error_prone_annotations\", \"version\": \"2.3.2\" }",
@@ -2946,6 +2892,18 @@
                 "https://repo1.maven.org/maven2/junit/junit/4.13.2/junit-4.13.2.jar"
               ],
               "downloaded_file_path": "junit/junit/4.13.2/junit-4.13.2.jar"
+            }
+          },
+          "org_hamcrest_hamcrest_core_jar_sources_1_3": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_file",
+            "attributes": {
+              "name": "rules_jvm_external~5.3~maven~org_hamcrest_hamcrest_core_jar_sources_1_3",
+              "sha256": "e223d2d8fbafd66057a8848cc94222d63c3cedd652cc48eddc0ab5c39c0f84df",
+              "urls": [
+                "https://repo1.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar"
+              ],
+              "downloaded_file_path": "org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar"
             }
           },
           "com_google_truth_extensions_truth_java8_extension_1_1_5": {
@@ -3049,6 +3007,18 @@
               "downloaded_file_path": "com/google/googlejavaformat/google-java-format/1.18.1/google-java-format-1.18.1.jar"
             }
           },
+          "org_hamcrest_hamcrest_core_1_3": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_file",
+            "attributes": {
+              "name": "rules_jvm_external~5.3~maven~org_hamcrest_hamcrest_core_1_3",
+              "sha256": "66fdef91e9739348df7a096aa384a5685f4e875584cce89386a7a47251c4d8e9",
+              "urls": [
+                "https://repo1.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar"
+              ],
+              "downloaded_file_path": "org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar"
+            }
+          },
           "org_mockito_mockito_core_5_7_0": {
             "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
             "ruleClassName": "http_file",
@@ -3099,6 +3069,18 @@
               "downloaded_file_path": "software/amazon/awssdk/http-client-spi/2.20.78/http-client-spi-2.20.78.jar"
             }
           },
+          "net_bytebuddy_byte_buddy_agent_1_14_9": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_file",
+            "attributes": {
+              "name": "rules_jvm_external~5.3~maven~net_bytebuddy_byte_buddy_agent_1_14_9",
+              "sha256": "11ed107d4b78e55f8c3d34250494375081a29bc125a1f5c56db582ccdd48835f",
+              "urls": [
+                "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.14.9/byte-buddy-agent-1.14.9.jar"
+              ],
+              "downloaded_file_path": "net/bytebuddy/byte-buddy-agent/1.14.9/byte-buddy-agent-1.14.9.jar"
+            }
+          },
           "unpinned_rules_jvm_external_deps": {
             "bzlFile": "@@rules_jvm_external~5.3//:coursier.bzl",
             "ruleClassName": "coursier_fetch",
@@ -3138,6 +3120,18 @@
               "use_starlark_android_rules": false,
               "aar_import_bzl_label": "@build_bazel_rules_android//android:rules.bzl",
               "duplicate_version_warning": "warn"
+            }
+          },
+          "net_bytebuddy_byte_buddy_agent_jar_sources_1_14_9": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_file",
+            "attributes": {
+              "name": "rules_jvm_external~5.3~maven~net_bytebuddy_byte_buddy_agent_jar_sources_1_14_9",
+              "sha256": "01ba24ea9e0c83e6e8a6d96d5476bd2860a26bc98994af747a6cbd7b015ca85f",
+              "urls": [
+                "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy-agent/1.14.9/byte-buddy-agent-1.14.9-sources.jar"
+              ],
+              "downloaded_file_path": "net/bytebuddy/byte-buddy-agent/1.14.9/byte-buddy-agent-1.14.9-sources.jar"
             }
           },
           "software_amazon_awssdk_endpoints_spi_2_20_78": {
@@ -3205,6 +3199,18 @@
               "downloaded_file_path": "io/netty/netty-codec/4.1.86.Final/netty-codec-4.1.86.Final.jar"
             }
           },
+          "net_bytebuddy_byte_buddy_1_14_9": {
+            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
+            "ruleClassName": "http_file",
+            "attributes": {
+              "name": "rules_jvm_external~5.3~maven~net_bytebuddy_byte_buddy_1_14_9",
+              "sha256": "377352e253282bf86f731ac90ed88348e8f40a63ce033c00a85982de7e790e6f",
+              "urls": [
+                "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy/1.14.9/byte-buddy-1.14.9.jar"
+              ],
+              "downloaded_file_path": "net/bytebuddy/byte-buddy/1.14.9/byte-buddy-1.14.9.jar"
+            }
+          },
           "com_google_truth_truth_1_1_5": {
             "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
             "ruleClassName": "http_file",
@@ -3255,18 +3261,6 @@
               "downloaded_file_path": "com/google/guava/guava-testlib/31.1-jre/guava-testlib-31.1-jre-sources.jar"
             }
           },
-          "net_bytebuddy_byte_buddy_jar_sources_1_14_10": {
-            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-            "ruleClassName": "http_file",
-            "attributes": {
-              "name": "rules_jvm_external~5.3~maven~net_bytebuddy_byte_buddy_jar_sources_1_14_10",
-              "sha256": "b932ec3a175b8c01647fc6f93c3b406e3d7af118ff6496ea8c5903e66458265e",
-              "urls": [
-                "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy/1.14.10/byte-buddy-1.14.10-sources.jar"
-              ],
-              "downloaded_file_path": "net/bytebuddy/byte-buddy/1.14.10/byte-buddy-1.14.10-sources.jar"
-            }
-          },
           "com_google_j2objc_j2objc_annotations_2_8": {
             "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
             "ruleClassName": "http_file",
@@ -3303,30 +3297,6 @@
                 "https://maven.google.com/software/amazon/awssdk/utils/2.20.78/utils-2.20.78.jar"
               ],
               "downloaded_file_path": "software/amazon/awssdk/utils/2.20.78/utils-2.20.78.jar"
-            }
-          },
-          "com_google_errorprone_error_prone_annotations_jar_sources_2_23_0": {
-            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-            "ruleClassName": "http_file",
-            "attributes": {
-              "name": "rules_jvm_external~5.3~maven~com_google_errorprone_error_prone_annotations_jar_sources_2_23_0",
-              "sha256": "5b4504609bb93d3c24b87cd839cf0bb7d878135d0a917a05081d0dc9b2a9973f",
-              "urls": [
-                "https://repo1.maven.org/maven2/com/google/errorprone/error_prone_annotations/2.23.0/error_prone_annotations-2.23.0-sources.jar"
-              ],
-              "downloaded_file_path": "com/google/errorprone/error_prone_annotations/2.23.0/error_prone_annotations-2.23.0-sources.jar"
-            }
-          },
-          "net_bytebuddy_byte_buddy_1_14_10": {
-            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-            "ruleClassName": "http_file",
-            "attributes": {
-              "name": "rules_jvm_external~5.3~maven~net_bytebuddy_byte_buddy_1_14_10",
-              "sha256": "30e6e0446437a67db37e2b7f7d33f50787ddfd970359319dfd05469daa2dcbce",
-              "urls": [
-                "https://repo1.maven.org/maven2/net/bytebuddy/byte-buddy/1.14.10/byte-buddy-1.14.10.jar"
-              ],
-              "downloaded_file_path": "net/bytebuddy/byte-buddy/1.14.10/byte-buddy-1.14.10.jar"
             }
           },
           "com_google_api_grpc_proto_google_common_protos_2_19_1": {
@@ -3529,18 +3499,6 @@
                 "https://repo1.maven.org/maven2/com/google/auto/value/auto-value-annotations/1.10.1/auto-value-annotations-1.10.1-sources.jar"
               ],
               "downloaded_file_path": "com/google/auto/value/auto-value-annotations/1.10.1/auto-value-annotations-1.10.1-sources.jar"
-            }
-          },
-          "org_hamcrest_hamcrest_core_2_2": {
-            "bzlFile": "@@bazel_tools//tools/build_defs/repo:http.bzl",
-            "ruleClassName": "http_file",
-            "attributes": {
-              "name": "rules_jvm_external~5.3~maven~org_hamcrest_hamcrest_core_2_2",
-              "sha256": "094f5d92b4b7d9c8a2bf53cc69d356243ae89c3499457bcb4b92f7ed3bf95879",
-              "urls": [
-                "https://repo1.maven.org/maven2/org/hamcrest/hamcrest-core/2.2/hamcrest-core-2.2.jar"
-              ],
-              "downloaded_file_path": "org/hamcrest/hamcrest-core/2.2/hamcrest-core-2.2.jar"
             }
           },
           "com_google_api_grpc_proto_google_cloud_storage_v2_2_22_3_alpha": {
