@@ -24,8 +24,8 @@ public class InstantEvent {
   private final Timestamp timestamp;
 
   public InstantEvent(JsonObject event) {
-    this.category = event.get(TraceEventFormatConstants.EVENT_CATEGORY).getAsString();
-    this.name = event.get(TraceEventFormatConstants.EVENT_NAME).getAsString();
+    this.category = event.get(TraceEventFormatConstants.EVENT_CATEGORY).getAsString().intern();
+    this.name = event.get(TraceEventFormatConstants.EVENT_NAME).getAsString().intern();
     this.timestamp =
         Timestamp.ofMicros(event.get(TraceEventFormatConstants.EVENT_TIMESTAMP).getAsLong());
   }

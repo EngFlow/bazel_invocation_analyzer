@@ -24,7 +24,7 @@ public class CounterEvent {
   private final double totalValue;
 
   public CounterEvent(JsonObject event) {
-    this.name = event.get(TraceEventFormatConstants.EVENT_NAME).getAsString();
+    this.name = event.get(TraceEventFormatConstants.EVENT_NAME).getAsString().intern();
     this.timestamp =
         Timestamp.ofMicros(event.get(TraceEventFormatConstants.EVENT_TIMESTAMP).getAsLong());
 
