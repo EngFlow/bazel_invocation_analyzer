@@ -22,7 +22,6 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import java.time.Duration;
-import java.util.Map.Entry;
 import javax.annotation.Nullable;
 
 public class CompleteEvent {
@@ -38,10 +37,10 @@ public class CompleteEvent {
   public CompleteEvent(JsonObject object) {
     this(
         object.has(TraceEventFormatConstants.EVENT_NAME)
-            ? object.get(TraceEventFormatConstants.EVENT_NAME).getAsString()
+            ? object.get(TraceEventFormatConstants.EVENT_NAME).getAsString().intern()
             : null,
         object.has(TraceEventFormatConstants.EVENT_CATEGORY)
-            ? object.get(TraceEventFormatConstants.EVENT_CATEGORY).getAsString()
+            ? object.get(TraceEventFormatConstants.EVENT_CATEGORY).getAsString().intern()
             : null,
         Timestamp.ofMicros(object.get(TraceEventFormatConstants.EVENT_TIMESTAMP).getAsLong()),
         TimeUtil.getDurationForMicros(
@@ -54,7 +53,9 @@ public class CompleteEvent {
                 .getAsJsonObject()
                 .entrySet()
                 .stream()
-                .collect(toImmutableMap(Entry::getKey, e1 -> e1.getValue().getAsString()))
+                .collect(
+                    toImmutableMap(
+                        e -> e.getKey().intern(), e -> e.getValue().getAsString().intern()))
             : ImmutableMap.of());
   }
 
