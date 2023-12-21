@@ -27,14 +27,15 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,68 +78,77 @@ public class BazelProfile implements Datum {
 
   public static BazelProfile createFromInputStream(InputStream inputStream)
       throws IllegalArgumentException {
-    JsonObject bazelProfile;
-    try {
-      bazelProfile = JsonParser.parseReader(new InputStreamReader(inputStream)).getAsJsonObject();
-    } catch (IllegalStateException e) {
-      throw new IllegalArgumentException("Could not parse Bazel profile.", e);
-    }
-    return new BazelProfile(bazelProfile);
+    return new BazelProfile(
+        new JsonReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)));
   }
 
   private final BazelVersion bazelVersion;
   private final Map<String, String> otherData = new HashMap<>();
   private final Map<ThreadId, ProfileThread> threads = new HashMap<>();
 
-  private BazelProfile(JsonObject profile) {
-    if (!profile.has(TraceEventFormatConstants.SECTION_OTHER_DATA)
-        || !profile.has(TraceEventFormatConstants.SECTION_TRACE_EVENTS)) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Invalid profile, JSON file missing \"%s\" and/or \"%s\"",
-              TraceEventFormatConstants.SECTION_OTHER_DATA,
-              TraceEventFormatConstants.SECTION_TRACE_EVENTS));
-    }
+  private BazelProfile(JsonReader profileReader) {
     try {
-      profile
-          .get(TraceEventFormatConstants.SECTION_OTHER_DATA)
-          .getAsJsonObject()
-          .entrySet()
-          .forEach(entry -> otherData.put(entry.getKey(), entry.getValue().getAsString()));
-      this.bazelVersion =
-          BazelVersion.parse(otherData.get(BazelProfileConstants.OTHER_DATA_BAZEL_VERSION));
-
-      profile
-          .get(TraceEventFormatConstants.SECTION_TRACE_EVENTS)
-          .getAsJsonArray()
-          .forEach(
-              element -> {
-                JsonObject object = element.getAsJsonObject();
-                int pid;
-                int tid;
-                try {
-                  pid = object.get(TraceEventFormatConstants.EVENT_PROCESS_ID).getAsInt();
-                  tid = object.get(TraceEventFormatConstants.EVENT_THREAD_ID).getAsInt();
-                } catch (Exception e) {
-                  // Skip events that do not have a valid pid or tid.
-                  return;
-                }
-                ThreadId threadId = new ThreadId(pid, tid);
-                ProfileThread profileThread =
-                    threads.compute(
-                        threadId,
-                        (key, t) -> {
-                          if (t == null) {
-                            t = new ProfileThread(threadId);
-                          }
-                          return t;
-                        });
-                // TODO: Use success response to take action on errant events.
-                profileThread.addEvent(object);
-              });
-    } catch (IllegalStateException e) {
+      boolean hasOtherData = false;
+      boolean hasTraceEvents = false;
+      profileReader.beginObject();
+      while (profileReader.hasNext()) {
+        switch (profileReader.nextName()) {
+          case TraceEventFormatConstants.SECTION_OTHER_DATA:
+            hasOtherData = true;
+            profileReader.beginObject();
+            while (profileReader.hasNext()) {
+              otherData.put(profileReader.nextName(), profileReader.nextString());
+            }
+            profileReader.endObject();
+            break;
+          case TraceEventFormatConstants.SECTION_TRACE_EVENTS:
+            hasTraceEvents = true;
+            profileReader.beginArray();
+            while (profileReader.hasNext()) {
+              var traceEvent = JsonParser.parseReader(profileReader).getAsJsonObject();
+              int pid;
+              int tid;
+              try {
+                pid = traceEvent.get(TraceEventFormatConstants.EVENT_PROCESS_ID).getAsInt();
+                tid = traceEvent.get(TraceEventFormatConstants.EVENT_THREAD_ID).getAsInt();
+              } catch (Exception e) {
+                // Skip events that do not have a valid pid or tid.
+                continue;
+              }
+              ThreadId threadId = new ThreadId(pid, tid);
+              ProfileThread profileThread =
+                  threads.compute(
+                      threadId,
+                      (key, t) -> {
+                        if (t == null) {
+                          t = new ProfileThread(threadId);
+                        }
+                        return t;
+                      });
+              // TODO: Use success response to take action on errant events.
+              profileThread.addEvent(traceEvent);
+            }
+            profileReader.endArray();
+            break;
+          default:
+            // We only care about otherData and traceEvents.
+            profileReader.skipValue();
+        }
+      }
+      profileReader.endObject();
+      if (!hasOtherData || !hasTraceEvents) {
+        throw new IllegalArgumentException(
+            String.format(
+                "Invalid profile, JSON file missing \"%s\" and/or \"%s\"",
+                TraceEventFormatConstants.SECTION_OTHER_DATA,
+                TraceEventFormatConstants.SECTION_TRACE_EVENTS));
+      }
+    } catch (IllegalStateException | IOException e) {
       throw new IllegalArgumentException("Could not parse Bazel profile.", e);
     }
+
+    this.bazelVersion =
+        BazelVersion.parse(otherData.get(BazelProfileConstants.OTHER_DATA_BAZEL_VERSION));
 
     if (!containsMainThread()) {
       throw new IllegalArgumentException(
