@@ -35,6 +35,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +78,8 @@ public class BazelProfile implements Datum {
 
   public static BazelProfile createFromInputStream(InputStream inputStream)
       throws IllegalArgumentException {
-    return new BazelProfile(new JsonReader(new InputStreamReader(inputStream)));
+    return new BazelProfile(
+        new JsonReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)));
   }
 
   private final BazelVersion bazelVersion;
