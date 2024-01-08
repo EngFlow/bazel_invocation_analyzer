@@ -1,6 +1,14 @@
 common --enable_platform_specific_config
 common --experimental_announce_profile_path
 
+coverage --combined_report=lcov
+# These are required to make coverage work.
+coverage --experimental_fetch_all_coverage_outputs
+coverage --experimental_split_coverage_postprocessing
+# The Coverage report generator can't run remotely because it's missing some
+# RE platform options (especially containerImage).
+coverage --strategy=CoverageReport=local
+
 build --explicit_java_test_deps
 build --nostamp
 build --incompatible_strict_action_env
