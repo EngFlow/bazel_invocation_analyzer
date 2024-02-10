@@ -9,7 +9,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Build
         run: |
           bazel build //...
@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Lint
         run: |
           bazel run //infra:lint -- "$(pwd)"
