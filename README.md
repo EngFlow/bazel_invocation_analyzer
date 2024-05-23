@@ -20,6 +20,8 @@ You can also view this tool's documentation on <https://docs.engflow.com/bia/ind
 
 [Bazel](https://bazel.build/) version 6.3+
 
+We recommend using [Bazelisk](https://bazel.build/install/bazelisk).
+
 ## CLI
 
 The Bazel Invocation Analyzer can be run in a terminal. In this mode it will print out the analysis results directly to the console.
