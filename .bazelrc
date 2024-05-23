@@ -1,3 +1,8 @@
+# Required for Bazel versions <7, where bzlmod is not enabled by default
+common --enable_bzlmod
+build --incompatible_sandbox_hermetic_tmp
+build --lockfile_mode=update
+
 common --enable_platform_specific_config
 common --experimental_announce_profile_path
 
