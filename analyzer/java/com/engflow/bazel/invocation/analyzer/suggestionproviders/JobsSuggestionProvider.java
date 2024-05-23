@@ -78,7 +78,7 @@ public class JobsSuggestionProvider extends SuggestionProviderBase {
           return SuggestionProviderUtil.createSuggestionOutputForEmptyInput(
               ANALYZER_CLASSNAME, EMPTY_REASON_PREFIX + coresUsed.getEmptyReason());
         }
-        String title = "Unset the value of of the Bazel flag --jobs";
+        String title = "Unset the value of the Bazel flag --jobs";
         String recommendation =
             "For local builds, setting the Bazel flag --jobs to a number is not"
                 + " recommended. Instead, omit this flag or set the value to \"auto\".\n"
