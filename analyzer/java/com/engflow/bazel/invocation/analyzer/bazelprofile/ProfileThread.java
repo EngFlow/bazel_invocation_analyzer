@@ -117,14 +117,14 @@ public class ProfileThread {
       switch (event.get(TraceEventFormatConstants.EVENT_PHASE).getAsString()) {
         case TraceEventFormatConstants.PHASE_COMPLETE: // Complete events
           {
-            completeEvents.add(new CompleteEvent(event));
+            completeEvents.add(CompleteEvent.fromJson(event));
             break;
           }
 
         case "I": // Deprecated, fall-through
         case TraceEventFormatConstants.PHASE_INSTANT: // Instant events
           {
-            InstantEvent instantEvent = new InstantEvent(event);
+            InstantEvent instantEvent = InstantEvent.fromJson(event);
 
             List<InstantEvent> instantList =
                 instants.compute(
@@ -142,7 +142,7 @@ public class ProfileThread {
 
         case TraceEventFormatConstants.PHASE_COUNTER: // Counter events
           {
-            CounterEvent counterEvent = new CounterEvent(event);
+            CounterEvent counterEvent = CounterEvent.fromJson(event);
 
             List<CounterEvent> countList =
                 counts.compute(
