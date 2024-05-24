@@ -78,7 +78,6 @@ public class TotalQueuingDurationDataProviderTest extends DataProviderUnitTestBa
     verify(dataManager).getDatum(BazelProfile.class);
     verifyNoMoreInteractions(dataManager);
 
-    assertThat(provider.getTotalQueuingDuration().getTotalQueuingDuration())
-        .isEqualTo(Duration.ZERO);
+    assertThat(queuing.getTotalQueuingDuration()).isEqualTo(Duration.ZERO);
   }
 }
