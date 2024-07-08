@@ -11,7 +11,7 @@ module(
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "buildifier_prebuilt", version = "6.4.0")
 bazel_dep(name = "platforms", version = "0.0.10")
-bazel_dep(name = "rules_jvm_external", version = "5.3")
+bazel_dep(name = "rules_jvm_external", version = "6.2")
 bazel_dep(name = "rules_proto", version = "6.0.2")
 bazel_dep(name = "protobuf", version = "27.2")
 
@@ -34,11 +34,11 @@ maven.install(
         "junit:junit:4.13.2",
         "org.mockito:mockito-core:5.12.0",
     ],
-    # When updating versions, run `REPIN=1 bazel run @unpinned_maven//:pin`
+    # When updating versions, run `REPIN=1 bazel run @maven//:pin`
     fail_if_repin_required = True,
     lock_file = "//:maven_install.json",
     repositories = [
         "https://repo1.maven.org/maven2",
     ],
 )
-use_repo(maven, "maven", "unpinned_maven")
+use_repo(maven, "maven")
