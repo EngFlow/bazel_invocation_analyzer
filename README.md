@@ -47,5 +47,6 @@ We welcome contributions from the community. Read our [guide to contributing](ht
 
 ## References
 
-- [Generating a Bazel profile](https://docs.engflow.com/docs/re/faq.html#how-do-i-capture-a-bazel-profile)
+- [Generating a Bazel
+  profile](https://docs.engflow.com/re/faq.html#how-do-i-capture-a-bazel-profile)
 - [Interpreting a Bazel profile](https://bazel.build/rules/performance#performance-profiling)
