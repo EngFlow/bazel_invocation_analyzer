@@ -51,17 +51,18 @@ public class DatumSupplierTest {
     CountDownLatch startLatch = new CountDownLatch(1);
     CountDownLatch endLatch = new CountDownLatch(100);
     for (int i = 0; i < 100; ++i) {
-      executorService.submit(
-          () -> {
-            try {
-              startLatch.await();
-              supplier.supply();
-              retrievalCount.getAndIncrement();
-              endLatch.countDown();
-            } catch (Throwable e) {
-              throw new IllegalStateException(e);
-            }
-          });
+      var unused =
+          executorService.submit(
+              () -> {
+                try {
+                  startLatch.await();
+                  supplier.supply();
+                  retrievalCount.getAndIncrement();
+                  endLatch.countDown();
+                } catch (Throwable e) {
+                  throw new IllegalStateException(e);
+                }
+              });
     }
     startLatch.countDown();
     endLatch.await();
