@@ -1,3 +1,5 @@
+load("@rules_java//java:defs.bzl", "java_library")
+
 java_library(
     name = "test_base",
     testonly = True,
@@ -14,7 +16,7 @@ java_library(
         "//third_party/jsr305",
         "//third_party/junit",
         "//third_party/mockito",
-        "@bazel_tools//tools/java/runfiles",
+        "@rules_java//java/runfiles",
     ],
 )
 
