@@ -1,3 +1,5 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+
 java_binary(
     name = "cli",
     main_class = "com.engflow.bazel.invocation.analyzer.Main",

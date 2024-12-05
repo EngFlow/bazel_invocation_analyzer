@@ -1,3 +1,5 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+
 package(default_visibility = ["//infra:__subpackages__"])
 
 java_binary(
