@@ -84,7 +84,7 @@ public class LocalActionsDataProvider extends DataProvider {
             Preconditions.checkArgument(
                 action.threadId == relatedEvents.peek().threadId,
                 "Thread ids must match %s != %s",
-                action.threadId == relatedEvents.peek().threadId);
+                action.threadId, relatedEvents.peek().threadId);
             related.add(relatedEvents.next());
           }
           out.accept(new LocalAction(action, related));
