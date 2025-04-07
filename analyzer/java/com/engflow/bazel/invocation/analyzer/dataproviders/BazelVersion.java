@@ -109,6 +109,7 @@ public class BazelVersion implements Datum {
         + " profile.";
   }
 
+  @Override
   public String getSummary() {
     return isEmpty()
         ? null

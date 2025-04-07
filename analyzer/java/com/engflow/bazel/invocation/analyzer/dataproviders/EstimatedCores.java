@@ -73,6 +73,7 @@ public abstract class EstimatedCores implements Datum {
     return gaps;
   }
 
+  @Override
   public String getSummary() {
     return isEmpty()
         ? null

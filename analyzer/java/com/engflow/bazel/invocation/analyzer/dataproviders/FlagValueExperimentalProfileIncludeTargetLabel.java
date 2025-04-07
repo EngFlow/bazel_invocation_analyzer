@@ -72,6 +72,7 @@ public class FlagValueExperimentalProfileIncludeTargetLabel implements Datum {
         + " the Bazel profile was generated.";
   }
 
+  @Override
   public String getSummary() {
     return String.valueOf(profileIncludeTargetLabelEnabled);
   }

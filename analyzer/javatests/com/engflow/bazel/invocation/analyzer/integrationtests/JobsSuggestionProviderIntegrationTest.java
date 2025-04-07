@@ -44,6 +44,7 @@ public class JobsSuggestionProviderIntegrationTest extends IntegerationTestBase 
     new SkymeldUsedDataProvider().register(dataManager);
   }
 
+  @Override
   public void withProfile(String filename) throws Exception {
     BazelProfile bazelProfile = BazelProfile.createFromPath(RUNFILES.rlocation(ROOT + filename));
     bazelProfile.registerWithDataManager(dataManager);
