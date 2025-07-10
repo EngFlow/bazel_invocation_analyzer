@@ -352,10 +352,6 @@ public class WriteBazelProfile {
 
     void json(UncheckWrite block);
 
-    default void object(String name, Contents contents) {
-      put(name, () -> object(contents));
-    }
-
     default void object(Contents contents) {
       json(
           writer -> {
