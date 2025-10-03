@@ -40,6 +40,7 @@ public class ProfileThread {
 
   @Nullable private String name;
   @Nullable private Integer sortIndex;
+  private boolean sorted;
 
   private final List<JsonObject> extraMetadata;
   private final List<JsonObject> extraEvents;
@@ -193,8 +194,13 @@ public class ProfileThread {
   }
 
   public List<CompleteEvent> getCompleteEvents() {
-    completeEvents.sort(Comparator.comparing((e) -> e.start));
-    return ImmutableList.copyOf(completeEvents);
+    synchronized (this) {
+      if (!sorted) {
+        completeEvents.sort(Comparator.comparing((e) -> e.start));
+        sorted = true;
+      }
+    }
+    return completeEvents;
   }
 
   public ImmutableMap<String, ImmutableList<CounterEvent>> getCounts() {
