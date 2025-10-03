@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipException;
@@ -89,10 +90,11 @@ public class BazelProfile implements Datum {
 
   private final BazelVersion bazelVersion;
   private final Map<String, String> otherData = new HashMap<>();
-  private final Map<ThreadId, ProfileThread> threads = new HashMap<>();
+  private final Map<ThreadId, ProfileThread> threads;
 
   private BazelProfile(JsonReader profileReader) {
     try {
+      Map<ThreadId, ProfileThread.Builder> threadBuilders = new HashMap<>();
       boolean hasOtherData = false;
       boolean hasTraceEvents = false;
       profileReader.beginObject();
@@ -121,17 +123,17 @@ public class BazelProfile implements Datum {
                 continue;
               }
               ThreadId threadId = new ThreadId(pid, tid);
-              ProfileThread profileThread =
-                  threads.compute(
+              ProfileThread.Builder profileThreadBuilder =
+                  threadBuilders.compute(
                       threadId,
                       (key, t) -> {
                         if (t == null) {
-                          t = new ProfileThread(threadId);
+                          t = new ProfileThread.Builder().setThreadId(key);
                         }
                         return t;
                       });
               // TODO: Use success response to take action on errant events.
-              profileThread.addEvent(traceEvent);
+              profileThreadBuilder.addEvent(traceEvent);
             }
             profileReader.endArray();
             break;
@@ -148,6 +150,9 @@ public class BazelProfile implements Datum {
                 TraceEventFormatConstants.SECTION_OTHER_DATA,
                 TraceEventFormatConstants.SECTION_TRACE_EVENTS));
       }
+      threads =
+          threadBuilders.entrySet().stream()
+              .collect(Collectors.toConcurrentMap(Map.Entry::getKey, e -> e.getValue().build()));
     } catch (IllegalStateException | IOException e) {
       throw new IllegalArgumentException("Could not parse Bazel profile.", e);
     }

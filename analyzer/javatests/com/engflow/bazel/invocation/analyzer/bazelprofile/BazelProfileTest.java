@@ -37,12 +37,10 @@ import com.engflow.bazel.invocation.analyzer.time.TimeUtil;
 import com.engflow.bazel.invocation.analyzer.time.Timestamp;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CompleteEvent;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatConstants;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.Test;
@@ -143,47 +141,45 @@ public class BazelProfileTest extends UnitTestBase {
   public void parseCriticalPath() throws Exception {
     var name = "CPP";
     var want =
-        new ProfileThread(
-            new ThreadId(1, 1),
-            BazelProfileConstants.THREAD_CRITICAL_PATH,
-            0,
-            ImmutableList.of(),
-            ImmutableList.of(),
-            Lists.newArrayList(
-                new CompleteEvent(
-                    name,
-                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
-                    Timestamp.ofMicros(11),
-                    TimeUtil.getDurationForMicros(10),
-                    1,
-                    1,
-                    ImmutableMap.of()),
-                new CompleteEvent(
-                    name,
-                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
-                    Timestamp.ofMicros(21),
-                    TimeUtil.getDurationForMicros(10),
-                    1,
-                    1,
-                    ImmutableMap.of()),
-                new CompleteEvent(
-                    name,
-                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
-                    Timestamp.ofMicros(31),
-                    TimeUtil.getDurationForMicros(10),
-                    1,
-                    1,
-                    ImmutableMap.of()),
-                new CompleteEvent(
-                    name,
-                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
-                    Timestamp.ofMicros(50),
-                    TimeUtil.getDurationForMicros(10),
-                    1,
-                    1,
-                    ImmutableMap.of())),
-            ImmutableMap.of(),
-            ImmutableMap.of());
+        new ProfileThread.Builder()
+            .setThreadId(new ThreadId(1, 1))
+            .setName(BazelProfileConstants.THREAD_CRITICAL_PATH)
+            .setSortIndex(0)
+            .setCompleteEvents(
+                List.of(
+                    new CompleteEvent(
+                        name,
+                        BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                        Timestamp.ofMicros(11),
+                        TimeUtil.getDurationForMicros(10),
+                        1,
+                        1,
+                        ImmutableMap.of()),
+                    new CompleteEvent(
+                        name,
+                        BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                        Timestamp.ofMicros(21),
+                        TimeUtil.getDurationForMicros(10),
+                        1,
+                        1,
+                        ImmutableMap.of()),
+                    new CompleteEvent(
+                        name,
+                        BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                        Timestamp.ofMicros(31),
+                        TimeUtil.getDurationForMicros(10),
+                        1,
+                        1,
+                        ImmutableMap.of()),
+                    new CompleteEvent(
+                        name,
+                        BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                        Timestamp.ofMicros(50),
+                        TimeUtil.getDurationForMicros(10),
+                        1,
+                        1,
+                        ImmutableMap.of())))
+            .build();
 
     var profile =
         useProfile(
@@ -351,147 +347,91 @@ public class BazelProfileTest extends UnitTestBase {
   }
 
   @Test
-  public void addEventShouldThrowOnSortedProfileThread() throws Exception {
-    var name = "CPP";
-    var thread =
-        new ProfileThread(
-            new ThreadId(1, 1),
-            BazelProfileConstants.THREAD_CRITICAL_PATH,
-            0,
-            ImmutableList.of(),
-            ImmutableList.of(),
-            Lists.newArrayList(
-                new CompleteEvent(
-                    name,
-                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
-                    Timestamp.ofMicros(11),
-                    TimeUtil.getDurationForMicros(10),
-                    1,
-                    1,
-                    ImmutableMap.of()),
-                new CompleteEvent(
-                    name,
-                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
-                    Timestamp.ofMicros(21),
-                    TimeUtil.getDurationForMicros(10),
-                    1,
-                    1,
-                    ImmutableMap.of()),
-                new CompleteEvent(
-                    name,
-                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
-                    Timestamp.ofMicros(31),
-                    TimeUtil.getDurationForMicros(10),
-                    1,
-                    1,
-                    ImmutableMap.of()),
-                new CompleteEvent(
-                    name,
-                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
-                    Timestamp.ofMicros(50),
-                    TimeUtil.getDurationForMicros(10),
-                    1,
-                    1,
-                    ImmutableMap.of())),
-            ImmutableMap.of(),
-            ImmutableMap.of());
-
-    // Getting the completeEvents from the thread will trigger them to be sorted.
-    var sorted = thread.getCompleteEvents();
-    // At this point, any further attempts at modifying the thread should throw an ISE, as this
-    // would break the sorting that was previously done.
-    var exception =
-        assertThrows(IllegalStateException.class, () -> thread.addEvent(new JsonObject()));
-    assertThat(exception)
-        .hasMessageThat()
-        .isEqualTo("Cannot add event, Bazel profile thread has been sorted!");
-  }
-
-  @Test
   public void isMainThreadShouldReturnFalseOnUnnamedProfileThread() {
-    ProfileThread thread = new ProfileThread(new ThreadId(0, 0));
+    ProfileThread thread = new ProfileThread.Builder().setThreadId(new ThreadId(0, 0)).build();
     assertThat(BazelProfile.isMainThread(thread)).isFalse();
   }
 
   @Test
   public void isMainThreadShouldReturnFalseOnOtherProfileThread() {
     ProfileThread thread =
-        new ProfileThread(
-            new ThreadId(0, 0), "skyframe-evaluator-1", null, null, null, null, null, null);
+        new ProfileThread.Builder()
+            .setThreadId(new ThreadId(0, 0))
+            .setName("skyframe-evaluator-1")
+            .build();
     assertThat(BazelProfile.isMainThread(thread)).isFalse();
   }
 
   @Test
   public void isMainThreadShouldReturnTrueOnNewName() {
     ProfileThread thread =
-        new ProfileThread(new ThreadId(0, 0), "Main Thread", null, null, null, null, null, null);
+        new ProfileThread.Builder().setThreadId(new ThreadId(0, 0)).setName("Main Thread").build();
     assertThat(BazelProfile.isMainThread(thread)).isTrue();
   }
 
   @Test
   public void isMainThreadShouldReturnTrueOnOldName() {
     ProfileThread thread =
-        new ProfileThread(new ThreadId(0, 0), "grpc-command-3", null, null, null, null, null, null);
+        new ProfileThread.Builder()
+            .setThreadId(new ThreadId(0, 0))
+            .setName("grpc-command-3")
+            .build();
     assertThat(BazelProfile.isMainThread(thread)).isTrue();
   }
 
   @Test
   public void isGarbageCollectorThreadShouldReturnFalseOnEmptyProfileThread() {
-    ProfileThread thread = new ProfileThread(new ThreadId(0, 0));
+    ProfileThread thread = new ProfileThread.Builder().setThreadId(new ThreadId(0, 0)).build();
     assertThat(BazelProfile.isGarbageCollectorThread(thread)).isFalse();
   }
 
   @Test
   public void isGarbageCollectorShouldReturnFalseOnOtherProfileThread() {
     ProfileThread thread =
-        new ProfileThread(
-            new ThreadId(0, 0), "skyframe-evaluator-1", null, null, null, null, null, null);
+        new ProfileThread.Builder()
+            .setThreadId(new ThreadId(0, 0))
+            .setName("skyframe-evaluator-1")
+            .build();
     assertThat(BazelProfile.isGarbageCollectorThread(thread)).isFalse();
   }
 
   @Test
   public void isGarbageCollectorShouldReturnFalseOnGCThreadWithoutGCEvents() {
     ProfileThread thread =
-        new ProfileThread(
-            new ThreadId(0, 0),
-            "Garbage Collector",
-            null,
-            null,
-            null,
-            Lists.newArrayList(
-                new CompleteEvent(
-                    null,
-                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
-                    Timestamp.ofMicros(11),
-                    TimeUtil.getDurationForMicros(10),
-                    1,
-                    1,
-                    ImmutableMap.of())),
-            null,
-            null);
+        new ProfileThread.Builder()
+            .setThreadId(new ThreadId(0, 0))
+            .setName("Garbage Collector")
+            .setCompleteEvents(
+                List.of(
+                    new CompleteEvent(
+                        null,
+                        BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                        Timestamp.ofMicros(11),
+                        TimeUtil.getDurationForMicros(10),
+                        1,
+                        1,
+                        ImmutableMap.of())))
+            .build();
     assertThat(BazelProfile.isGarbageCollectorThread(thread)).isFalse();
   }
 
   @Test
   public void isGarbageCollectorShouldReturnTrueOnThreadWithGC() {
     ProfileThread thread =
-        new ProfileThread(
-            new ThreadId(0, 0),
-            "Foo Thread",
-            null,
-            null,
-            null,
-            Lists.newArrayList(
-                new CompleteEvent(
-                    null,
-                    BazelProfileConstants.CAT_GARBAGE_COLLECTION,
-                    Timestamp.ofMicros(11),
-                    TimeUtil.getDurationForMicros(10),
-                    1,
-                    1,
-                    ImmutableMap.of())),
-            null,
-            null);
+        new ProfileThread.Builder()
+            .setThreadId(new ThreadId(0, 0))
+            .setName("Foo Thread")
+            .setCompleteEvents(
+                List.of(
+                    new CompleteEvent(
+                        null,
+                        BazelProfileConstants.CAT_GARBAGE_COLLECTION,
+                        Timestamp.ofMicros(11),
+                        TimeUtil.getDurationForMicros(10),
+                        1,
+                        1,
+                        ImmutableMap.of())))
+            .build();
     assertThat(BazelProfile.isGarbageCollectorThread(thread)).isTrue();
   }
 
