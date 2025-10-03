@@ -152,7 +152,7 @@ public class BazelProfile implements Datum {
       }
       threads =
           threadBuilders.entrySet().stream()
-              .collect(Collectors.toConcurrentMap(Map.Entry::getKey, e -> e.getValue().build()));
+              .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build()));
     } catch (IllegalStateException | IOException e) {
       throw new IllegalArgumentException("Could not parse Bazel profile.", e);
     }
