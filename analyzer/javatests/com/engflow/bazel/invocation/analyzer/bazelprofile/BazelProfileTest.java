@@ -353,7 +353,7 @@ public class BazelProfileTest extends UnitTestBase {
   @Test
   public void addEventShouldThrowOnSortedProfileThread() throws Exception {
     var name = "CPP";
-    var want =
+    var thread =
         new ProfileThread(
             new ThreadId(1, 1),
             BazelProfileConstants.THREAD_CRITICAL_PATH,
@@ -397,11 +397,11 @@ public class BazelProfileTest extends UnitTestBase {
             ImmutableMap.of());
 
     // Getting the completeEvents from the thread will trigger them to be sorted.
-    var sorted = want.getCompleteEvents();
+    var sorted = thread.getCompleteEvents();
     // At this point, any further attempts at modifying the thread should throw an ISE, as this
     // would break the sorting that was previously done.
     var exception =
-        assertThrows(IllegalStateException.class, () -> want.addEvent(new JsonObject()));
+        assertThrows(IllegalStateException.class, () -> thread.addEvent(new JsonObject()));
     assertThat(exception)
         .hasMessageThat()
         .isEqualTo("Cannot add event, Bazel profile thread has been sorted!");
