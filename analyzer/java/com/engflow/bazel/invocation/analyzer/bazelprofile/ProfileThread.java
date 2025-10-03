@@ -38,8 +38,8 @@ import javax.annotation.Nullable;
 public class ProfileThread {
   private final ThreadId threadId;
 
-  @Nullable private String name;
-  @Nullable private Integer sortIndex;
+  @Nullable private final String name;
+  @Nullable private final Integer sortIndex;
 
   private final ImmutableList<JsonObject> extraMetadata;
   private final ImmutableList<JsonObject> extraEvents;
