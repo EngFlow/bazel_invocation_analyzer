@@ -40,6 +40,7 @@ import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatCo
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.IntStream;
@@ -347,6 +348,63 @@ public class BazelProfileTest extends UnitTestBase {
 
     assertThat(profile.getActionCounts().isPresent()).isTrue();
     assertThat(profile.getActionCounts().get().size()).isEqualTo(201);
+  }
+
+  @Test
+  public void addEventShouldThrowOnSortedProfileThread() throws Exception {
+    var name = "CPP";
+    var want =
+        new ProfileThread(
+            new ThreadId(1, 1),
+            BazelProfileConstants.THREAD_CRITICAL_PATH,
+            0,
+            ImmutableList.of(),
+            ImmutableList.of(),
+            Lists.newArrayList(
+                new CompleteEvent(
+                    name,
+                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                    Timestamp.ofMicros(11),
+                    TimeUtil.getDurationForMicros(10),
+                    1,
+                    1,
+                    ImmutableMap.of()),
+                new CompleteEvent(
+                    name,
+                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                    Timestamp.ofMicros(21),
+                    TimeUtil.getDurationForMicros(10),
+                    1,
+                    1,
+                    ImmutableMap.of()),
+                new CompleteEvent(
+                    name,
+                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                    Timestamp.ofMicros(31),
+                    TimeUtil.getDurationForMicros(10),
+                    1,
+                    1,
+                    ImmutableMap.of()),
+                new CompleteEvent(
+                    name,
+                    BazelProfileConstants.CAT_CRITICAL_PATH_COMPONENT,
+                    Timestamp.ofMicros(50),
+                    TimeUtil.getDurationForMicros(10),
+                    1,
+                    1,
+                    ImmutableMap.of())),
+            ImmutableMap.of(),
+            ImmutableMap.of());
+
+    // Getting the completeEvents from the thread will trigger them to be sorted.
+    var sorted = want.getCompleteEvents();
+    // At this point, any further attempts at modifying the thread should throw an ISE, as this
+    // would break the sorting that was previously done.
+    var exception =
+        assertThrows(IllegalStateException.class, () -> want.addEvent(new JsonObject()));
+    assertThat(exception)
+        .hasMessageThat()
+        .isEqualTo("Cannot add event, Bazel profile thread has been sorted!");
   }
 
   @Test

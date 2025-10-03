@@ -112,8 +112,14 @@ public class ProfileThread {
   /**
    * Parses a {@link JsonObject} as a tracing event and adds it to this thread. Returns {@code true}
    * if parsing and adding the event was successful and {@code false} otherwise.
+   *
+   * @throws IllegalStateException if the thread has already been sorted, and as such cannot be
+   *     modified anymore.
    */
   public boolean addEvent(JsonObject event) {
+    if (sorted) {
+      throw new IllegalStateException("Cannot add event, Bazel profile thread has been sorted!");
+    }
     try {
       switch (event.get(TraceEventFormatConstants.EVENT_PHASE).getAsString()) {
         case TraceEventFormatConstants.PHASE_COMPLETE: // Complete events
