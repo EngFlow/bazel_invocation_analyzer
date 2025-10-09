@@ -24,6 +24,7 @@ import com.engflow.bazel.invocation.analyzer.time.DurationUtil;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.CounterEvent;
 import com.engflow.bazel.invocation.analyzer.traceeventformat.TraceEventFormatConstants;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipException;
@@ -80,21 +80,40 @@ public class BazelProfile implements Datum {
 
   public static BazelProfile createFromInputStream(InputStream inputStream)
       throws IllegalArgumentException {
-    return new BazelProfile(
+    return BazelProfile.create(
         new JsonReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)));
   }
 
   public static BazelProfile of(Reader reader) {
-    return new BazelProfile(new JsonReader(reader));
+    return BazelProfile.create(new JsonReader(reader));
   }
 
   private final BazelVersion bazelVersion;
-  private final Map<String, String> otherData = new HashMap<>();
-  private final Map<ThreadId, ProfileThread> threads;
+  private final ImmutableMap<String, String> otherData;
+  private final ImmutableMap<ThreadId, ProfileThread> threads;
+  private final ProfileThread mainThread;
+  private final Optional<ProfileThread> criticalPath;
+  private final Optional<ProfileThread> gcThread;
 
-  private BazelProfile(JsonReader profileReader) {
+  private BazelProfile(
+      BazelVersion bazelVersion,
+      ImmutableMap<String, String> otherData,
+      ImmutableMap<ThreadId, ProfileThread> threads,
+      ProfileThread mainThread,
+      Optional<ProfileThread> criticalPath,
+      Optional<ProfileThread> gcThread) {
+    this.bazelVersion = Preconditions.checkNotNull(bazelVersion);
+    this.otherData = Preconditions.checkNotNull(otherData);
+    this.threads = Preconditions.checkNotNull(threads);
+    this.mainThread = Preconditions.checkNotNull(mainThread);
+    this.criticalPath = Preconditions.checkNotNull(criticalPath);
+    this.gcThread = Preconditions.checkNotNull(gcThread);
+  }
+
+  private static BazelProfile create(JsonReader profileReader) {
+    ImmutableMap.Builder<String, String> otherDataBuilder = ImmutableMap.builder();
+    Map<ThreadId, ProfileThread.Builder> threadBuilders = new HashMap<>();
     try {
-      Map<ThreadId, ProfileThread.Builder> threadBuilders = new HashMap<>();
       boolean hasOtherData = false;
       boolean hasTraceEvents = false;
       profileReader.beginObject();
@@ -104,7 +123,7 @@ public class BazelProfile implements Datum {
             hasOtherData = true;
             profileReader.beginObject();
             while (profileReader.hasNext()) {
-              otherData.put(profileReader.nextName(), profileReader.nextString());
+              otherDataBuilder.put(profileReader.nextName(), profileReader.nextString());
             }
             profileReader.endObject();
             break;
@@ -123,15 +142,11 @@ public class BazelProfile implements Datum {
                 continue;
               }
               ThreadId threadId = new ThreadId(pid, tid);
-              ProfileThread.Builder profileThreadBuilder =
-                  threadBuilders.compute(
-                      threadId,
-                      (key, t) -> {
-                        if (t == null) {
-                          t = new ProfileThread.Builder().setThreadId(key);
-                        }
-                        return t;
-                      });
+              ProfileThread.Builder profileThreadBuilder = threadBuilders.get(threadId);
+              if (profileThreadBuilder == null) {
+                profileThreadBuilder = new ProfileThread.Builder().setThreadId(threadId);
+                threadBuilders.put(threadId, profileThreadBuilder);
+              }
               // TODO: Use success response to take action on errant events.
               profileThreadBuilder.addEvent(traceEvent);
             }
@@ -150,30 +165,41 @@ public class BazelProfile implements Datum {
                 TraceEventFormatConstants.SECTION_OTHER_DATA,
                 TraceEventFormatConstants.SECTION_TRACE_EVENTS));
       }
-      threads =
-          threadBuilders.entrySet().stream()
-              .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build()));
     } catch (IllegalStateException | IOException e) {
       throw new IllegalArgumentException("Could not parse Bazel profile.", e);
     }
 
-    this.bazelVersion =
+    ImmutableMap<String, String> otherData = otherDataBuilder.build();
+    BazelVersion bazelVersion =
         BazelVersion.parse(otherData.get(BazelProfileConstants.OTHER_DATA_BAZEL_VERSION));
-
-    if (!containsMainThread()) {
+    ImmutableMap.Builder<ThreadId, ProfileThread> threadsMapBuilder = ImmutableMap.builder();
+    ProfileThread mainThread = null;
+    ProfileThread criticalPath = null;
+    ProfileThread gcThread = null;
+    for (Map.Entry<ThreadId, ProfileThread.Builder> entry : threadBuilders.entrySet()) {
+      ProfileThread t = entry.getValue().build();
+      if (mainThread == null && isMainThread(t)) {
+        mainThread = t;
+      } else if (criticalPath == null && isCriticalPathThread(t)) {
+        criticalPath = t;
+      } else if (gcThread == null && isGarbageCollectorThread(t)) {
+        gcThread = t;
+      }
+      threadsMapBuilder.put(entry.getKey(), t);
+    }
+    if (mainThread == null) {
       throw new IllegalArgumentException(
           String.format(
               "Invalid Bazel profile, JSON file missing \"%s\".",
               BazelProfileConstants.THREAD_MAIN));
     }
-  }
-
-  /**
-   * This method is called from the constructor. Either it needs to stay private or it must be
-   * declared final, so that it cannot be overridden.
-   */
-  private boolean containsMainThread() {
-    return threads.values().stream().anyMatch(BazelProfile::isMainThread);
+    return new BazelProfile(
+        bazelVersion,
+        otherData,
+        threadsMapBuilder.build(),
+        mainThread,
+        Optional.ofNullable(criticalPath),
+        Optional.ofNullable(gcThread));
   }
 
   /**
@@ -238,15 +264,15 @@ public class BazelProfile implements Datum {
   }
 
   public Optional<ProfileThread> getCriticalPath() {
-    return threads.values().stream().filter(BazelProfile::isCriticalPathThread).findAny();
+    return criticalPath;
   }
 
   public ProfileThread getMainThread() {
-    return threads.values().stream().filter(BazelProfile::isMainThread).findAny().get();
+    return mainThread;
   }
 
   public Optional<ProfileThread> getGarbageCollectorThread() {
-    return threads.values().stream().filter(BazelProfile::isGarbageCollectorThread).findAny();
+    return gcThread;
   }
 
   public Optional<ImmutableList<CounterEvent>> getActionCounts() {
