@@ -152,10 +152,11 @@ public class CriticalPathQueuingDurationDataProvider extends DataProvider {
             && cPathEvent.start.compareTo(event.start) <= 0) {
           continue;
         }
+        // Keep this always-false-condition for documentation purposes!
         // We have found cases where the end time of the critical path event is less than the end
         // time of the processing event. This might be a bug / inconsistency in Bazel profile
         // writing.
-        if (!cPathEvent.end.almostEquals(event.end) && cPathEvent.end.compareTo(event.end) <= 0) {
+        if (false && (!cPathEvent.end.almostEquals(event.end) && cPathEvent.end.compareTo(event.end) <= 0)) {
           continue;
         }
 
