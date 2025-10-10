@@ -38,26 +38,14 @@ import javax.annotation.Nullable;
 public class ProfileThread {
   private final ThreadId threadId;
 
-  @Nullable private String name;
-  @Nullable private Integer sortIndex;
+  @Nullable private final String name;
+  @Nullable private final Integer sortIndex;
 
-  private final List<JsonObject> extraMetadata;
-  private final List<JsonObject> extraEvents;
-  private final List<CompleteEvent> completeEvents;
-  private final Map<String, List<CounterEvent>> counts;
-  private final Map<String, List<InstantEvent>> instants;
-
-  public ProfileThread(ThreadId threadId) {
-    this(
-        threadId,
-        null,
-        null,
-        new ArrayList<>(),
-        new ArrayList<>(),
-        new ArrayList<>(),
-        new HashMap<>(),
-        new HashMap<>());
-  }
+  private final ImmutableList<JsonObject> extraMetadata;
+  private final ImmutableList<JsonObject> extraEvents;
+  private final ImmutableList<CompleteEvent> completeEvents;
+  private final ImmutableMap<String, ImmutableList<CounterEvent>> counts;
+  private final ImmutableMap<String, ImmutableList<InstantEvent>> instants;
 
   @Override
   public String toString() {
@@ -75,23 +63,23 @@ public class ProfileThread {
         threadId, name, sortIndex, extraMetadata, extraEvents, completeEvents, counts, instants);
   }
 
-  public ProfileThread(
+  private ProfileThread(
       ThreadId threadId,
       @Nullable String name,
       @Nullable Integer sortIndex,
-      @Nullable List<JsonObject> extraMetadata,
-      @Nullable List<JsonObject> extraEvents,
-      @Nullable List<CompleteEvent> completeEvents,
-      @Nullable Map<String, List<CounterEvent>> counts,
-      @Nullable Map<String, List<InstantEvent>> instants) {
+      @Nullable ImmutableList<JsonObject> extraMetadata,
+      @Nullable ImmutableList<JsonObject> extraEvents,
+      @Nullable ImmutableList<CompleteEvent> completeEvents,
+      @Nullable ImmutableMap<String, ImmutableList<CounterEvent>> counts,
+      @Nullable ImmutableMap<String, ImmutableList<InstantEvent>> instants) {
     this.threadId = Preconditions.checkNotNull(threadId);
     this.name = name;
     this.sortIndex = sortIndex;
-    this.extraMetadata = extraMetadata == null ? new ArrayList<>() : extraMetadata;
-    this.extraEvents = extraEvents == null ? new ArrayList<>() : extraEvents;
-    this.completeEvents = completeEvents == null ? new ArrayList<>() : completeEvents;
-    this.counts = counts == null ? new HashMap<>() : counts;
-    this.instants = instants == null ? new HashMap<>() : instants;
+    this.extraMetadata = extraMetadata == null ? ImmutableList.of() : extraMetadata;
+    this.extraEvents = extraEvents == null ? ImmutableList.of() : extraEvents;
+    this.completeEvents = completeEvents == null ? ImmutableList.of() : completeEvents;
+    this.counts = counts == null ? ImmutableMap.of() : counts;
+    this.instants = instants == null ? ImmutableMap.of() : instants;
   }
 
   public ThreadId getThreadId() {
@@ -108,124 +96,20 @@ public class ProfileThread {
     return sortIndex;
   }
 
-  /**
-   * Parses a {@link JsonObject} as a tracing event and adds it to this thread. Returns {@code true}
-   * if parsing and adding the event was successful and {@code false} otherwise.
-   */
-  public boolean addEvent(JsonObject event) {
-    try {
-      switch (event.get(TraceEventFormatConstants.EVENT_PHASE).getAsString()) {
-        case TraceEventFormatConstants.PHASE_COMPLETE: // Complete events
-          {
-            completeEvents.add(CompleteEvent.fromJson(event));
-            break;
-          }
-
-        case "I": // Deprecated, fall-through
-        case TraceEventFormatConstants.PHASE_INSTANT: // Instant events
-          {
-            InstantEvent instantEvent = InstantEvent.fromJson(event);
-
-            List<InstantEvent> instantList =
-                instants.compute(
-                    instantEvent.getCategory(),
-                    (key, c) -> {
-                      if (c == null) {
-                        c = new ArrayList<>();
-                      }
-                      return c;
-                    });
-
-            instantList.add(instantEvent);
-            break;
-          }
-
-        case TraceEventFormatConstants.PHASE_COUNTER: // Counter events
-          {
-            CounterEvent counterEvent = CounterEvent.fromJson(event);
-
-            List<CounterEvent> countList =
-                counts.compute(
-                    counterEvent.getName(),
-                    (key, c) -> {
-                      if (c == null) {
-                        c = new ArrayList<>();
-                      }
-                      return c;
-                    });
-
-            countList.add(counterEvent);
-            break;
-          }
-
-        case TraceEventFormatConstants.PHASE_METADATA: // Metadata events
-          {
-            String eventName = event.get(TraceEventFormatConstants.EVENT_NAME).getAsString();
-            if (TraceEventFormatConstants.METADATA_THREAD_NAME.equals(eventName)) {
-              this.name =
-                  event
-                      .get(TraceEventFormatConstants.EVENT_ARGUMENTS)
-                      .getAsJsonObject()
-                      .get("name")
-                      .getAsString();
-            } else if (TraceEventFormatConstants.METADATA_THREAD_SORT_INDEX.equals(eventName)) {
-              this.sortIndex =
-                  Integer.parseInt(
-                      event
-                          .get(TraceEventFormatConstants.EVENT_ARGUMENTS)
-                          .getAsJsonObject()
-                          .get("sort_index")
-                          .getAsString());
-            } else {
-              extraMetadata.add(event);
-            }
-            break;
-          }
-
-        default:
-          extraEvents.add(event);
-      }
-
-      return true;
-    } catch (Exception ex) {
-      return false;
-    }
-  }
-
   public List<CompleteEvent> getCompleteEvents() {
-    completeEvents.sort(Comparator.comparing((e) -> e.start));
-    return ImmutableList.copyOf(completeEvents);
+    return completeEvents;
   }
 
   public ImmutableMap<String, ImmutableList<CounterEvent>> getCounts() {
-    return ImmutableMap.copyOf(
-        counts.entrySet().stream()
-            .collect(
-                Collectors.toMap(
-                    Map.Entry::getKey,
-                    e -> {
-                      List<CounterEvent> entries = e.getValue();
-                      entries.sort(Comparator.comparing(CounterEvent::getTimestamp));
-                      return ImmutableList.copyOf(entries);
-                    })));
+    return counts;
   }
 
   public ImmutableMap<String, ImmutableList<InstantEvent>> getInstants() {
-    return ImmutableMap.copyOf(
-        instants.entrySet().stream()
-            .collect(
-                Collectors.toMap(
-                    Map.Entry::getKey,
-                    e -> {
-                      List<InstantEvent> entries = e.getValue();
-                      entries.sort(Comparator.comparing(InstantEvent::getTimestamp));
-                      return ImmutableList.copyOf(entries);
-                    })));
+    return instants;
   }
 
   public ImmutableList<JsonObject> getExtraEvents() {
-    extraEvents.sort(Comparator.comparingLong(e -> e.get("ts").getAsLong()));
-    return ImmutableList.copyOf(extraEvents);
+    return extraEvents;
   }
 
   @Override
@@ -257,5 +141,216 @@ public class ProfileThread {
   public int hashCode() {
     return Objects.hashCode(
         threadId, name, sortIndex, extraMetadata, extraEvents, completeEvents, counts, instants);
+  }
+
+  public static class Builder {
+
+    private ThreadId threadId;
+
+    @Nullable private String name;
+    @Nullable private Integer sortIndex;
+
+    private List<JsonObject> extraMetadata = new ArrayList<>();
+    private List<JsonObject> extraEvents = new ArrayList<>();
+    private List<CompleteEvent> completeEvents = new ArrayList<>();
+    private Map<String, List<CounterEvent>> counts = new HashMap<>();
+    private Map<String, List<InstantEvent>> instants = new HashMap<>();
+
+    /**
+     * Parses a {@link JsonObject} as a tracing event and adds it to this thread. Returns {@code
+     * true} if parsing and adding the event was successful and {@code false} otherwise.
+     */
+    public boolean addEvent(JsonObject event) {
+      try {
+        switch (event.get(TraceEventFormatConstants.EVENT_PHASE).getAsString()) {
+          case TraceEventFormatConstants.PHASE_COMPLETE: // Complete events
+            {
+              completeEvents.add(CompleteEvent.fromJson(event));
+              break;
+            }
+
+          case "I": // Deprecated, fall-through
+          case TraceEventFormatConstants.PHASE_INSTANT: // Instant events
+            {
+              InstantEvent instantEvent = InstantEvent.fromJson(event);
+
+              List<InstantEvent> instantList =
+                  instants.compute(
+                      instantEvent.getCategory(),
+                      (key, c) -> {
+                        if (c == null) {
+                          c = new ArrayList<>();
+                        }
+                        return c;
+                      });
+
+              instantList.add(instantEvent);
+              break;
+            }
+
+          case TraceEventFormatConstants.PHASE_COUNTER: // Counter events
+            {
+              CounterEvent counterEvent = CounterEvent.fromJson(event);
+
+              List<CounterEvent> countList =
+                  counts.compute(
+                      counterEvent.getName(),
+                      (key, c) -> {
+                        if (c == null) {
+                          c = new ArrayList<>();
+                        }
+                        return c;
+                      });
+
+              countList.add(counterEvent);
+              break;
+            }
+
+          case TraceEventFormatConstants.PHASE_METADATA: // Metadata events
+            {
+              String eventName = event.get(TraceEventFormatConstants.EVENT_NAME).getAsString();
+              if (TraceEventFormatConstants.METADATA_THREAD_NAME.equals(eventName)) {
+                this.name =
+                    event
+                        .get(TraceEventFormatConstants.EVENT_ARGUMENTS)
+                        .getAsJsonObject()
+                        .get("name")
+                        .getAsString();
+              } else if (TraceEventFormatConstants.METADATA_THREAD_SORT_INDEX.equals(eventName)) {
+                this.sortIndex =
+                    Integer.parseInt(
+                        event
+                            .get(TraceEventFormatConstants.EVENT_ARGUMENTS)
+                            .getAsJsonObject()
+                            .get("sort_index")
+                            .getAsString());
+              } else {
+                extraMetadata.add(event);
+              }
+              break;
+            }
+
+          default:
+            extraEvents.add(event);
+        }
+
+        return true;
+      } catch (Exception ex) {
+        return false;
+      }
+    }
+
+    public ThreadId getThreadId() {
+      return threadId;
+    }
+
+    public Builder setThreadId(ThreadId threadId) {
+      this.threadId = threadId;
+      return this;
+    }
+
+    @Nullable
+    public String getName() {
+      return name;
+    }
+
+    public Builder setName(@Nullable String name) {
+      this.name = name;
+      return this;
+    }
+
+    @Nullable
+    public Integer getSortIndex() {
+      return sortIndex;
+    }
+
+    public Builder setSortIndex(@Nullable Integer sortIndex) {
+      this.sortIndex = sortIndex;
+      return this;
+    }
+
+    public List<JsonObject> getExtraMetadata() {
+      return extraMetadata;
+    }
+
+    public Builder setExtraMetadata(List<JsonObject> extraMetadata) {
+      this.extraMetadata = extraMetadata;
+      return this;
+    }
+
+    public List<JsonObject> getExtraEvents() {
+      return extraEvents;
+    }
+
+    public Builder setExtraEvents(List<JsonObject> extraEvents) {
+      this.extraEvents = extraEvents;
+      return this;
+    }
+
+    public List<CompleteEvent> getCompleteEvents() {
+      return completeEvents;
+    }
+
+    public Builder setCompleteEvents(List<CompleteEvent> completeEvents) {
+      this.completeEvents = completeEvents;
+      return this;
+    }
+
+    public Map<String, List<CounterEvent>> getCounts() {
+      return counts;
+    }
+
+    public Builder setCounts(Map<String, List<CounterEvent>> counts) {
+      this.counts = counts;
+      return this;
+    }
+
+    public Map<String, List<InstantEvent>> getInstants() {
+      return instants;
+    }
+
+    public Builder setInstants(Map<String, List<InstantEvent>> instants) {
+      this.instants = instants;
+      return this;
+    }
+
+    public ProfileThread build() {
+      var extraEventsSorted =
+          ImmutableList.sortedCopyOf(
+              Comparator.comparingLong(e -> e.get("ts").getAsLong()), this.extraEvents);
+      var completeEventSorted =
+          ImmutableList.sortedCopyOf(Comparator.comparing((e) -> e.start), this.completeEvents);
+      var countsSorted =
+          ImmutableMap.copyOf(
+              counts.entrySet().stream()
+                  .collect(
+                      Collectors.toMap(
+                          Map.Entry::getKey,
+                          e -> {
+                            List<CounterEvent> entries = e.getValue();
+                            entries.sort(Comparator.comparing(CounterEvent::getTimestamp));
+                            return ImmutableList.copyOf(entries);
+                          })));
+      var instantsSorted =
+          ImmutableMap.copyOf(
+              instants.entrySet().stream()
+                  .collect(
+                      Collectors.toMap(
+                          Map.Entry::getKey,
+                          e -> {
+                            List<InstantEvent> entries = e.getValue();
+                            entries.sort(Comparator.comparing(InstantEvent::getTimestamp));
+                            return ImmutableList.copyOf(entries);
+                          })));
+      return new ProfileThread(
+          this.threadId,
+          this.name,
+          this.sortIndex,
+          ImmutableList.copyOf(this.extraMetadata),
+          extraEventsSorted,
+          completeEventSorted,
+          countsSorted,
+          instantsSorted);
+    }
   }
 }
