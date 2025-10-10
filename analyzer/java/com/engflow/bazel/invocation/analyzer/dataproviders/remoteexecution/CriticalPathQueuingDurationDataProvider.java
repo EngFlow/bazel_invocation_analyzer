@@ -175,7 +175,6 @@ public class CriticalPathQueuingDurationDataProvider extends DataProvider {
           // Both events within bounds, prefer the longer one.
           if (event.duration.compareTo(found.duration) > 0) {
             found = event;
-            foundWithinBounds = true;
           }
           continue;
         }
